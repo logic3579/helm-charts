@@ -5,11 +5,15 @@ on:
     branches:
       - main
 
+env:
+  REPO_OWNER: ${{ github.repository_owner }}
+
 jobs:
   release:
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,10 +22,10 @@ jobs:
 
       - name: Configure Git
         run: |
-          git config user.name "$GH_ACTOR"
-          git config user.email "$GH_ACTOR@duck.com"
+          git config user.name ${{ env.REPO_OWNER }}
+          git config user.email "${{ env.REPO_OWNER }}@duck.com"
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         env:
-          CR_TOKEN: "${{ secrets.GH_TOKEN }}"
+          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
