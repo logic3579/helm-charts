@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: global-entrypoint
+data:
+  entrypoint.sh: |-
+      #!/bin/bash
+      set -e
+      set -x
+
+      do_something() {
+          APP_NAME=${APP_NAME}
+          case "$APP_NAME" in
+            frontend-example )
+              echo "frontend-example"
+              ;;
+            backend-example )
+              echo "backend-example"
+              ;;
+          esac
+      }
+      do_something
+      exec "$@"

@@ -1,0 +1,9 @@
+{{- if eq .Values.categraf.type "internal" -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: input-mysql
+data:
+{{ (.Files.Glob "categraf/conf/input.mysql/*.toml").AsConfig | indent 2 }}
+{{- end -}}
+

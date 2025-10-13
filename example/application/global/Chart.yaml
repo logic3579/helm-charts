@@ -1,0 +1,6 @@
+apiVersion: v2
+name: global
+description: A Helm chart for Kubernetes
+type: application
+version: 1.0.1
+appVersion: 2025-01-01

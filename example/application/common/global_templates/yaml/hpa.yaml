@@ -1,0 +1,6 @@
+{{- if .Values.autoscaling.enabled }}
+{{- if .Values.autoscaling.keda }}
+{{- else }}
+{{- include "global.hpa" . }}
+{{- end }}
+{{- end }}

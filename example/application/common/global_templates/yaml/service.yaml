@@ -1,0 +1,3 @@
+{{- if .Values.service }}
+{{- include "global.service" . }}
+{{- end }}

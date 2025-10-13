@@ -1,0 +1,68 @@
+StatefulSet: false
+
+APP_NAME: backend-example
+APP_TYPE: BACKEND
+APP_LANG: JAVA
+
+debug: false
+
+nodeSelector:
+  tier: app
+
+global:
+  JAVA_OPTS: ""
+  image:
+    repo: harbor.example.com/project/backend-example
+    tag: v1
+    pullPolicy: IfNotPresent
+  readinessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: "/actuator/health"
+      port: http-port
+      scheme: HTTP
+    initialDelaySeconds: 120
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 3
+  livenessProbe:
+    failureThreshold: 3
+    httpGet:
+      path: "/actuator/health"
+      port: http-port
+      scheme: HTTP
+    initialDelaySeconds: 120
+    periodSeconds: 15
+    successThreshold: 1
+    timeoutSeconds: 3
+
+service:
+  type: ClusterIP
+  port: 80
+  targetport: 8080
+  name: http-port
+  protocol: TCP
+  app_name: backend-example
+
+resources:
+  requests:
+    cpu: 1
+    memory: 2Gi
+  limits:
+    cpu: 2
+    memory: 4Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 90
+  behavior:
+    ScaleDown:
+      PodsNum: 1
+      PeriodSeconds: 900
+
+ingress:
+  enabled: false
+  domain: www.example.com

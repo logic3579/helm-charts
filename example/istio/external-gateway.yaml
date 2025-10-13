@@ -1,0 +1,30 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: external-gateway
+  namespace: istio-ingress
+spec:
+  selector:
+    app: istio-ingress-external
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*.example.com"
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "*.example.com"
+      tls:
+        mode: SIMPLE
+        credentialName: example-wildcard-secret
+    - port:
+        number: 3306
+        name: mysql
+        protocol: TCP
+      hosts:
+        - "*"

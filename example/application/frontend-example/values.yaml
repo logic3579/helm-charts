@@ -1,0 +1,77 @@
+StatefulSet: false
+
+APP_NAME: backend-example
+APP_TYPE: BACKEND
+APP_LANG: JAVA
+
+JAVA_OPTS: ""
+
+debug: false
+
+nodeSelector:
+  tier: app
+
+image:
+  repo: harbor.example.com/frontend/frontend-game-web
+  tag: p1.7.8
+  pullPolicy: IfNotPresent
+
+readinessProbe:
+  failureThreshold: 3
+  httpGet:
+    path: "/index.html"
+    port: http-port
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  successThreshold: 1
+  timeoutSeconds: 3
+livenessProbe:
+  failureThreshold: 3
+  httpGet:
+    path: "/index.html"
+    port: http-port
+    scheme: HTTP
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  successThreshold: 1
+  timeoutSeconds: 3
+
+service:
+  type: ClusterIP
+  port: 80
+  targetport: 80
+  name: http-port
+  protocol: TCP
+  app_name: frontend-example
+
+resources:
+  requests:
+    cpu: 10m
+    memory: 50Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 1
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    ScaleDown:
+      PodsNum: 1
+      PeriodSeconds: 900
+
+ingress:
+  enabled: false
+  domain: www.example.com
+
+virtualservice:
+  enabled: true
+  gateways:
+    - istio-ingress/gateway-external
+  hosts:
+    - www.example.com
+  port: 80
