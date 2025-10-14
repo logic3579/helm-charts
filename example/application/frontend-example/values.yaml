@@ -71,7 +71,7 @@ ingress:
 virtualservice:
   enabled: true
   gateways:
-    - istio-ingress/gateway-external
+    - istio-ingress/external-gateway
   hosts:
     - www.example.com
   port: 80

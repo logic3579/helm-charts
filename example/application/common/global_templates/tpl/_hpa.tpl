@@ -1,4 +1,5 @@
 {{- define "global.hpa" }}
+{{- if .Values.autoscaling.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -38,4 +39,5 @@ spec:
         metricName: http_request_count
         targetAverageValue: {{ .Values.autoscaling.http_request_count }}
     {{- end }}
+{{- end }}
 {{- end }}

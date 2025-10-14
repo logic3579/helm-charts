@@ -10,4 +10,3 @@ data:
 {{ printf "%s" $file | indent 4 }}
 {{- end }}
 {{- end }}
-

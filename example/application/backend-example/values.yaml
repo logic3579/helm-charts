@@ -6,6 +6,8 @@ APP_LANG: JAVA
 
 debug: false
 
+init_containers_sysctl: false
+
 nodeSelector:
   tier: app
 
