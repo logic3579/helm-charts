@@ -17,6 +17,6 @@ install clusterissuer and certifacate
 ```bash
 kubectl create -n cert-manager secret generic gcp-dns-key --from-file=./dns01-solver.json
 
-kubectl apply -f gcp-clusterissuer.yaml
+kubectl apply -f clusterissuer-gcp.yaml
 kubectl apply -f certificate.yaml
 ```

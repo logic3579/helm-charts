@@ -24,7 +24,6 @@ kubectl apply -f virtualservice.yaml
 helm upgrade --create-namespace \
   --install prometheus-community/prometheus-mysql-exporter \
   -n monitoring \
-  -f mysql-exporter-values.yaml \
   --set mysql.host="mysql.middleware.svc.cluster.local" \
   --set mysql.user="user" \
   --set mysql.password="password"
@@ -36,7 +35,6 @@ helm upgrade --create-namespace \
 helm upgrade --create-namespace \
   --install grafana/grafana \
   -n monitoring \
-  -f grafana-values.yaml \
   --set persistence.type="pvc" \
   --set persistence.enabled="true" \
   --set persistence.storageClassName="standard-rwo" \
