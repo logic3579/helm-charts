@@ -4,28 +4,59 @@ on:
   push:
     branches:
       - main
-
-env:
-  REPO_OWNER: ${{ github.repository_owner }}
+    paths:
+      - "charts/**"
+  workflow_dispatch:
 
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
+      pages: write
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Configure Git
         run: |
-          git config user.name ${{ env.REPO_OWNER }}
-          git config user.email "${{ env.REPO_OWNER }}@duck.com"
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
+        uses: helm/chart-releaser-action@v1.7.0
         env:
-          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          CR_SKIP_EXISTING: true
+          CR_RELEASE_NAME_TEMPLATE: "{{ .Name }}-{{ .Version }}"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build artifact for Pages
+        run: |
+          mkdir -p ./public
+          if [ -d "docs" ]; then
+            cp -r docs/* ./public/
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+
+  deploy:
+    name: Deploy
+    needs: release
+    runs-on: ubuntu-latest
+    # permissions:
+    #   pages: write
+    #   id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
