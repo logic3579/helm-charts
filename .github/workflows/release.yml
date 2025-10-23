@@ -33,10 +33,15 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Copy index.html
+        run: |
+          mkdir -p ./public
+          cp index.html ./public/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./charts
+          path: ./public
 
   deploy:
     name: Deploy

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helm Charts Repository</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css">
+  <style>
+    body {
+      box-sizing: border-box;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 45px;
+    }
+    @media (max-width: 767px) {
+      body {
+        padding: 15px;
+      }
+    }
+    .markdown-body {
+      box-sizing: border-box;
+      min-width: 200px;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 45px;
+    }
+    @media (max-width: 767px) {
+      .markdown-body {
+        padding: 15px;
+      }
+    }
+    .repo-badge {
+      margin-bottom: 20px;
+    }
+    .quick-install {
+      background-color: #f6f8fa;
+      border-radius: 6px;
+      padding: 16px;
+      margin: 20px 0;
+    }
+    .quick-install code {
+      background-color: #f6f8fa;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    .chart-list {
+      margin-top: 30px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .chart-list th, .chart-list td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    .chart-list th {
+      background-color: #f6f8fa;
+    }
+    .chart-list tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <article class="markdown-body">
+    <div class="repo-badge">
+      <a href="https://artifacthub.io/">
+        <img src="https://img.shields.io/badge/Artifact%20Hub-repo-blue" alt="Artifact Hub">
+      </a>
+      <a href="https://github.com/logic3579/helm-charts/actions/workflows/release.yml">
+        <img src="https://github.com/logic3579/helm-charts/actions/workflows/release.yml/badge.svg?branch=main" alt="Release Charts">
+      </a>
+    </div>
+
+    <h1>Helm Charts Repository</h1>
+    <p>Welcome to the Helm Charts repository. This repository contains a collection of Helm charts that can be used to deploy applications on Kubernetes.</p>
+
+    <h2>Quick Start</h2>
+    <div class="quick-install">
+      <p>Add this repository to Helm:</p>
+      <pre><code>helm repo add my-repo https://logic3579.github.io/helm-charts
+helm repo update</code></pre>
+    </div>
+
+    <h2>Available Charts</h2>
+    <table class="chart-list">
+      <thead>
+        <tr>
+          <th>Chart Name</th>
+          <th>Version</th>
+          <th>Description</th>
+          <th>Install Command</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>mychart</td>
+          <td>Latest</td>
+          <td>A sample Helm chart</td>
+          <td><code>helm install mychart my-repo/mychart</code></td>
+        </tr>
+        <tr>
+          <td>mylibchart</td>
+          <td>Latest</td>
+          <td>A library chart for common templates</td>
+          <td><code>helm dependency update ./my-chart</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Documentation</h2>
+    <p>Helm must be installed to use the charts. Please refer to Helm's <a href="https://helm.sh/docs/">documentation</a> to get started.</p>
+
+    <h3>Build a Helm package</h3>
+    <p>To create a helm chart:</p>
+    <pre><code>helm create charts/my-chart</code></pre>
+
+    <p>Check configuration for all charts:</p>
+    <pre><code>helm lint charts/*</code></pre>
+
+    <p>Package all helm chart into chart archive:</p>
+    <pre><code>helm package charts/*</code></pre>
+
+    <h3>Install a Chart</h3>
+    <p>Once Helm has been set up correctly, you can install a chart:</p>
+    <pre><code>helm install my-chart my-repo/my-chart</code></pre>
+
+    <p>To uninstall the chart:</p>
+    <pre><code>helm uninstall my-chart</code></pre>
+
+    <h2>Contributing</h2>
+    <p>If you would like to contribute to this repository, please feel free to submit a pull request.</p>
+
+    <h2>License</h2>
+    <p>These charts are licensed under the Apache License 2.0.</p>
+  </article>
+</body>
+</html>
