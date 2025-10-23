@@ -14,7 +14,7 @@ Check configuration for all charts
 
 Package all helm chart into chart archive
 
-    cd docs && helm package ../charts/*
+    helm package charts/*
 
 ### GitHub Pages example
 
