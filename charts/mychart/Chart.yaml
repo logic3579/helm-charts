@@ -1,22 +1,22 @@
 apiVersion: v2
-appVersion: "20230101"
+appVersion: v0.1.0
 dependencies:
-#- name: mysql
-#  repository: https://charts.bitnami.com/bitnami
-#  #repository: "@bitnami"
-#  version: 9.14.1
-#  tags:
-#  - database
-- name: mylibchart
-  version: 0.1.0
-  repository: file://../mylibchart
+  #- name: mysql
+  #  repository: https://charts.bitnami.com/bitnami
+  #  #repository: "@bitnami"
+  #  version: 9.14.1
+  #  tags:
+  #  - database
+  - name: mylibchart
+    version: 0.1.0
+    repository: file://mylibchart
 description: A Helm chart for Kubernetes Template
-home: https://github.com/yakir3/helm-charts/charts/mychart
-icon: https://yakir.com/img/x.png
+home: https://github.com/logic3579/helm-charts
+# icon:
 keywords:
   - template
 maintainers:
-- name: Yakir
-  url: https://github.com/yakir3/helm-charts
+  - name: Logic
+    url: https://github.com/logic3579/helm-charts
 name: mychart
 version: 0.1.0

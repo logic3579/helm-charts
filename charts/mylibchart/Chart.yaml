@@ -3,4 +3,4 @@ name: mylibchart
 description: A Helm chart for Kubernetes
 type: library
 version: 0.1.0
-appVersion: "20230101"
+appVersion: v0.1.0

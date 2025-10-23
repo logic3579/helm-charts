@@ -25,16 +25,16 @@ Helm's [documentation](https://helm.sh/docs/) to get started.
 
 Index and publish helm package
 
-    # helm repo index ../docs --url https://logic3579.github.io/helm-charts
-    helm repo index ../docs --url https://yakir.top/helm-charts
+    # helm repo index ./charts --url https://yakir.top/helm-charts
+    helm repo index ./charts --url https://logic3579.github.io/helm-charts
     git add -A
     git commit -m 'Update helm-charts index.yaml'
     git push origin
 
 Once Helm has been set up correctly, add the repo as follows:
 
-    # helm repo add my-repo https://logic3579.github.io/helm-charts
-    helm repo add my-repo https://yakir.top/helm-charts/
+    # helm repo add my-repo https://yakir.top/helm-charts/
+    helm repo add my-repo https://logic3579.github.io/helm-charts
 
 If you had already added this repo earlier, run `helm repo update` to retrieve
 the latest versions of the packages.

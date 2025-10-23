@@ -29,22 +29,14 @@ jobs:
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_SKIP_EXISTING: true
-          CR_RELEASE_NAME_TEMPLATE: "{{ .Name }}-{{ .Version }}"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Build artifact for Pages
-        run: |
-          mkdir -p ./public
-          if [ -d "docs" ]; then
-            cp -r docs/* ./public/
-          fi
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: ./charts
 
   deploy:
     name: Deploy

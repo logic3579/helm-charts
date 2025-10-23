@@ -1,0 +1,34 @@
+apiVersion: v1
+entries:
+  mychart:
+  - apiVersion: v2
+    appVersion: v0.1.0
+    created: "2025-10-23T22:33:07.373917+08:00"
+    dependencies:
+    - name: mylibchart
+      repository: file://mylibchart
+      version: 0.1.0
+    description: A Helm chart for Kubernetes Template
+    digest: eaa4eb14d70e2389b7103cde0f88ed70b91248b1016547dea9e00a3cda0bd25a
+    home: https://github.com/logic3579/helm-charts
+    keywords:
+    - template
+    maintainers:
+    - name: Logic
+      url: https://github.com/logic3579/helm-charts
+    name: mychart
+    urls:
+    - https://logic3579.github.io/helm-charts/mychart-0.1.0.tgz
+    version: 0.1.0
+  mylibchart:
+  - apiVersion: v2
+    appVersion: v0.1.0
+    created: "2025-10-23T22:33:07.374021+08:00"
+    description: A Helm chart for Kubernetes
+    digest: 5e418224bcda9ea173fb3ef9170f461124cebe336e7e2c6f310ccb5eb12eb1f7
+    name: mylibchart
+    type: library
+    urls:
+    - https://logic3579.github.io/helm-charts/mylibchart-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-10-23T22:33:07.373475+08:00"
