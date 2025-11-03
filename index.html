@@ -1067,12 +1067,11 @@
 </span></code></pre>
     <p>Once Helm has been set up correctly, add the repo as follows:</p>
     <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm repo add my-repo https://logic3579.github.io/helm-charts
-</span><span class="code-line line-number" line="2"># helm repo add my-repo https://helm-charts.yakir.top/helm-charts/
 </span></code></pre>
     <p>If you had already added this repo earlier, run <code>helm repo update</code> to retrieve
       the latest versions of the packages.
       You can then run <code>helm search repo my-repo</code> to see the charts.</p>
-    <p>Install the my-app chart:</p>
+    <p>Install the chart:</p>
     <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm install my-chart my-repo/my-chart
 </span></code></pre>
     <p>Uninstall the chart:</p>
@@ -1090,7 +1089,7 @@
     <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm repo add --username &lt;username&gt; --password &lt;access_token&gt; my-repo https://gitlab.example.com/api/v4/projects/&lt;project_id&gt;/packages/helm/stable
 </span><span class="code-line line-number" line="2">helm cm-push mychart-0.1.0.tgz my-repo
 </span></code></pre>
-    <p>Install the my-app chart:</p>
+    <p>Install the chart:</p>
     <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm install my-chart my-repo/my-chart
 </span></code></pre>
     <p>Uninstall the chart:</p>

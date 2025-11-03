@@ -25,7 +25,6 @@ Helm's [documentation](https://helm.sh/docs/) to get started.
 
 Index and publish helm package
 
-    # helm repo index ./charts --url https://yakir.top/helm-charts
     helm repo index ./charts --url https://logic3579.github.io/helm-charts
     git add -A
     git commit -m 'Update helm-charts index.yaml'
@@ -33,14 +32,13 @@ Index and publish helm package
 
 Once Helm has been set up correctly, add the repo as follows:
 
-    # helm repo add my-repo https://yakir.top/helm-charts/
     helm repo add my-repo https://logic3579.github.io/helm-charts
 
 If you had already added this repo earlier, run `helm repo update` to retrieve
 the latest versions of the packages.
 You can then run `helm search repo my-repo` to see the charts.
 
-Install the my-app chart:
+Install the chart:
 
     helm install my-chart my-repo/my-chart
 
@@ -65,7 +63,7 @@ Index and publish helm package
     helm repo add --username <username> --password <access_token> my-repo https://gitlab.example.com/api/v4/projects/<project_id>/packages/helm/stable
     helm cm-push mychart-0.1.0.tgz my-repo
 
-Install the my-app chart:
+Install the chart:
 
     helm install my-chart my-repo/my-chart
 
