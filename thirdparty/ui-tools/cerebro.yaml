@@ -1,0 +1,179 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cerebro
+  namespace: mgmt
+data:
+  application.conf: |
+    secret = "ki:s:[[@=Ag?QI`W2jMwkY:eqvrJ]JqoJyi2axj3ZvOv^/KavOT4ViJSv?6YY4[N"
+    basePath = "/"
+    pidfile.path=/dev/null
+    rest.history.size = 50 // defaults to 50 if not specified
+    data.path = "./cerebro.db"
+    play {
+      server.http.port = ${?CEREBRO_PORT}
+    }
+    es = {
+      gzip = true
+    }
+    auth = {
+      type: ${?AUTH_TYPE}
+      settings {
+        url = ${?LDAP_URL}
+        base-dn = ${?LDAP_BASE_DN}
+        method = ${?LDAP_METHOD}
+        user-template = ${?LDAP_USER_TEMPLATE}
+        // User identifier that can perform searches
+        bind-dn = ${?LDAP_BIND_DN}
+        bind-pw = ${?LDAP_BIND_PWD}
+        group-search {
+          // If left unset parent's base-dn will be used
+          base-dn = ${?LDAP_GROUP_BASE_DN}
+          // Attribute that represent the user, for example uid or mail
+          user-attr = ${?LDAP_USER_ATTR}
+          // Define a separate template for user-attr
+          // If left unset parent's user-template will be used
+          user-attr-template = ${?LDAP_USER_ATTR_TEMPLATE}
+          // Filter that tests membership of the group. If this property is empty then there is no group membership check
+          // AD example => memberOf=CN=mygroup,ou=ouofthegroup,DC=domain,DC=com
+          // OpenLDAP example => CN=mygroup
+          group = ${?LDAP_GROUP}
+        }
+        username = ${?BASIC_AUTH_USER}
+        password = ${?BASIC_AUTH_PWD}
+      }
+    }
+    hosts = [
+      {
+        host = "http://1.1.1.1:9200"
+        name = "es-cluster1"
+        auth = {
+          username = "xxx"
+          password = "xxx"
+        }
+      }
+    ]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cerebro
+  namespace: mgmt
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: cerebro
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: cerebro
+      namespace: mgmt
+    spec:
+      containers:
+        - args:
+            - -Dhttp.address=0.0.0.0
+          env:
+            - name: SERVICE_NAME
+              value: cerebro
+            - name: CEREBRO_PORT
+              value: "9000"
+          image: lmenezes/cerebro:0.9.4
+          imagePullPolicy: IfNotPresent
+          name: cerebro
+          ports:
+            - containerPort: 9000
+          resources:
+            limits:
+              cpu: 2
+              memory: 4Gi
+            requests:
+              cpu: 1
+              memory: 1Gi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /opt/cerebro/conf/application.conf
+              name: app-config
+              subPath: application.conf
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            defaultMode: 400
+            name: cerebro-config
+          name: app-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: cerebro
+  name: cerebro
+  namespace: mgmt
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: port-9000
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
+  selector:
+    app: cerebro
+  sessionAffinity: None
+  type: ClusterIP
+---
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: cerebro
+#  namespace: mgmt
+#spec:
+#  ingressClassName: nginx
+#  rules:
+#    - host: cerebro.example.com
+#      http:
+#        paths:
+#          - backend:
+#              service:
+#                name: cerebro
+#                port:
+#                  number: 9000
+#            path: /
+#            pathType: ImplementationSpecific
+#status:
+#  loadBalancer:
+#    ingress:
+#      - ip: 172.16.1.1
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: cerebro
+  namespace: mgmt
+spec:
+  gateways:
+    - istio-ingress/gateway-external
+  hosts:
+    - cerebro.example.com
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: cerebro.mgmt.svc.cluster.local
+            port:
+              number: 9000

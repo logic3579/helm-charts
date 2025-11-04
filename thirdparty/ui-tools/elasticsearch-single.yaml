@@ -1,0 +1,173 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: elasticsearch-credentials
+  labels:
+    app: "elasticsearch"
+type: Opaque
+data:
+  username: ZWxhc3RpYw==
+  password: cEFzc3cwcmQK
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+  labels:
+    app: "elasticsearch"
+  annotations:
+    esMajorVersion: "8"
+spec:
+  selector:
+    matchLabels:
+      app: "elasticsearch"
+  replicas: 1
+  template:
+    metadata:
+      name: "elasticsearch"
+      labels:
+        app: "elasticsearch"
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      terminationGracePeriodSeconds: 120
+      volumes:
+        - name: elastic-config
+          persistentVolumeClaim:
+            claimName: elastic-config-pvc
+        - name: elastic-data
+          persistentVolumeClaim:
+            claimName: elastic-data-pvc
+        - name: es-plugins
+          persistentVolumeClaim:
+            claimName: elastic-plugins-pvc
+      initContainers:
+        - name: configure-sysctl
+          securityContext:
+            runAsUser: 0
+            privileged: true
+          image: "docker.elastic.co/elasticsearch/elasticsearch:8.5.1"
+          imagePullPolicy: "IfNotPresent"
+          command: ["sysctl", "-w", "vm.max_map_count=262144"]
+          resources: {}
+      containers:
+        - name: "elasticsearch"
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            runAsUser: 1000
+          image: "docker.elastic.co/elasticsearch/elasticsearch:8.5.1"
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - name: http
+              containerPort: 9200
+            - name: transport
+              containerPort: 9300
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 4Gi
+            requests:
+              cpu: 2000m
+              memory: 4Gi
+          env:
+            - name: node.name
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: TZ
+              value: Asia/Shanghai
+            - name: discovery.type
+              value: "single-node"
+            - name: cluster.name
+              value: "elasticsearch"
+            - name: network.host
+              value: "0.0.0.0"
+            - name: ELASTIC_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-credentials
+                  key: username
+            - name: ELASTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: elasticsearch-credentials
+                  key: password
+            - name: ES_JAVA_OPTS
+              value: "-Xmx3g -Xms3g"
+            - name: xpack.security.enabled
+              value: "true"
+            - name: xpack.security.transport.ssl.enabled
+              value: "false"
+            - name: xpack.security.http.ssl.enabled
+              value: "false"
+          volumeMounts:
+            - name: elastic-config
+              mountPath: /usr/share/elasticsearch/config
+              readOnly: false
+            - name: elastic-data
+              mountPath: /usr/share/elasticsearch/data
+              readOnly: false
+            - mountPath: /usr/share/elasticsearch/plugins
+              name: es-plugins
+              readOnly: false
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: elasticsearch
+  labels:
+    app: "elasticsearch"
+spec:
+  type: ClusterIP
+  selector:
+    app: "elasticsearch"
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9200
+      targetPort: 9200
+#---
+## Source: elasticsearch/templates/ingress.yaml
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: elasticsearch
+#  labels:
+#    app: elasticsearch
+#spec:
+#  ingressClassName: "nginx"
+#  rules:
+#    - host: es.example.com
+#      http:
+#        paths:
+#          - path: /
+#            pathType: ImplementationSpecific
+#            backend:
+#              service:
+#                name: elasticsearch
+#                port:
+#                  number: 9200
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: elastic
+  namespace: mgmt
+spec:
+  gateways:
+    - istio-ingress/gateway-internal
+  hosts:
+    - elasticsearch.example.com
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: elasticsearch.mgmt.svc.cluster.local
+            port:
+              number: 9200

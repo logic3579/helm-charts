@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: init-sysctl
+  namespace: default
+  labels:
+    app: init-sysctl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: init-sysctl
+  template:
+    metadata:
+      labels:
+        app: init-sysctl
+    spec:
+      containers:
+        - args:
+            [
+              "/bin/sh",
+              "-c",
+              'i=0; while true; do echo "$i: $(date)"; i=$((i+1)); sleep 10; done',
+            ]
+          name: counter
+          image: busybox
+      initContainers:
+        - name: setsysctl
+          image: busybox
+          securityContext:
+            privileged: true
+          command:
+            - sh
+            - -c
+            - |
+              sysctl -w net.core.somaxconn=65535
+              sysctl -w net.ipv4.ip_local_port_range="10001 65535"
+              sysctl -w net.ipv4.tcp_tw_reuse=1
+              sysctl -w fs.file-max=655350
+              sysctl -w net.ipv4.tcp_rmem="4096 26214400 26214400"
+              # modify in Node
+              # net.core.rmem_max = 212992
+              # net.core.rmem_default = 212992
+              # net.core.wmem_max = 212992
+              # net.core.wmem_default = 212992
