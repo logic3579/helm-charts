@@ -1,0 +1,158 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: categraf-config
+  namespace: monitoring
+data:
+  config.toml: |-
+    [global]
+    print_configs = false
+    hostname = "$HOSTNAME"
+    omit_hostname = true
+    precision = "ms"
+    interval = 15
+    providers = ["local"]
+    disable_usage_report = true
+    [global.labels]
+    source="categraf"
+    [log]
+    file_name = "stdout"
+    max_size = 100
+    max_age = 1
+    max_backups = 1
+    local_time = true
+    compress = false
+    [writer_opt]
+    batch = 1000
+    chan_size = 1000000
+    [[writers]]
+    url = "http://nightingale-center/prometheus/v1/write"
+    basic_auth_user = ""
+    basic_auth_pass = ""
+    timeout = 5000
+    dial_timeout = 2500
+    max_idle_conns_per_host = 100
+    [http]
+    enable = false
+    address = ":9100"
+    print_access = false
+    run_mode = "release"
+    [ibex]
+    enable = false
+    interval = "1000ms"
+    servers = ["127.0.0.1:20090"]
+    meta_dir = "./meta"
+    [heartbeat]
+    enable = false
+    url = "http://nightingale-center/v1/n9e/heartbeat"
+    interval = 10
+    basic_auth_user = ""
+    basic_auth_pass = ""
+    timeout = 5000
+    dial_timeout = 2500
+    max_idle_conns_per_host = 100
+  logs.toml: |-
+    [logs]
+    enable = false
+  kube-state-metrics.toml: |-
+    [[instances]]
+    urls = ["http://kube-state-metrics:8080/metrics"]
+    use_tls = false
+    url_label_key = "instance"
+    url_label_value = "{{.Host}}"
+    #labels = {job="kube-state-metrics"}
+
+    #[[instances]]
+    #urls = ["http://prometheus-mysql-exporter:9104/metrics"]
+    #use_tls = false
+    #url_label_key = "instance"
+    #url_label_value = "{{.Host}}"
+    #labels = {job="prometheus-mysql-exporter"}
+  mysql.toml: |-
+    [[instances]]
+    address = "mysql.database.svc:3306"
+    username = "readonly"
+    password = "password"
+    extra_status_metrics = true
+    extra_innodb_metrics = false
+    gather_processlist_processes_by_state = false
+    gather_processlist_processes_by_user = false
+    gather_schema_size = false
+    gather_table_size = false
+    gather_system_table_size = false
+    gather_slave_status = true
+    labels = {job="prometheus-mysql-exporter"}
+  clickhouse.toml: |-
+    [[instances]]
+    servers = ["http://clickhouse.database.svc:8123"]
+    username = "readonly"
+    password = "password"
+    url_label_key = "instance"
+    url_label_value = "{{.Host}}"
+    labels = { instance="clickhouse_main" }
+  kafka.toml: |-
+    [[instances]]
+    log_level = "error"
+    kafka_uris = ["kafka-broker-1.middleware.svc:9092","kafka-broker-2.middleware.svc:9092","kafka-broker-3.middleware.svc:9092"]
+    topic_exclude_regex="__consumer_offsets"
+    rename_uncommit_offset_to_lag = true
+    labels = { cluster="kafka-cluster" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: categraf-deployment
+  name: categraf-deployment
+  namespace: monitoring
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: categraf-deployment
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: categraf-deployment
+    spec:
+      containers:
+        - env:
+            - name: TZ
+              value: Asia/UTC
+          image: flashcatcloud/categraf:latest
+          imagePullPolicy: Always
+          name: categraf
+          resources: {}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/categraf
+      dnsPolicy: ClusterFirstWithHostNet
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: nightingale-categraf-v6
+      serviceAccountName: nightingale-categraf-v6
+      terminationGracePeriodSeconds: 30
+      nodeSelector:
+        tier: mgmt
+      volumes:
+        - name: config
+          configMap:
+            name: categraf-deployment-config
+            items:
+              - key: config.toml
+                path: conf/config.toml
+              - key: logs.toml
+                path: conf/logs.toml
+              - key: kube-state-metrics.toml
+                path: conf/input.prometheus/kube-state-metrics.toml
+              - key: clickhouse.toml
+                path: conf/input.clickhouse/clickhouse.toml
+              - key: kafka.toml
+                path: conf/input.kafka/kafka.toml

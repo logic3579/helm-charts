@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis-insight
+  name: redisinsight
   namespace: mgmt
 spec:
   replicas: 1
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: redis-insight
+      app: redisinsight
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -17,18 +17,18 @@ spec:
   template:
     metadata:
       labels:
-        app: redis-insight
+        app: redisinsight
       namespace: mgmt
     spec:
       containers:
         - env:
             - name: SERVICE_NAME
-              value: redis-insight
+              value: redisinsight
             - name: RITRUSTEDORIGINS
-              value: http://redis-insight.example.com,https://redis-insight.example.com
-          image: redislabs/redisinsight:1.14.0
+              value: http://redisinsight.example.com,https://redisinsight.example.com
+          image: redislabs/redisinsight:latest
           imagePullPolicy: IfNotPresent
-          name: redis-insight
+          name: redisinsight
           ports:
             - containerPort: 8001
               name: port-8001
@@ -52,8 +52,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: redis-insight
-  name: redis-insight
+    app: redisinsight
+  name: redisinsight
   namespace: mgmt
 spec:
   internalTrafficPolicy: Cluster
@@ -66,24 +66,24 @@ spec:
       protocol: TCP
       targetPort: 8001
   selector:
-    app: redis-insight
+    app: redisinsight
   sessionAffinity: None
   type: ClusterIP
 #---
 #apiVersion: networking.k8s.io/v1
 #kind: Ingress
 #metadata:
-#  name: redis-insight
+#  name: redisinsight
 #  namespace: mgmt
 #spec:
 #  ingressClassName: nginx
 #  rules:
-#    - host: redis-insight.example.com
+#    - host: redisinsight.example.com
 #      http:
 #        paths:
 #          - backend:
 #              service:
-#                name: redis-insight
+#                name: redisinsight
 #                port:
 #                  number: 8001
 #            path: /
@@ -96,19 +96,19 @@ spec:
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
-  name: redis-insight
+  name: redisinsight
   namespace: mgmt
 spec:
   gateways:
     - istio-ingress/gateway-internal
   hosts:
-    - redis-insight.example.com
+    - redisinsight.example.com
   http:
     - match:
         - uri:
             prefix: /
       route:
         - destination:
-            host: redis-insight.mgmt.svc.cluster.local
+            host: redisinsight.mgmt.svc.cluster.local
             port:
               number: 8001
