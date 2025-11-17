@@ -33,7 +33,7 @@ spec:
             - name: SPRING_SECURITY_USER_PASSWORD
               value: your-password
             - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
-              value: kafka.mgmt.svc:9092
+              value: kafka.middleware.svc:9092
             - name: KAFKA_CLUSTERS_0_READONLY
               value: "true"
           image: provectuslabs/kafka-ui:latest
