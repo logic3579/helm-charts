@@ -4,7 +4,7 @@
 helm repo add istio https://istio-release.storage.googleapis.com/charts --force-update
 
 helm install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
-helm install istiod istio/istiod -n istio-system --wait
+helm install istiod istio/istiod -n istio-system --wait --set _internal_defaults_do_not_set.nodeSelector.tier=mgmt
 
 # internal gateway
 helm upgrade --install istio-ingress-internal istio/gateway -f values-internal.yaml -n istio-ingress --wait --create-namespace --version=1.27.1
