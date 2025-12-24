@@ -1,0 +1,255 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: clickhouse-backup-credentials
+  namespace: database
+type: Opaque
+stringData:
+  GCS_ACCESS_KEY: "GOOGxxx"
+  GCS_SECRET_KEY: "xxx"
+  CLICKHOUSE_PASSWORD: "xxx"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-backup-script
+  namespace: database
+data:
+  backup.sh: |
+    #!/bin/bash
+    set -e
+
+    # ========== 配置 ==========
+    DATABASE="mydb"
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    BACKUP_TYPE="${BACKUP_TYPE:-full}"
+    SHARDS="${SHARDS:-0 1}"  # 2 个 shard
+    GCS_BUCKET="${GCS_BUCKET:-mygcs-bucket}"
+    ENDPOINT="https://storage.googleapis.com/${GCS_BUCKET}"
+
+    echo "============================================"
+    echo "ClickHouse Backup - Database: ${DATABASE}"
+    echo "Type: ${BACKUP_TYPE}"
+    echo "Time: ${TIMESTAMP}"
+    echo "============================================"
+
+    for SHARD in ${SHARDS}; do
+      # 构建主机名（根据 Bitnami Helm Chart 命名规则）
+      HOST="${CLICKHOUSE_HOST}-shard${SHARD}-0.${CLICKHOUSE_HOST}-headless"
+      
+      BACKUP_NAME="${BACKUP_TYPE}-shard${SHARD}-${TIMESTAMP}"
+      BACKUP_PATH="${ENDPOINT}/shard${SHARD}/${BACKUP_NAME}"
+
+
+      echo ""
+      echo ">>> Shard ${SHARD}: ${HOST}"
+      echo ">>> Backup: ${BACKUP_NAME}"
+
+      # 构建 BACKUP SQL
+      BACKUP_SQL="BACKUP DATABASE ${DATABASE} TO S3('${BACKUP_PATH}', '${GCS_ACCESS_KEY}', '${GCS_SECRET_KEY}')"
+
+      # 增量备份判断逻辑
+      if [ "${BACKUP_TYPE}" = "incremental" ]; then
+        echo ">>> Finding latest full backup for incremental..."
+        
+        # 查找最新的基准备份
+        LATEST_NAME=$(clickhouse-client \
+          --host="${HOST}" \
+          --port="${CLICKHOUSE_PORT:-9000}" \
+          --user="${CLICKHOUSE_USER:-readonly}" \
+          --password="${CLICKHOUSE_PASSWORD}" \
+          --query="SELECT name FROM system.backups WHERE status='BACKUP_CREATED' AND name LIKE '%/shard${SHARD}/full-%' ORDER BY end_time DESC LIMIT 1" \
+          2>/dev/null || echo "")
+
+        # 有基准备份
+        if [ -n "${LATEST_NAME}" ]; then
+          echo ">>> Found raw backup record: ${LATEST_NAME}"
+
+          # 从 name 中提取 full-shardX-YYYYMMDD-HHMMSS 部分
+          BACKUP_ID=$(echo "${LATEST_NAME}" | grep -oE 'full-shard[0-9]+-[0-9]{8}-[0-9]{6}' | head -1)
+          echo ">>> Extracted backup ID: ${BACKUP_ID}"
+
+          if [ -n "${BACKUP_ID}" ]; then
+            BASE_PATH="${ENDPOINT}/shard${SHARD}/${BACKUP_ID}"
+            echo ">>> Base backup path: ${BASE_PATH}"
+            BACKUP_SQL="${BACKUP_SQL} SETTINGS base_backup = S3('${BASE_PATH}', '${GCS_ACCESS_KEY}', '${GCS_SECRET_KEY}')"
+          else
+            echo ">>> Warning: Could not extract backup ID, creating full backup instead"
+            BACKUP_NAME="full-shard${SHARD}-${TIMESTAMP}"
+            BACKUP_PATH="${ENDPOINT}/shard${SHARD}/${BACKUP_NAME}"
+            BACKUP_SQL="BACKUP DATABASE ${DATABASE} TO S3('${BACKUP_PATH}', '${GCS_ACCESS_KEY}', '${GCS_SECRET_KEY}')"
+          fi
+        # 没有基准备份，使用全量备份
+        else
+          echo ">>> No previous backup found, creating full backup instead"
+          BACKUP_NAME="full-shard${SHARD}-${TIMESTAMP}"
+          BACKUP_PATH="${ENDPOINT}/shard${SHARD}/${BACKUP_NAME}"
+          BACKUP_SQL="BACKUP DATABASE ${DATABASE} TO S3('${BACKUP_PATH}', '${GCS_ACCESS_KEY}', '${GCS_SECRET_KEY}')"
+        fi
+      fi
+
+      # 执行备份
+      echo ">>> Executing backup..."
+      clickhouse-client \
+        --host="${HOST}" \
+        --port="${CLICKHOUSE_PORT:-9000}" \
+        --user="${CLICKHOUSE_USER:-readonly}" \
+        --password="${CLICKHOUSE_PASSWORD}" \
+        --query="${BACKUP_SQL}"
+
+      echo ">>> ✓ Shard ${SHARD} completed: ${BACKUP_NAME}"
+    done
+
+    echo ""
+    echo "============================================"
+    echo "All backups completed successfully!"
+    echo "============================================"
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: clickhouse-backup-full
+  namespace: database
+  labels:
+    app: clickhouse-backup
+    type: full
+spec:
+  schedule: "0 18 * * *"
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 7200 # 2 小时超时
+      template:
+        metadata:
+          labels:
+            app: clickhouse-backup
+            type: full
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: clickhouse/clickhouse-client:latest
+              env:
+                - name: CLICKHOUSE_HOST
+                  value: "clickhouse"
+                - name: CLICKHOUSE_PORT
+                  value: "9000"
+                - name: CLICKHOUSE_USER
+                  value: "readonly"
+                - name: CLICKHOUSE_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse-backup-credentials
+                      key: CLICKHOUSE_PASSWORD
+                - name: GCS_BUCKET
+                  value: "mygcs-bucket"
+                - name: GCS_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse-backup-credentials
+                      key: GCS_ACCESS_KEY
+                - name: GCS_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse-backup-credentials
+                      key: GCS_SECRET_KEY
+                - name: BACKUP_TYPE
+                  value: "full"
+                - name: SHARDS
+                  value: "0 1" # 2S3R 集群的 shard 编号
+              command: ["/bin/bash", "/scripts/backup.sh"]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
+          volumes:
+            - name: scripts
+              configMap:
+                name: clickhouse-backup-script
+                defaultMode: 0755
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: clickhouse-backup-incremental
+  namespace: database
+  labels:
+    app: clickhouse-backup
+    type: incremental
+spec:
+  schedule: "0 7 * * *"
+  timeZone: "UTC"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 3600 # 1 小时超时
+      template:
+        metadata:
+          labels:
+            app: clickhouse-backup
+            type: incremental
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: clickhouse/clickhouse-client:latest
+              env:
+                - name: CLICKHOUSE_HOST
+                  value: "clickhouse"
+                - name: CLICKHOUSE_PORT
+                  value: "9000"
+                - name: CLICKHOUSE_USER
+                  value: "readonly"
+                - name: CLICKHOUSE_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse-backup-credentials
+                      key: CLICKHOUSE_PASSWORD
+                - name: GCS_BUCKET
+                  value: "mygcs-bucket"
+                - name: GCS_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse-backup-credentials
+                      key: GCS_ACCESS_KEY
+                - name: GCS_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: clickhouse-backup-credentials
+                      key: GCS_SECRET_KEY
+                - name: BACKUP_TYPE
+                  value: "incremental"
+                - name: SHARDS
+                  value: "0 1"
+              command: ["/bin/bash", "/scripts/backup.sh"]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
+          volumes:
+            - name: scripts
+              configMap:
+                name: clickhouse-backup-script
+                defaultMode: 0755
