@@ -1,0 +1,21 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: ingress-deny-external
+  namespace: istio-ingress
+spec:
+  selector:
+    matchLabels:
+      istio: ingress-external
+  action: DENY
+  rules:
+    - to:
+        - operation:
+            paths:
+              - "/api/private/*"
+              - "/.env"
+            hosts:
+              - "api.example.com"
+            ports:
+              - "80"
+              - "443"

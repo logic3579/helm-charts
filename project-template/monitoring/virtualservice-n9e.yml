@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: nightingale
+  namespace: monitoring
+spec:
+  gateways:
+    - istio-ingress/external-gateway
+  hosts:
+    - nightingale.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: nightingale.monitoring.svc.cluster.local
+            port:
+              number: 80

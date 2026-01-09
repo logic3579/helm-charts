@@ -1,0 +1,48 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: accesslog-internal
+  namespace: istio-ingress
+spec:
+  workloadSelector:
+    labels:
+      istio: ingress-internal
+  configPatches:
+    - applyTo: NETWORK_FILTER
+      match:
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+            access_log:
+              - name: envoy.access_loggers.stdout
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                  log_format:
+                    json_format:
+                      "start_time": "%START_TIME%"
+                      "client_ip": "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
+                      "method": "%REQ(:METHOD)%"
+                      "path": "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+                      "protocol": "%PROTOCOL%"
+                      "response_code": "%RESPONSE_CODE%"
+                      "response_flags": "%RESPONSE_FLAGS%"
+                      "bytes_received": "%BYTES_RECEIVED%"
+                      "bytes_sent": "%BYTES_SENT%"
+                      "duration": "%DURATION%"
+                      "upstream_service_time": "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"
+                      "x_forwarded_for": "%REQ(X-FORWARDED-FOR)%"
+                      "user_agent": "%REQ(USER-AGENT)%"
+                      "request_id": "%REQ(X-REQUEST-ID)%"
+                      "authority": "%REQ(:AUTHORITY)%"
+                      "upstream_host": "%UPSTREAM_HOST%"
+                      "upstream_cluster_raw": "%UPSTREAM_CLUSTER_RAW%"
+                      "upstream_local_address": "%UPSTREAM_LOCAL_ADDRESS%"
+                      "downstream_local_address": "%DOWNSTREAM_LOCAL_ADDRESS%"
+                      "requested_server_name": "%REQUESTED_SERVER_NAME%"
+                      "route_name": "%ROUTE_NAME%"

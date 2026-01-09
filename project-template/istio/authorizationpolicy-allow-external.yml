@@ -1,0 +1,29 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: ingress-allow-external
+  namespace: istio-ingress
+spec:
+  selector:
+    matchLabels:
+      istio: ingress-external
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            remoteIpBlocks:
+              - "10.100.1.0/24" # gke nodes
+              - "172.16.0.0/16" # gke pods
+      to:
+        - operation:
+            hosts:
+              - "www.example.com"
+    # allow all
+    - from:
+        - source:
+            remoteIpBlocks:
+              - "0.0.0.0/0"
+      to:
+        - operation:
+            hosts:
+              - "websocket.example.com"
