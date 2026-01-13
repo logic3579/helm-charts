@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka1
+  namespace: streaming
+spec:
+  externalName: kafka-broker-0.kafka-broker-headless.streaming.svc.cluster.local
+  type: ExternalName
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka2
+  namespace: streaming
+spec:
+  externalName: kafka-broker-1.kafka-broker-headless.streaming.svc.cluster.local
+  type: ExternalName
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka3
+  namespace: streaming
+spec:
+  externalName: kafka-broker-2.kafka-broker-headless.streaming.svc.cluster.local
+  type: ExternalName
