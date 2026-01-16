@@ -15,6 +15,8 @@ helm upgrade --install \
   loki grafana/loki \
   -f values-loki.yaml \
   --version=6.34.0
+
+kubectl apply -n monitoring -f virtualservice-loki.yml
 ```
 
 ## Promtail

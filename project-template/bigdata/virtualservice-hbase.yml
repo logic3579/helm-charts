@@ -1,0 +1,39 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: hbase
+  namespace: bigdata
+spec:
+  gateways:
+    - istio-ingress/gateway-external
+  hosts:
+    - hbase.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: hbase-hbase-master.bigdata.svc.cluster.local
+            port:
+              number: 16010
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: hdfs
+  namespace: bigdata
+spec:
+  gateways:
+    - istio-ingress/gateway-external
+  hosts:
+    - hdfs.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: hbase-hdfs.bigdata.svc.cluster.local
+            port:
+              number: 50070

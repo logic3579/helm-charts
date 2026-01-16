@@ -1,19 +1,19 @@
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
-  name: nightingale
-  namespace: monitoring
+  name: loki-gateway
+  namespace: logging
 spec:
   gateways:
-    - istio-ingress/gateway-external
+    - istio-ingress/gateway-internal
   hosts:
-    - nightingale.example.com
+    - loki-gateway.example.com
   http:
     - match:
         - uri:
             prefix: "/"
       route:
         - destination:
-            host: nightingale.monitoring.svc.cluster.local
+            host: loki-gateway.logging.svc.cluster.local
             port:
               number: 80

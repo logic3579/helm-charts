@@ -1,0 +1,77 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: clickhouse-external
+  namespace: database
+spec:
+  gateways:
+    - istio-ingress/gateway-external
+  hosts:
+    - clickhouse.example.com
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: clickhouse.database.svc.cluster.local
+            port:
+              number: 8123
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: clickhouse-internal
+  namespace: database
+spec:
+  gateways:
+    - istio-ingress/gateway-internal
+  hosts:
+    - ch-internal.example.com
+  http:
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: clickhouse.database.svc.cluster.local
+            port:
+              number: 8123
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: clickhouse-native-external
+  namespace: database
+spec:
+  gateways:
+    - istio-ingress/gateway-external
+  hosts:
+    - clickhouse.example.com
+  tcp:
+    - match:
+        - port: 9000
+      route:
+        - destination:
+            host: clickhouse.database.svc.cluster.local
+            port:
+              number: 9000
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: clickhouse-native-internal
+  namespace: database
+spec:
+  gateways:
+    - istio-ingress/gateway-internal
+  hosts:
+    - ch-internal.example.com
+  tcp:
+    - match:
+        - port: 9000
+      route:
+        - destination:
+            host: clickhouse.database.svc.cluster.local
+            port:
+              number: 9000

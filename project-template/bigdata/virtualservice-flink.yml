@@ -1,19 +1,19 @@
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
-  name: nightingale
-  namespace: monitoring
+  name: flink
+  namespace: bigdata
 spec:
   gateways:
     - istio-ingress/gateway-external
   hosts:
-    - nightingale.example.com
+    - flink.example.com
   http:
     - match:
         - uri:
             prefix: "/"
       route:
         - destination:
-            host: nightingale.monitoring.svc.cluster.local
+            host: flink-jobmanager.bigdata.svc.cluster.local
             port:
-              number: 80
+              number: 8081

@@ -5,7 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   gateways:
-    - istio-ingress/external-gateway
+    - istio-ingress/gateway-external
   hosts:
     - grafana.example.com
   http:
