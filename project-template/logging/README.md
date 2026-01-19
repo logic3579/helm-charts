@@ -13,10 +13,10 @@ kubectl create namespace logging
 helm upgrade --install \
   --namespace logging \
   loki grafana/loki \
-  -f values-loki.yaml \
+  -f loki-values.yaml \
   --version=6.34.0
 
-kubectl apply -n monitoring -f virtualservice-loki.yml
+kubectl apply -n monitoring -f loki-virtualservice.yml
 ```
 
 ## Promtail

@@ -16,5 +16,5 @@ helm upgrade --install \
   --set image.repository="bitnamilegacy/kafka"
 
 # optional: custom service name
-kubectl apply -n streaming -f service-kafka.yml
+kubectl apply -n streaming -f kafka-service.yml
 ```

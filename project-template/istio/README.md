@@ -4,6 +4,8 @@
 
 ```bash
 helm repo add istio https://istio-release.storage.googleapis.com/charts --force-update
+kubectl create ns istio-system
+kubectl create ns istio-ingress
 ```
 
 ## Istio
@@ -13,30 +15,31 @@ helm repo add istio https://istio-release.storage.googleapis.com/charts --force-
 helm install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
 helm install istiod istio/istiod -n istio-system --wait --set _internal_defaults_do_not_set.nodeSelector.tier=mgmt
 
-# install internal gateway
-helm upgrade --install \
-  --create-namespace \
-  --namespace istio-ingress \
-  istio-ingress-internal istio/gateway \
-  -f values-internal.yaml \
-  --version=1.27.1
 # install external gateway
 helm upgrade --install \
   --create-namespace \
   --namespace istio-ingress \
-  istio-ingress-external istio/gateway \
-  -f values-external.yaml \
+  external-istio-ingress istio/gateway \
+  -f external-values.yaml \
+  --version=1.27.1
+
+# install internal gateway
+helm upgrade --install \
+  --create-namespace \
+  --namespace istio-ingress \
+  internal-istio-ingress istio/gateway \
+  -f internal-values.yaml \
   --version=1.27.1
 
 # create gateway resources
-kubectl apply -n istio-ingress -f gateway-internal.yml
-kubectl apply -n istio-ingress -f gateway-external.yml
+kubectl apply -n istio-ingress -f external-gateway.yml
+kubectl apply -n istio-ingress -f internal-gateway.yml
 
 # create authorizationpolicy(optional)
-kubectl apply -n istio-ingress -f authorizationpolicy-allow-internal.yml
-kubectl apply -n istio-ingress -f authorizationpolicy-allow-external.yml
+kubectl apply -n istio-ingress -f allow-external-authorizationpolicy.yml
+kubectl apply -n istio-ingress -f deny-external-authorizationpolicy.yml
 
 # create envoyfilter(optional)
-kubectl apply -n istio-ingress -f envoyfilter-internal.yml
-kubectl apply -n istio-ingress -f envoyfilter-external.yml
+kubectl apply -n istio-ingress -f external-envoyfilter.yml
+kubectl apply -n istio-ingress -f internal-envoyfilter.yml
 ```

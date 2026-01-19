@@ -5,7 +5,7 @@ metadata:
   namespace: bigdata
 spec:
   gateways:
-    - istio-ingress/gateway-external
+    - istio-ingress/external-gateway
   hosts:
     - hbase.example.com
   http:
@@ -25,7 +25,7 @@ metadata:
   namespace: bigdata
 spec:
   gateways:
-    - istio-ingress/gateway-external
+    - istio-ingress/external-gateway
   hosts:
     - hdfs.example.com
   http:

@@ -16,7 +16,7 @@ helm upgrade --install \
   flink bitnami/flink \
   --set image.repository="bitnamilegacy/flink"
 
-kubectl apply -n monitoring -f virtualservice-flink.yml
+kubectl apply -n monitoring -f flink-virtualservice.yml
 ```
 
 ## HBase
@@ -24,9 +24,7 @@ kubectl apply -n monitoring -f virtualservice-flink.yml
 ```bash
 helm upgrade --install \
   --namespace bigdata \
-  hbase gradiant-bigdata/hbase \
-  --set image.repository="bitnamilegacy/flink"
+  hbase gradiant-bigdata/hbase
 
-kubectl apply -n monitoring -f virtualservice-flink.yml
-
+kubectl apply -n monitoring -f hbase-virtualservice.yml
 ```

@@ -165,7 +165,7 @@ metadata:
   namespace: mgmt
 spec:
   gateways:
-    - istio-ingress/gateway-external
+    - istio-ingress/external-gateway
   hosts:
     - cerebro.example.com
   http:

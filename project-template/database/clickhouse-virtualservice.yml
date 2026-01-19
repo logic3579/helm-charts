@@ -5,7 +5,7 @@ metadata:
   namespace: database
 spec:
   gateways:
-    - istio-ingress/gateway-external
+    - istio-ingress/external-gateway
   hosts:
     - clickhouse.example.com
   http:
@@ -45,7 +45,7 @@ metadata:
   namespace: database
 spec:
   gateways:
-    - istio-ingress/gateway-external
+    - istio-ingress/external-gateway
   hosts:
     - clickhouse.example.com
   tcp:
