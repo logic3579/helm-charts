@@ -3,8 +3,26 @@
 ## Prerequisites
 
 ```bash
-#helm repo add bitnami https://charts.bitnami.com/bitnami --force-update
+helm repo add bitnami https://charts.bitnami.com/bitnami --force-update
+helm repo add heywood8 https://heywood8.github.io/helm-charts --force-update
 kubectl create namespace mgmt
+```
+
+## kafka-ui
+
+```bash
+kubectl apply -n mgmt -f kafka-ui.yml
+```
+
+## redisinsight
+
+```bash
+helm upgrade --install \
+  --namespace mgmt \
+  redisinsight heywood8/redisinsight \
+  --set nodeSelector.tier="mgmt"
+
+kubectl apply -n mgmt -f redisinsight-virtualservice.yml
 ```
 
 ## Zookeeper

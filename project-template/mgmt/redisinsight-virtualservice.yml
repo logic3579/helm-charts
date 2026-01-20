@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: redisinsight
+  namespace: mgmt
+spec:
+  gateways:
+    - istio-ingress/external-gateway
+  hosts:
+    - redisinsight.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: redisinsight.mgmt.svc.cluster.local
+            port:
+              number: 5000

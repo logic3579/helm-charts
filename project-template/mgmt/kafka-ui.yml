@@ -20,6 +20,8 @@ spec:
         app: kafka-ui
       namespace: mgmt
     spec:
+      nodeSelector:
+        tier: mgmt
       containers:
         - env:
             - name: SERVICE_NAME
