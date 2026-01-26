@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: mlflow
+  namespace: bigdata
+spec:
+  gateways:
+    - istio-ingress/external-gateway
+  hosts:
+    - mlflow.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: mlflow.bigdata.svc.cluster.local
+            port:
+              number: 80
