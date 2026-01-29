@@ -57,9 +57,9 @@ _internal_defaults_do_not_set:
         targetPort: 443
     annotations:
       networking.gke.io/load-balancer-type: "Internal"
-      networking.gke.io/load-balancer-ip-addresses: "istio-ingress-internal-ip"
+      networking.gke.io/load-balancer-ip-addresses: "internal-istio-ingress-ip"
       networking.gke.io/internal-load-balancer-allow-global-access: "true"
-    loadBalancerIP: "172.16.1.1"
+    loadBalancerIP: "your_lb_ip"
     loadBalancerSourceRanges: []
     externalTrafficPolicy: ""
     externalIPs: []

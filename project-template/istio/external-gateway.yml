@@ -1,11 +1,11 @@
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
-  name: gateway-external
+  name: external-gateway
   namespace: istio-ingress
 spec:
   selector:
-    app: istio-ingress-external
+    app: external-istio
   servers:
     - port:
         number: 80

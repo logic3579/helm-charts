@@ -1,12 +1,12 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: accesslog-external
+  name: external-accesslog
   namespace: istio-ingress
 spec:
   workloadSelector:
     labels:
-      istio: ingress-external
+      istio: external-istio
   configPatches:
     - applyTo: NETWORK_FILTER
       match:
@@ -19,6 +19,7 @@ spec:
         value:
           typed_config:
             "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+            xff_num_trusted_hops: 1
             access_log:
               - name: envoy.access_loggers.stdout
                 typed_config:

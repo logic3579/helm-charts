@@ -60,8 +60,8 @@ _internal_defaults_do_not_set:
         protocol: TCP
         targetPort: 3306
     annotations:
-      networking.gke.io/load-balancer-ip-addresses: "istio-ingress-external"
-    loadBalancerIP: "1.1.1.1"
+      networking.gke.io/load-balancer-ip-addresses: "external-istio-ingress-ip"
+    loadBalancerIP: "your_lb_ip"
     loadBalancerSourceRanges: []
     externalTrafficPolicy: "Local"
     externalIPs: []

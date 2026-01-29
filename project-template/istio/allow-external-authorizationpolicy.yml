@@ -6,7 +6,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      istio: ingress-external
+      istio: external-istio
   action: ALLOW
   rules:
     - from:
@@ -27,3 +27,4 @@ spec:
         - operation:
             hosts:
               - "websocket.example.com"
+              - "websocket.example.com:80"

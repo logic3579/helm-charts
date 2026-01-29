@@ -1,12 +1,12 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: accesslog-internal
+  name: internal-accesslog
   namespace: istio-ingress
 spec:
   workloadSelector:
     labels:
-      istio: ingress-internal
+      istio: internal-istio
   configPatches:
     - applyTo: NETWORK_FILTER
       match:

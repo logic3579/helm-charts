@@ -6,10 +6,14 @@ metadata:
 spec:
   selector:
     matchLabels:
-      istio: ingress-external
+      istio: external-istio
   action: DENY
   rules:
-    - to:
+    - from:
+        - source:
+            notRemoteIpBlocks:
+              - "1.1.1.1/32" # whitelist-ip
+      to:
         - operation:
             paths:
               - "/api/private/*"
