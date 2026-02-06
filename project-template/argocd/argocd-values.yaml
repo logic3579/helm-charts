@@ -1,0 +1,215 @@
+# ArgoCD Helm Chart Values
+# Chart: argo/argo-cd
+# Documentation: https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd
+
+## Global settings
+global:
+  # Domain for ArgoCD UI
+  domain: argocd.example.com
+  nodeSelector:
+    kubernetes.io/os: linux
+    tier: mgmt
+
+## ArgoCD Server
+server:
+  # Service configuration - ClusterIP for Istio integration
+  service:
+    type: ClusterIP
+    servicePortHttp: 80
+    servicePortHttps: 443
+
+  # Disable TLS - Istio handles TLS termination
+  extraArgs:
+    - --insecure
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # Autoscaling
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 2
+    targetCPUUtilizationPercentage: 80
+
+## ArgoCD Repository Server
+repoServer:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+
+## ArgoCD Application Controller
+controller:
+  # Workload Identity: bind KSA to GSA for accessing all remote GKE clusters
+  serviceAccount:
+    annotations:
+      iam.gke.io/gcp-service-account: argocd-cluster-access@mgmt_project_id.iam.gserviceaccount.com
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+  # Metrics for Prometheus
+  metrics:
+    enabled: false
+    serviceMonitor:
+      enabled: false # Enable if using Prometheus Operator
+
+## Redis (HA mode)
+redis:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+## Redis HA (optional - enable for production)
+redis-ha:
+  enabled: false # Set to true for HA Redis
+
+## Dex (SSO - optional)
+dex:
+  enabled: false # Enable for SSO integration
+
+## Notifications Controller
+notifications:
+  enabled: true
+
+  # ArgoCD URL for notification links
+  argocdUrl: https://argocd.example.com
+
+  # Resource limits
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+  # Notification services will be configured via ConfigMap/Secret
+  # See notifications/configmap.yaml and notifications/secret.yaml.template
+
+## ArgoCD Configs
+configs:
+  # ConfigMap settings
+  cm:
+    # Enable Helm support
+    helm.enabled: "true"
+
+    # Application status badge
+    statusbadge.enabled: "true"
+
+    # Resource tracking method
+    resource.tracking.method: annotation
+
+    # Timeout for Helm operations
+    timeout.reconciliation: 180s
+
+    # Admin account enabled
+    admin.enabled: "true"
+
+    # URL for ArgoCD
+    url: https://argocd.example.com
+
+    # Additional local accounts
+    # Format: accounts.<name>: <capabilities>
+    # Capabilities: login, apiKey
+    accounts.viewer: login
+
+  # Parameters - increase limits for large repos
+  params:
+    # Repo server parallelism
+    reposerver.parallelism.limit: 10
+
+    # Application resync period
+    controller.app.resync.period: 180
+
+    # Enable gzip compression
+    server.enable.gzip: "true"
+
+  # RBAC Configuration
+  rbac:
+    # Policy for default role
+    policy.default: role:readonly
+
+    # Custom policies
+    policy.csv: |
+      # === Groups ===
+      # Admin group - full access (for SSO users in devops-team)
+      g, devops-team, role:admin
+
+      # === Roles ===
+      # Viewer role - read-only access (no sync, no delete)
+      p, role:viewer, applications, get, */*, allow
+      p, role:viewer, logs, get, */*, allow
+      p, role:viewer, projects, get, *, allow
+
+      # Read-only role (default) - minimal access
+      p, role:readonly, applications, get, *, allow
+
+      # === Local accounts to roles binding ===
+      # Bind local 'viewer' account to role:viewer
+      g, viewer, role:viewer
+
+  # Credential templates for Git repositories
+  credentialTemplates:
+    github-https:
+      url: https://github.com/repo_owner
+      # Password will be set via secret
+      # kubectl create secret generic argocd-repo-creds-github \
+      #   --from-literal=password=<github-pat> \
+      #   -n argocd
+
+  # Repository credentials (reference credential template)
+  repositories:
+    repo-name:
+      url: https://github.com/repo_owner/repo_name.git
+      name: devops-tools
+      type: git
+
+  # Secret configuration
+  secret:
+    # Create argocd-secret
+    createSecret: true
+
+    # GitHub webhook secret (optional)
+    # githubSecret: <webhook-secret>
+
+## Application Set Controller
+applicationSet:
+  enabled: true
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+## Extra objects to deploy (VirtualService will be in separate file)
+extraObjects: []

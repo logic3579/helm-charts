@@ -1,0 +1,264 @@
+# ArgoCD Notifications ConfigMap
+# Uses Slack Incoming Webhook for notifications
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+data:
+  # Slack Incoming Webhook service
+  # $slack-webhook-url references the key in argocd-notifications-secret
+  service.webhook.slack-webhook: |
+    url: $slack-webhook-url
+    headers:
+    - name: Content-Type
+      value: application/json
+
+  # Triggers are subscribed via Application annotations (set by ApplicationSet)
+  # Do NOT use defaultTriggers here - it creates duplicate subscriptions
+  # with empty service names causing notification errors.
+
+  # Notification templates
+  template.app-sync-succeeded: |
+    webhook:
+      slack-webhook:
+        method: POST
+        body: |
+          {
+            "channel": "cicd",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "✅ Deployment Successful",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Application:*\n{{.app.metadata.name}}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Environment:*\n{{.app.metadata.labels.environment}}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Revision:*\n`{{.app.status.sync.revision}}`"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Health:*\n{{.app.status.health.status}}"
+                  }
+                ]
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View in ArgoCD"
+                    },
+                    "url": "{{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
+                  }
+                ]
+              }
+            ]
+          }
+
+  template.app-sync-failed: |
+    webhook:
+      slack-webhook:
+        method: POST
+        body: |
+          {
+            "channel": "cicd",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "❌ Deployment Failed",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Application:*\n{{.app.metadata.name}}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Environment:*\n{{.app.metadata.labels.environment}}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Revision:*\n`{{.app.status.sync.revision}}`"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Health:*\n{{.app.status.health.status}}"
+                  }
+                ]
+              },
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": "*Error:*\n{{.app.status.operationState.message}}"
+                }
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View in ArgoCD"
+                    },
+                    "url": "{{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
+                  }
+                ]
+              }
+            ]
+          }
+
+  template.app-health-degraded: |
+    webhook:
+      slack-webhook:
+        method: POST
+        body: |
+          {
+            "channel": "cicd",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "⚠️ Health Degraded",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Application:*\n{{.app.metadata.name}}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Environment:*\n{{.app.metadata.labels.environment}}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Health:*\n{{.app.status.health.status}}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Sync:*\n{{.app.status.sync.status}}"
+                  }
+                ]
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View in ArgoCD"
+                    },
+                    "url": "{{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
+                  }
+                ]
+              }
+            ]
+          }
+
+  template.app-sync-running: |
+    webhook:
+      slack-webhook:
+        method: POST
+        body: |
+          {
+            "channel": "cicd",
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "🔄 Deployment Started",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Application:*\n{{.app.metadata.name}}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Environment:*\n{{.app.metadata.labels.environment}}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*Target Revision:*\n`{{.app.status.sync.revision}}`"
+                  }
+                ]
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View in ArgoCD"
+                    },
+                    "url": "{{.context.argocdUrl}}/applications/{{.app.metadata.name}}"
+                  }
+                ]
+              }
+            ]
+          }
+
+  # Triggers
+  trigger.on-sync-succeeded: |
+    - description: Application synced successfully
+      send:
+        - app-sync-succeeded
+      when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
+
+  trigger.on-sync-failed: |
+    - description: Application sync failed
+      send:
+        - app-sync-failed
+      when: app.status.operationState != nil and app.status.operationState.phase in ['Error', 'Failed']
+
+  trigger.on-health-degraded: |
+    - description: Application health degraded
+      send:
+        - app-health-degraded
+      when: app.status.health.status == 'Degraded'
+
+  trigger.on-sync-running: |
+    - description: Application sync started
+      send:
+        - app-sync-running
+      when: app.status.operationState != nil and app.status.operationState.phase == 'Running'
+
+  # Context
+  context: |
+    argocdUrl: https://argocd.example.com

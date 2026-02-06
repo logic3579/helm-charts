@@ -1,0 +1,45 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  hosts:
+    - argocd.example.com
+  gateways:
+    - istio-ingress/external-gateway
+  http:
+    # Main ArgoCD UI route
+    - match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: argocd-server.argocd.svc.cluster.local
+            port:
+              number: 80
+      # Timeout settings
+      timeout: 300s
+      retries:
+        attempts: 3
+        perTryTimeout: 100s
+        retryOn: connect-failure,refused-stream,unavailable,cancelled,retriable-4xx,reset
+---
+# Istio DestinationRule for ArgoCD (optional - for advanced traffic management)
+# apiVersion: networking.istio.io/v1beta1
+# kind: DestinationRule
+# metadata:
+#   name: argocd-server
+#   namespace: argocd
+# spec:
+#   host: argocd-server.argocd.svc.cluster.local
+#   trafficPolicy:
+#     connectionPool:
+#       tcp:
+#         maxConnections: 100
+#       http:
+#         h2UpgradePolicy: UPGRADE
+#         http1MaxPendingRequests: 100
+#         http2MaxRequests: 1000
+#     loadBalancer:
+#       simple: ROUND_ROBIN

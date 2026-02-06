@@ -1,0 +1,102 @@
+# ApplicationSet for Prod Environment
+# Automatically discovers all applications in helm-chart-prod/
+# NOTE: Auto-sync is DISABLED - changes are synced only after manual trigger
+#
+# Usage:
+#   cp prod-apps.yaml.example prod-apps.yaml
+#   # Edit the file to replace placeholders with actual values
+#   kubectl apply -f prod-apps.yaml
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: example-prod-apps
+  namespace: argocd
+spec:
+  # Go templates for more flexibility
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+
+  # Generator: Git Directory - auto-discover all helm charts
+  generators:
+    - git:
+        repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+        revision: main
+        directories:
+          # Include all directories under helm-chart-prod
+          - path: <HELM_CHARTS_PATH>/helm-chart-prod/*
+          # Exclude the global directory (shared config, not an app)
+          - path: <HELM_CHARTS_PATH>/helm-chart-prod/global
+            exclude: true
+
+  # Application template
+  template:
+    metadata:
+      # App name: <directory-name>-prod
+      name: "{{ .path.basename }}-prod"
+      namespace: argocd
+      labels:
+        environment: prod
+        app.kubernetes.io/part-of: example
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      # Slack notifications (optional)
+      annotations:
+        notifications.argoproj.io/subscribe.on-sync-succeeded.slack-webhook: ""
+        notifications.argoproj.io/subscribe.on-sync-failed.slack-webhook: ""
+        notifications.argoproj.io/subscribe.on-health-degraded.slack-webhook: ""
+        notifications.argoproj.io/subscribe.on-sync-running.slack-webhook: ""
+
+    spec:
+      # Project reference
+      project: example-prod
+
+      # Source configuration
+      source:
+        repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+        targetRevision: main
+        path: "{{ .path.path }}"
+        helm:
+          valueFiles:
+            - values.yaml
+
+      # Destination: Prod cluster (use cluster name from cluster secret)
+      destination:
+        name: prod-cluster
+        namespace: <TARGET_NAMESPACE>
+
+      # Sync policy: MANUAL for Production environment
+      # Auto-sync is intentionally disabled
+      syncPolicy:
+        # NO automated sync for production!
+        # automated: null  # This is the default
+
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+          - ApplyOutOfSyncOnly=true
+          - ServerSideApply=true
+
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+
+      # Ignore differences for certain fields
+      ignoreDifferences:
+        # Ignore replicas managed by HPA
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas
+        # Ignore service account token secrets
+        - group: ""
+          kind: ServiceAccount
+          jsonPointers:
+            - /secrets
+
+      # Revision history limit
+      revisionHistoryLimit: 10

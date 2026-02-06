@@ -1,0 +1,99 @@
+# ApplicationSet for UAT Environment
+# Automatically discovers and deploys all applications in helm-chart-uat/
+#
+# Usage:
+#   cp uat-apps.yaml.example uat-apps.yaml
+#   # Edit the file to replace placeholders with actual values
+#   kubectl apply -f uat-apps.yaml
+
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: example-uat-apps
+  namespace: argocd
+spec:
+  # Go templates for more flexibility
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+
+  # Generator: Git Directory - auto-discover all helm charts
+  generators:
+    - git:
+        repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+        revision: main
+        directories:
+          # Include all directories under helm-chart-uat
+          - path: <HELM_CHARTS_PATH>/helm-chart-uat/*
+          # Exclude the global directory (shared config, not an app)
+          - path: <HELM_CHARTS_PATH>/helm-chart-uat/global
+            exclude: true
+
+  # Application template
+  template:
+    metadata:
+      # App name: <directory-name>-uat
+      name: "{{ .path.basename }}-uat"
+      namespace: argocd
+      labels:
+        environment: uat
+        app.kubernetes.io/part-of: example
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+      # Slack notifications (optional)
+      annotations:
+        notifications.argoproj.io/subscribe.on-sync-succeeded.slack-webhook: ""
+        notifications.argoproj.io/subscribe.on-sync-failed.slack-webhook: ""
+        notifications.argoproj.io/subscribe.on-health-degraded.slack-webhook: ""
+        notifications.argoproj.io/subscribe.on-sync-running.slack-webhook: ""
+
+    spec:
+      # Project reference
+      project: example-uat
+
+      # Source configuration
+      source:
+        repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+        targetRevision: main
+        path: "{{ .path.path }}"
+        helm:
+          valueFiles:
+            - values.yaml
+
+      # Destination: UAT cluster (use cluster name from cluster secret)
+      destination:
+        name: uat-cluster
+        namespace: <TARGET_NAMESPACE>
+
+      # Sync policy: Automated for UAT environment
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+          - ApplyOutOfSyncOnly=true
+          - ServerSideApply=true
+
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+
+      # Ignore differences for certain fields
+      ignoreDifferences:
+        # Ignore replicas managed by HPA
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas
+        # Ignore service account token secrets
+        - group: ""
+          kind: ServiceAccount
+          jsonPointers:
+            - /secrets

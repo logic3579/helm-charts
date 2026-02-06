@@ -1,0 +1,76 @@
+# ArgoCD AppProject for UAT Environment
+# This project manages all applications deployed to the UAT GKE cluster
+#
+# Usage:
+#   cp uat-project.yaml.example uat-project.yaml
+#   # Edit the file to replace placeholders with actual values
+#   kubectl apply -f uat-project.yaml
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: example-uat
+  namespace: argocd
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  description: "Example UAT Environment - Auto-sync enabled"
+
+  # Source repositories - replace with your repo URL
+  sourceRepos:
+    - "https://github.com/<YOUR_ORG>/<YOUR_REPO>.git"
+
+  # Destination cluster - use cluster name from cluster secret
+  destinations:
+    - name: uat-cluster
+      namespace: "*"
+
+  # Cluster resources allowed to be deployed
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  # Namespace resources allowed
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  # Roles for this project
+  roles:
+    # Admin role - full access
+    - name: admin
+      description: "Full access to UAT project"
+      policies:
+        - p, proj:example-uat:admin, applications, *, example-uat/*, allow
+        - p, proj:example-uat:admin, clusters, get, example-uat/*, allow
+        - p, proj:example-uat:admin, repositories, get, example-uat/*, allow
+        - p, proj:example-uat:admin, logs, get, example-uat/*, allow
+      groups:
+        - devops-team
+
+    # Developer role - view and sync
+    - name: dev
+      description: "View and sync UAT applications"
+      policies:
+        - p, proj:example-uat:dev, applications, get, example-uat/*, allow
+        - p, proj:example-uat:dev, applications, sync, example-uat/*, allow
+        - p, proj:example-uat:dev, logs, get, example-uat/*, allow
+      groups:
+        - developer-team
+
+  # Orphaned resources monitoring
+  orphanedResources:
+    warn: true
+    ignore:
+      # Global helm chart ConfigMaps
+      - kind: ConfigMap
+        name: "global-*"
+      # Istio auto-generated certificates
+      - kind: ConfigMap
+        name: "istio-ca-*"
+      # Manually managed pull secret
+      - kind: Secret
+        name: "github-registry-secret"
+      # Manually managed ServiceAccount
+      - kind: ServiceAccount
+        name: "app"
