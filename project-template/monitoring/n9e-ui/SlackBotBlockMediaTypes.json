@@ -1,0 +1,84 @@
+[
+  {
+    "id": 21,
+    "name": "SlackBotBlock",
+    "ident": "slackbot",
+    "description": "",
+    "enable": true,
+    "param_config": {
+      "user_info": {
+        "contact_key": ""
+      },
+      "custom": {
+        "params": [
+          {
+            "key": "channel",
+            "cname": "your_channel",
+            "type": "string"
+          },
+          {
+            "key": "channel_name",
+            "cname": "your_channel_name",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    "request_type": "http",
+    "request_config": {
+      "http_request_config": {
+        "url": "https://slack.com/api/chat.postMessage",
+        "method": "POST",
+        "headers": {
+          "Authorization": "Bearer your_token",
+          "Content-Type": "application/json"
+        },
+        "proxy": "",
+        "timeout": 10000,
+        "concurrency": 5,
+        "retry_times": 3,
+        "retry_interval": 100,
+        "tls": {
+          "enable": false,
+          "cert_file": "",
+          "key_file": "",
+          "ca_file": "",
+          "skip_verify": false
+        },
+        "request": {
+          "parameters": {},
+          "form": "",
+          "body": "{\"channel\": \"#{{$params.channel}}\", \"blocks\":  \"{{$tpl.content}}\"}"
+        }
+      },
+      "smtp_request_config": {
+        "host": "",
+        "port": 0,
+        "username": "",
+        "password": "VJCINmcPe%JJ^3S",
+        "from": "",
+        "insecure_skip_verify": false,
+        "batch": 0
+      },
+      "script_request_config": {
+        "script_type": "",
+        "timeout": 0,
+        "script": "",
+        "path": ""
+      },
+      "flashduty_request_config": {
+        "proxy": "",
+        "integration_url": "",
+        "timeout": 0,
+        "retry_times": 0,
+        "retry_sleep": 0
+      }
+    },
+    "weight": 0,
+    "create_at": 1761555276,
+    "create_by": "root",
+    "update_at": 1761557167,
+    "update_by": "root"
+  }
+]
+

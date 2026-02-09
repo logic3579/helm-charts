@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: categraf-deployment
+  name: categraf
   namespace: monitoring
 data:
   config.toml: |-
@@ -111,23 +111,37 @@ data:
     topic_exclude_regex="__consumer_offsets"
     rename_uncommit_offset_to_lag = true
     labels = { cluster="kafka-cluster" }
+
+  redis.toml: |-
+    [[instances]]
+    address = "1.1.1.1:6379"
+    username = ""
+    password = ""
+    labels = { instance="redis-1" }
+
+    [[instances]]
+    address = "2.2.2.2:6379"
+    username = ""
+    password = ""
+    labels = { instance="redis-2" }
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: categraf-deployment
-  name: categraf-deployment
+    app: categraf
+  name: categraf
   namespace: monitoring
 spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: categraf-deployment
+      app: categraf
   template:
     metadata:
       labels:
-        app: categraf-deployment
+        app: categraf
     spec:
       containers:
         - env:
@@ -152,7 +166,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: categraf-deployment-config
+            name: categraf-config
             items:
               - key: config.toml
                 path: conf/config.toml
@@ -164,3 +178,5 @@ spec:
                 path: conf/input.clickhouse/clickhouse.toml
               - key: kafka.toml
                 path: conf/input.kafka/kafka.toml
+              - key: redis.toml
+                path: conf/input.redis/redis.toml

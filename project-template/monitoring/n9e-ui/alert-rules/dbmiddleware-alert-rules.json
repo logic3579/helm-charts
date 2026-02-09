@@ -1,0 +1,884 @@
+[
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "ClickHouse Disk Pressure",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 180,
+    "rule_config": {
+      "queries": [
+        {
+          "keys": {
+            "labelKey": "",
+            "valueKey": ""
+          },
+          "prom_ql": "clickhouse_asynchronous_metrics_disk_available_default{env=\"prod\"} / (clickhouse_asynchronous_metrics_disk_available_default{env=\"prod\"} + clickhouse_asynchronous_metrics_disk_used_default{env=\"prod\"}) * 100 < 10",
+          "severity": 1
+        },
+        {
+          "keys": {
+            "labelKey": "",
+            "valueKey": ""
+          },
+          "prom_ql": "clickhouse_asynchronous_metrics_disk_available_default{env=\"prod\"} / (clickhouse_asynchronous_metrics_disk_available_default{env=\"prod\"} + clickhouse_asynchronous_metrics_disk_used_default{env=\"prod\"}) * 100 < 20",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 30s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "ClickHouse Memory Pressure",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 180,
+    "rule_config": {
+      "queries": [
+        {
+          "keys": {
+            "labelKey": "",
+            "valueKey": ""
+          },
+          "prom_ql": "clickhouse_metrics_memory_tracking{env=\"prod\"} / clickhouse_asynchronous_metrics_os_memory_total{env=\"prod\"} * 100 > 90",
+          "severity": 1
+        },
+        {
+          "keys": {
+            "labelKey": "",
+            "valueKey": ""
+          },
+          "prom_ql": "clickhouse_metrics_memory_tracking{env=\"prod\"}/ clickhouse_asynchronous_metrics_os_memory_total{env=\"prod\"} * 100 > 80",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 30s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "ClickHouse Network Pressure",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 180,
+    "rule_config": {
+      "queries": [
+        {
+          "keys": {
+            "labelKey": "",
+            "valueKey": ""
+          },
+          "prom_ql": "clickhouse_metrics_network_send{env=\"prod\"} > 250 or clickhouse_metrics_network_receive{env=\"prod\"} > 250",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 30s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "ClickHouse ZooKeeper fault",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "queries": [
+        {
+          "keys": {
+            "labelKey": "",
+            "valueKey": ""
+          },
+          "prom_ql": "avg(clickhouse_metrics_zoo_keeper_session{env=\"prod\"} ) != 1",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 30s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Kafka - broker is down",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kafka_broker_info{env=\"prod\",service=~\"kafka\"} < 1",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "type=categraf",
+      "service=kafka"
+    ],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "kafka - Consumption Delay",
+    "note": "Consumer group {{ $labels.consumergroup }} consumption Topic {{ $labels.topic }} was delay exceeds 5 minutes.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "max(kafka_consumer_lag_millis{env=\"prod\",topic!=\"bid-request-events\"}) by (topic, consumergroup)  / 1000 > 2000",
+          "severity": 2,
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "max(kafka_consumer_lag_millis{env=\"prod\",topic=\"bid-request-events\"}) by (topic, consumergroup)  / 1000 > 10000",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "service=kafka",
+      "type=categraf"
+    ],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Kafka - then number of replicas is less than 3",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum(kafka_topic_partition_in_sync_replica{env=\"prod\"}) by (topic) < 3",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "service=kafka",
+      "type=categraf"
+    ],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Kafka - too many production messages",
+    "note": "Topic {{ $labels.topic }} has too many production messages with 1 minute.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum(rate(kafka_topic_partition_current_offset{env=\"prod\",topic!=\"bid-request-events\"}[1m])) by (topic) > 2000",
+          "severity": 2
+        },
+        {
+          "prom_ql": "sum(rate(kafka_topic_partition_current_offset{env=\"prod\",topic=\"bid-request-events\"}[1m])) by (topic) > 7000",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "service=kafka",
+      "type=categraf"
+    ],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "MySQL - A slow query has occurred in Mysql within the last minute",
+    "note": "MySQL server mysql has some new slow query",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "increase(mysql_global_status_slow_queries{env=\"prod\"}[1m]) > 0",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlSlowQueries"
+    ],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "MySQL - More than 60% of the connections in Mysql are in a running state",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "avg by (instance) (mysql_global_status_threads_running{env=\"prod\"}) / avg by (instance) (mysql_global_variables_max_connections{env=\"prod\"}) * 100 > 60",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlHighThreadsRunning"
+    ],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "MySQL - The number of connections in Mysql has exceeded 80%",
+    "note": "More than 80% of MySQL connections are in use",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "avg by (instance) (mysql_global_status_threads_connected{env=\"prod\"}) / avg by (instance) (mysql_global_variables_max_connections{env=\"prod\"}) * 100 > 80",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlTooManyConnections"
+    ],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Mysql has just restarted. Please be advised - categraf",
+    "note": "MySQL has just been restarted, less than one minute ago",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 0,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "mysql_global_status_uptime{env=\"prod\"} < 60",
+          "severity": 3
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlRestarted"
+    ],
+    "annotations": null,
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Mysql has opened a large number of file handles. Please be aware - categraf",
+    "note": "More than 80% of MySQL files open",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "avg by (instance) (mysql_global_status_open_files{env=\"prod\"}) / avg by (instance)(mysql_global_variables_open_files_limit{env=\"prod\"}) * 100 > 80",
+          "severity": 2
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlHighOpenFiles"
+    ],
+    "annotations": null,
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Mysql instance has crashed - categraf",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 0,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "mysql_up{env=\"prod\"} == 0",
+          "severity": 1
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlDown"
+    ],
+    "annotations": null,
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "MysqlInnodbLogWaits - categraf",
+    "note": "MySQL innodb log writes stalling",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 0,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "rate(mysql_global_status_innodb_log_waits{env=\"prod\"}[15m]) > 10",
+          "severity": 2
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlInnodbLogWaits"
+    ],
+    "annotations": null,
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "MysqlSlaveIoThreadNotRunning - categraf",
+    "note": "MySQL Slave IO thread not running",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 0,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "mysql_slave_status_master_server_id{env=\"prod\"} > 0 and ON (instance) mysql_slave_status_slave_io_running{env=\"prod\"} == 0",
+          "severity": 1
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlSlaveIoThreadNotRunning"
+    ],
+    "annotations": null,
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "MysqlSlaveReplicationLag - categraf",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "mysql_slave_status_master_server_id{env=\"prod\"} > 0 and ON (instance) (mysql_slave_status_seconds_behind_master{env=\"prod\"} - mysql_slave_status_sql_delay{env=\"prod\"}) > 30",
+          "severity": 1
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlSlaveReplicationLag"
+    ],
+    "annotations": null,
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "MysqlSlaveSqlThreadNotRunning - categraf",
+    "note": "MySQL Slave SQL thread not running",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 0,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "mysql_slave_status_master_server_id{env=\"prod\"} > 0 and ON (instance) mysql_slave_status_slave_sql_running{env=\"prod\"} == 0",
+          "severity": 1
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [
+      "alertname=MysqlSlaveSqlThreadNotRunning"
+    ],
+    "annotations": null,
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  }
+]

@@ -27,6 +27,19 @@ helm upgrade --install \
   --set mysql.password="your_password"
 ```
 
+## prometheus-redis-exporter
+
+```bash
+helm upgrade --install \
+  --namespace monitoring \
+  prometheus-redis-exporter prometheus-community/prometheus-redis-exporter \
+  --set resources.requests.cpu=100m \
+  --set resources.requests.memory=256Mi \
+  --set resources.limits.cpu=200m \
+  --set resources.limits.memory=512Mi \
+  --set nodeSelector.tier=mgmt \
+```
+
 ## Grafana
 
 ```bash

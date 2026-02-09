@@ -1,0 +1,572 @@
+[
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Disk - IO is a bit busy",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "rate(diskio_io_time{env=\"prod\",name='sda1'}[2m])/10 > 99",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Disk - usage percent exceeds",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "disk_used_percent{env=\"prod\",device=\"sda1\",path=~'/|/home'} > 80",
+          "severity": 3
+        },
+        {
+          "prom_ql": "disk_used_percent{env=\"prod\",device=\"sda1\",path=~'/|/home'} > 85",
+          "severity": 2
+        },
+        {
+          "prom_ql": "disk_used_percent{env=\"prod\",device=\"sda1\",path=~'/|/home'} > 90",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 30s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "host",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Lost connection with monitoring target",
+    "note": "",
+    "prod": "host",
+    "delay": 0,
+    "prom_for_duration": 0,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "key": "all_hosts",
+          "op": "==",
+          "values": []
+        }
+      ],
+      "triggers": [
+        {
+          "duration": 60,
+          "severity": 2,
+          "type": "target_miss"
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Machine load - high cpu load",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 600,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "100 - cpu_usage_idle{env=\"prod\",cpu=\"cpu-total\"} > 95",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Machine load - high memory load",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "100 - mem_available_percent{env=\"prod\"} > 95",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Network - number of TME_WAIT exceeds 20,000",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "netstat_tcp_time_wait{env=\"prod\"} > 20000",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Network - packet loss in the inbound direction",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "increase(net_drop_in{env=\"prod\"}[2m]) > 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "Network - packet loss in the outbound direction",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "increase(net_drop_out{env=\"prod\"}[2m]) > 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "System - inode is about to run out",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "disk_inodes_used{env=\"prod\",device=\"sda1\",path=~\"/|/home\"}/disk_inodes_total{env=\"prod\",device=\"sda1\",path=~\"/|/home\"} *100 > 95",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "System - OOM kill",
+    "note": "OOM Kill detected({{ $labels.ident }})",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "increase(kernel_vmstat_oom_kill{env=\"prod\"}[5m]) > 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "System - process too many",
+    "note": "Process Too Many detected",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "processes_total{env=\"prod\"} > 600",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  }
+]

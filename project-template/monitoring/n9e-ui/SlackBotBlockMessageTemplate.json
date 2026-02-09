@@ -1,0 +1,148 @@
+[
+  {{- if $event.IsRecovered }}
+  {
+    "type": "header",
+    "text": {
+      "type": "plain_text",
+      "text": "✅ Alert Recovered",
+      "emoji": true
+    }
+  },
+  {
+    "type": "section",
+    "fields": [
+      {{- if ne $event.Cate "host"}}
+      {
+        "type": "mrkdwn",
+        "text": "*Alert cluster:*\n{{$event.Cluster}}"
+      },
+      {{- end}}
+      {
+      "type": "mrkdwn",
+        "text": "*Alert host:*\n{{if $event.TargetIdent}}{{$event.TargetIdent}}{{else}}N/A{{end}}"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*Level Status:*\n:large_green_circle: S{{$event.Severity}} Recovered"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*Alert name:*\n{{$event.RuleName}}"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*Recovery time:*\n{{timeformat $event.LastEvalTime}}"
+      },
+      {{$time_duration := sub $event.LastEvalTime $event.FirstTriggerTime}}
+      {
+        "type": "mrkdwn",
+        "text": "*Duration:*\n{{humanizeDurationInterface $time_duration}}"
+      }
+    ]
+  },
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "*Alert description:*\nService has been restored ✓"
+    }
+  }
+  {{- else }}
+  {
+    "type": "header",
+    "text": {
+      "type": "plain_text",
+      "text": "🚨 Alert Triggered",
+      "emoji": true
+    }
+  },
+  {
+    "type": "section",
+    "fields": [
+      {{- if ne $event.Cate "host"}}
+      {
+        "type": "mrkdwn",
+        "text": "*Alert cluster:*\n{{$event.Cluster}}"
+      },
+      {{- end}}
+      {
+      "type": "mrkdwn",
+        "text": "*Alert host:*\n{{if $event.TargetIdent}}{{$event.TargetIdent}}{{else}}N/A{{end}}"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*Level Status:*\n{{if eq $event.Severity 1}}🔴{{else if eq $event.Severity 2}}🟠{{else}}🟡{{end}} S{{$event.Severity}} triggered"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*Alert name:*\n{{$event.RuleName}}"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*Trigger time:*\n{{timeformat $event.TriggerTime}}"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*Sending time:*\n{{timestamp}}"
+      },
+      {
+        "type": "mrkdwn",
+        "text": "*Trigger value:*\n`{{$event.TriggerValue}}`"
+      },
+      {{$time_duration := sub now.Unix $event.FirstTriggerTime}}
+      {
+        "type": "mrkdwn",
+        "text": "*Duration:*\n{{humanizeDurationInterface $time_duration}}"
+      }
+    ]
+  },
+  {{- if $event.RuleNote }}
+  {
+    "type": "section",
+    "text": {
+      "type": "mrkdwn",
+      "text": "*Alert description:*\n{{$event.RuleNote}}"
+    }
+  },
+  {{- end}}
+  {
+    "type": "divider"
+  }
+  {{- end }},
+  {
+    "type": "actions",
+    "elements": [
+      {{$domain := "https://n9e.io"}}
+      {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "Event Details",
+          "emoji": true
+        },
+        "url": "{{$domain}}/alert-his-events/{{$event.Id}}",
+        "style": "primary"
+      },
+      {{- if not $event.IsRecovered }}
+      {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "Block for 1 hour",
+          "emoji": true
+        },
+        "url": "{{$domain}}/alert-mutes/add?__event_id={{$event.Id}}"
+      },
+      {
+        "type": "button",
+        "text": {
+          "type": "plain_text",
+          "text": "View Curve",
+          "emoji": true
+        },
+        "url": "{{$domain}}/metric/explorer?__event_id={{$event.Id}}&mode=graph"
+      }
+      {{- end }}
+    ]
+  }
+]

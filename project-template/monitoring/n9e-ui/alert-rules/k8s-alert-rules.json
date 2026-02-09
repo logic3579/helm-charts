@@ -1,0 +1,1232 @@
+[
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesContainerCPUPressure",
+    "note": "Pod {{ $labels.pod }} Container {{ $labels.container }} in Namespace {{ $labels.namespace }} has cpu pressure.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 600,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",image!~\".*pause.*\",container!=\"\",container!=\"clickhouse\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 75",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",image!~\".*pause.*\",container!=\"\",container!=\"clickhouse\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 85",
+          "severity": 2
+        },
+        {
+          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",image!~\".*pause.*\",container!=\"\",container!=\"clickhouse\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 95",
+          "severity": 1
+        },
+        {
+          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",container=\"clickhouse\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 95",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesContainerMemoryPressure",
+    "note": "Pod {{ $labels.pod }} Container {{ $labels.container }} in Namespace {{ $labels.namespace }} has memory pressure.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached|clickhouse|kafka|zookeeper\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached|clickhouse\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 75",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached|clickhouse|kafka|zookeeper\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 85",
+          "severity": 2
+        },
+        {
+          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached|clickhouse|kafka|zookeeper\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 95",
+          "severity": 1
+        },
+        {
+          "prom_ql": "sum(container_memory_working_set_bytes{env=\"prod\",image!~\".*pause.*\",container=~\"clickhouse|kafka|zookeeper\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container=~\"clickhouse|kafka\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 95",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesContainerOomKiller",
+    "note": "Pod {{ $labels.pod }} Container {{ $labels.container }} in Namespace {{ $labels.namespace }} has oom.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "(kube_pod_container_status_restarts_total{env=\"prod\"} - kube_pod_container_status_restarts_total{env=\"prod\"} offset 10m >= 1) and ignoring (reason) min_over_time(kube_pod_container_status_last_terminated_reason{env=\"prod\",reason=\"OOMKilled\"}[10m]) == 1",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} has been OOMKilled {{ $value }} times in the last 10 minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes container oom killer ({{ $labels.namespace }}/{{ $labels.pod }}:{{ $labels.container }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesDeploymentDown",
+    "note": "Kubernetes Deployment down ({{ $labels.namespace }}/{{ $labels.deployment }})",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kube_deployment_status_replicas{env=\"prod\"} != kube_deployment_status_replicas_ready{env=\"prod\"} > 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesDeploymentGenerationMismatch",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 600,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "kube_deployment_status_observed_generation{env=\"prod\"} != kube_deployment_metadata_generation{env=\"prod\"}",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has failed but has not been rolled back.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes Deployment generation mismatch ({{ $labels.namespace }}/{{ $labels.deployment }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesDeploymentReplicasMismatch",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 600,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "kube_deployment_spec_replicas{env=\"prod\"} != kube_deployment_status_replicas_available{env=\"prod\"}",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Deployment {{ $labels.namespace }}/{{ $labels.deployment }} replicas mismatch\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes Deployment replicas mismatch ({{ $labels.namespace }}/{{ $labels.deployment }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesHpaMetricsUnavailability",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kube_horizontalpodautoscaler_status_condition{env=\"prod\",status=\"false\", condition=\"ScalingActive\"} == 1",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesHpaScaleInability",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "(kube_horizontalpodautoscaler_spec_max_replicas{env=\"prod\"} - kube_horizontalpodautoscaler_status_desired_replicas{env=\"prod\"}) * on (horizontalpodautoscaler{env=\"prod\"},namespace) (kube_horizontalpodautoscaler_status_condition{env=\"prod\",condition=\"ScalingLimited\", status=\"true\"} == 1) == 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} is unable to scale\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes HPA scale inability (instance {{ $labels.instance }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesHpaScaleMaximum",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "(kube_horizontalpodautoscaler_status_desired_replicas{env=\"prod\"} >= kube_horizontalpodautoscaler_spec_max_replicas{env=\"prod\"}) and (kube_horizontalpodautoscaler_spec_max_replicas{env=\"prod\"} > 1) and (kube_horizontalpodautoscaler_spec_min_replicas{env=\"prod\"} != kube_horizontalpodautoscaler_spec_max_replicas{env=\"prod\"})",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} has hit maximum number of desired pods\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes HPA scale maximum (instance {{ $labels.instance }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesHpaUnderutilized",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "max(quantile_over_time(0.5, kube_horizontalpodautoscaler_status_desired_replicas{env=\"prod\"}[1d]) == kube_horizontalpodautoscaler_spec_min_replicas{env=\"prod\"}) by (horizontalpodautoscaler{env=\"prod\"}) > 3",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "HPA {{ $labels.namespace }}/{{ $labels.horizontalpodautoscaler }} is constantly at minimum replicas for 50% of the time. Potential cost saving here.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes HPA underutilized (instance {{ $labels.instance }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesNodeDiskPressure",
+    "note": "Node {{ $labels.node }} has DiskPressure condition.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kube_node_status_condition{env=\"prod\",condition=\"DiskPressure\",status=\"true\"} == 1",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesNodeMemoryPressure",
+    "note": "Node {{ $labels.node }} has MemoryPressure condition.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kube_node_status_condition{env=\"prod\",condition=\"MemoryPressure\",status=\"true\"} == 1",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesNodeNetworkUnavailable",
+    "note": "Node {{ $labels.node }} has network unavailable.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kube_node_status_condition{env=\"prod\",condition=\"NetworkUnavailable\",status=\"true\"} == 1",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Node {{ $labels.node }} has NetworkUnavailable condition\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes Node network unavailable (instance {{ $labels.instance }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesNodeNotReady",
+    "note": "Node {{ $labels.node }} has been unready for a long time.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 600,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kube_node_status_condition{env=\"prod\",condition=\"Ready\",status=\"true\"} == 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesNodeOutOfPodCapacity",
+    "note": "Node {{ $labels.node }} has out of pod capacity.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum by (node) ((kube_pod_status_phase{env=\"prod\",phase=\"Running\"} == 1) + on(uid{env=\"prod\"}, instance) group_left(node) (0 * kube_pod_info{env=\"prod\",pod_template_hash=\"\"})) / sum by (node) (kube_node_status_allocatable{env=\"prod\",resource=\"pods\"}) * 100 > 90",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Node {{ $labels.node }} is out of pod capacity\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes Node out of pod capacity (instance {{ $labels.instance }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesPersistentvolumeclaimPending",
+    "note": "Kubernetes Volume {{ $labels.persistentvolumeclaim }} out of disk space.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kube_persistentvolumeclaim_status_phase{env=\"prod\",phase=\"Pending\"} == 1",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "PersistentVolumeClaim {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} is pending\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes PersistentVolumeClaim pending ({{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesPersistentvolumeError",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "kube_persistentvolume_status_phase{env=\"prod\",phase=~\"Failed|Pending\", job=\"kube-state-metrics\"} > 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Persistent volume {{ $labels.persistentvolume }} is in bad state\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes PersistentVolumeClaim pending ({{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesPodCrashLooping",
+    "note": "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "increase(kube_pod_container_status_restarts_total{env=\"prod\"}[1m]) > 3",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesPodNotHealthy",
+    "note": "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-running state for longer than 5 minutes.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum by (namespace, pod) (kube_pod_status_phase{env=\"prod\",phase=~\"Pending|Unknown|Failed\"}) > 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesStatefulsetDown",
+    "note": "Kubernetes StatefulSet down ({{ $labels.namespace }}/{{ $labels.statefulset }})",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kube_statefulset_replicas{env=\"prod\"} != kube_statefulset_status_replicas_ready{env=\"prod\"} > 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesStatefulsetUpdateNotRolledOut",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 600,
+    "rule_config": {
+      "algo_params": null,
+      "inhibit": false,
+      "prom_ql": "",
+      "queries": [
+        {
+          "prom_ql": "max without (revision{env=\"prod\"}) (kube_statefulset_status_current_revision{env=\"prod\"} unless kube_statefulset_status_update_revision{env=\"prod\"}) * (kube_statefulset_replicas{env=\"prod\"} != kube_statefulset_status_replicas_updated{env=\"prod\"})",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ],
+      "severity": 0
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "StatefulSet {{ $labels.namespace }}/{{ $labels.statefulset }} update has not been rolled out.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Kubernetes StatefulSet update not rolled out ({{ $labels.namespace }}/{{ $labels.statefulset }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "KubernetesVolumeOutOfDiskSpace",
+    "note": "Kubernetes Volume {{ $labels.persistentvolumeclaim }} out of disk space.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "kubelet_volume_stats_available_bytes{env=\"prod\"} / kubelet_volume_stats_capacity_bytes{env=\"prod\"} * 100 < 20",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "kubelet_volume_stats_available_bytes{env=\"prod\"} / kubelet_volume_stats_capacity_bytes{env=\"prod\"} * 100 < 15",
+          "severity": 2
+        },
+        {
+          "prom_ql": "kubelet_volume_stats_available_bytes{env=\"prod\"} / kubelet_volume_stats_capacity_bytes{env=\"prod\"} * 100 < 10",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  }
+]

@@ -1,0 +1,260 @@
+[
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "DockerContainerCPUPressure",
+    "note": "Container {{ $labels.com_docker_compose_service }} in Node {{ $labels.ident }} has cpu pressure.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "queries": [
+        {
+          "prom_ql": "sum (docker_container_cpu_usage_percent{env=\"prod\"}) by (ident,com_docker_compose_service) / 8 > 95",
+          "severity": 1,
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [1],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "DockerContainerMemoryPressure",
+    "note": "Container {{ $labels.com_docker_compose_service }} in Node {{ $labels.ident }} has memory pressure.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "queries": [
+        {
+          "prom_ql": "sum (docker_container_mem_usage_percent{env=\"prod\"}) by (ident,com_docker_compose_service) > 95",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [1],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "DockerContainerNetInTraffic",
+    "note": "Container {{ $labels.com_docker_compose_service }} in Node {{ $labels.ident }} has network in traffic.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "sum (rate(docker_container_net_rx_bytes{env=\"prod\"}[5m])) by (ident,com_docker_compose_service) / 1024 / 1024 > 10",
+          "severity": 3,
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "sum (rate(docker_container_net_rx_bytes{env=\"prod\"}[5m])) by (ident,com_docker_compose_service) / 1024 / 1024 > 20",
+          "severity": 2
+        },
+        {
+          "prom_ql": "sum (rate(docker_container_net_rx_bytes{env=\"prod\"}[5m])) by (ident,com_docker_compose_service) / 1024 / 1024 > 30",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [1],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "DockerContainerNetOutTraffic",
+    "note": "Container {{ $labels.com_docker_compose_service }} in Node {{ $labels.ident }} has network out traffic.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "sum (rate(docker_container_net_tx_bytes{env=\"prod\"}[5m])) by (ident,com_docker_compose_service) / 1024 / 1024 > 10",
+          "severity": 3,
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "sum (rate(docker_container_net_tx_bytes{env=\"prod\"}[5m])) by (ident,com_docker_compose_service) / 1024 / 1024 > 20",
+          "severity": 2
+        },
+        {
+          "prom_ql": "sum (rate(docker_container_net_tx_bytes{env=\"prod\"}[5m])) by (ident,com_docker_compose_service) / 1024 / 1024 > 30",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [1],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "DockerContainerOOMKilled",
+    "note": "Container {{ $labels.com_docker_compose_service }} in Node {{ $labels.ident }} OOM killed.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 60,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "max(docker_container_status_oomkilled{env=\"prod\",com_docker_compose_service!=\"\"}) by (ident,com_docker_compose_service) > 0",
+          "severity": 3,
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [1],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "RtbBidRequestDuration",
+    "note": "Instance {{ $labels.ident }} in Node {{ $labels.ident }} bid request response duration great than 100 milliseconds.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 30,
+    "rule_config": {
+      "queries": [
+        {
+          "prom_ql": "histogram_quantile(0.95, sum(rate(rtb_bid_request_duration_milliseconds_bucket{env=\"prod\"}[5m])) by (le, ident)) > 100",
+          "severity": 1,
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 1,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 30s",
+    "notify_rule_ids": [1],
+    "notify_version": 1
+  }
+]
