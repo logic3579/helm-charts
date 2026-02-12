@@ -48,7 +48,7 @@ data:
                   },
                   {
                     "type": "mrkdwn",
-                    "text": "*Revision:*\n`{{.app.status.sync.revision}}`"
+                    "text": "*Image Tag:*\n`{{(call .repo.GetCommitMetadata .app.status.sync.revision).Message | regexFind "→ \\S+" | trimPrefix "→ "}}`"
                   },
                   {
                     "type": "mrkdwn",
@@ -98,10 +98,6 @@ data:
                   {
                     "type": "mrkdwn",
                     "text": "*Environment:*\n{{.app.metadata.labels.environment}}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Revision:*\n`{{.app.status.sync.revision}}`"
                   },
                   {
                     "type": "mrkdwn",
@@ -211,10 +207,6 @@ data:
                   {
                     "type": "mrkdwn",
                     "text": "*Environment:*\n{{.app.metadata.labels.environment}}"
-                  },
-                  {
-                    "type": "mrkdwn",
-                    "text": "*Target Revision:*\n`{{.app.status.sync.revision}}`"
                   }
                 ]
               },
@@ -239,7 +231,7 @@ data:
     - description: Application synced successfully
       send:
         - app-sync-succeeded
-      when: app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
+      when: app.status.operationState != nil and app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
 
   trigger.on-sync-failed: |
     - description: Application sync failed
