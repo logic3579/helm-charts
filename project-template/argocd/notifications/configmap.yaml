@@ -48,10 +48,6 @@ data:
                   },
                   {
                     "type": "mrkdwn",
-                    "text": "*Image Tag:*\n`{{index .app.status.summary.images 0 | splitList ":" | last}}`"
-                  },
-                  {
-                    "type": "mrkdwn",
                     "text": "*Health:*\n{{.app.status.health.status}}"
                   }
                 ]
@@ -253,4 +249,4 @@ data:
 
   # Context
   context: |
-    argocdUrl: https://argocd.revosurge.com
+    argocdUrl: https://argocd.example.com

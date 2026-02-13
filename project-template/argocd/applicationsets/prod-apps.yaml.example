@@ -39,7 +39,7 @@ spec:
         environment: prod
         app.kubernetes.io/part-of: example
       finalizers:
-        - resources-finalizer.argocd.argoproj.io
+        - argocd.argoproj.io/resources-finalizer
       # Slack notifications (optional)
       annotations:
         notifications.argoproj.io/subscribe.on-sync-succeeded.slack-webhook: ""
