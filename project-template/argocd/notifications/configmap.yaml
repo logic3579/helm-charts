@@ -48,7 +48,7 @@ data:
                   },
                   {
                     "type": "mrkdwn",
-                    "text": "*Image Tag:*\n`{{(call .repo.GetCommitMetadata .app.status.sync.revision).Message | regexFind "→ \\S+" | trimPrefix "→ "}}`"
+                    "text": "*Image Tag:*\n`{{index .app.status.summary.images 0 | splitList ":" | last}}`"
                   },
                   {
                     "type": "mrkdwn",
@@ -253,4 +253,4 @@ data:
 
   # Context
   context: |
-    argocdUrl: https://argocd.example.com
+    argocdUrl: https://argocd.revosurge.com
