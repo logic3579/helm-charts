@@ -109,27 +109,31 @@ helm repo update
 kubectl create namespace argocd
 ```
 
-### Step 5: Create GitHub Credentials Secret
-
-```bash
-kubectl create secret generic argocd-repo-creds-github \
-  --from-literal=url=https://github.com/<YOUR_ORG> \
-  --from-literal=username=git \
-  --from-literal=password=<GITHUB_PAT> \
-  -n argocd
-
-kubectl label secret argocd-repo-creds-github \
-  argocd.argoproj.io/secret-type=repo-creds \
-  -n argocd
-```
-
-### Step 6: Install ArgoCD
+### Step 5: Install ArgoCD
 
 ```bash
 helm install argocd argo/argo-cd \
   -n argocd \
-  -f values-argocd.yaml \
+  -f argocd-values.yaml \
   --version 9.3.5
+```
+
+This creates the credential template secret (`argocd-repo-creds-github`) with `url` and `username`, and the repository secret (`argocd-repo-devops-tools`). The credential template still needs the GitHub PAT — see next step.
+
+### Step 6: Patch GitHub PAT into Credential Template
+
+Helm intentionally does not include the PAT in `argocd-values.yaml` to avoid storing secrets in Git. Patch it manually after install (or upgrade):
+
+```bash
+kubectl patch secret argocd-repo-creds-github -n argocd \
+  --type merge -p "{\"stringData\":{\"password\":\"<GITHUB_PAT>\"}}"
+```
+
+Verify the repo connection:
+
+```bash
+argocd repo list
+# STATUS should be "Successful"
 ```
 
 ### Step 7: Wait for ArgoCD to be Ready
@@ -252,7 +256,7 @@ argocd account update-password --account viewer \
 
 ### Adding New Local Accounts
 
-Update `values-argocd.yaml`:
+Update `argocd-values.yaml`:
 
 ```yaml
 configs:
@@ -268,7 +272,7 @@ configs:
 Then upgrade and set password:
 
 ```bash
-helm upgrade argocd argo/argo-cd -n argocd -f values-argocd.yaml
+helm upgrade argocd argo/argo-cd -n argocd -f argocd-values.yaml
 argocd account update-password --account newuser --grpc-web
 ```
 
@@ -436,7 +440,7 @@ gcloud iam service-accounts get-iam-policy \
 ```bash
 helm upgrade argocd argo/argo-cd \
   -n argocd \
-  -f values-argocd.yaml
+  -f argocd-values.yaml
 ```
 
 ---
@@ -458,32 +462,32 @@ kubectl delete namespace argocd
 
 ## Related Files
 
-| Path                                              | Description                           |
-| ------------------------------------------------- | ------------------------------------- |
-| `values-argocd.yaml`                              | Helm values for ArgoCD installation   |
-| `../clusters/uat-cluster-secret.yaml.example`     | UAT cluster connection template       |
-| `../clusters/prod-cluster-secret.yaml.example`    | Prod cluster connection template      |
-| `../projects/uat-project.yaml.example`            | UAT project definition template       |
-| `../projects/prod-project.yaml.example`           | Prod project definition template      |
-| `../applicationsets/uat-apps.yaml.example`        | UAT ApplicationSet template           |
-| `../applicationsets/prod-apps.yaml.example`       | Prod ApplicationSet template          |
-| `../notifications/`                               | Slack notification configuration      |
-| `../istio/`                                       | Istio VirtualService for UI access    |
+| Path                                           | Description                         |
+| ---------------------------------------------- | ----------------------------------- |
+| `argocd-values.yaml`                           | Helm values for ArgoCD installation |
+| `../clusters/uat-cluster-secret.yaml.example`  | UAT cluster connection template     |
+| `../clusters/prod-cluster-secret.yaml.example` | Prod cluster connection template    |
+| `../projects/uat-project.yaml.example`         | UAT project definition template     |
+| `../projects/prod-project.yaml.example`        | Prod project definition template    |
+| `../applicationsets/uat-apps.yaml.example`     | UAT ApplicationSet template         |
+| `../applicationsets/prod-apps.yaml.example`    | Prod ApplicationSet template        |
+| `../notifications/`                            | Slack notification configuration    |
+| `../istio/`                                    | Istio VirtualService for UI access  |
 
 ### Placeholders Reference
 
-| Placeholder                      | Description                                    | How to Get                                                                         |
-| -------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `<YOUR_ORG>`                     | GitHub organization name                       | Your org name (e.g., `example-org`)                                                |
-| `<YOUR_REPO>`                    | Repository name                                | Your repo name (e.g., `devops-tools`)                                              |
-| `<REGION>`                       | GCP region                                     | e.g., `asia-southeast1`                                                            |
-| `<UAT_CLUSTER_NAME>`             | UAT GKE cluster name                           | `gcloud container clusters list --project=example-uat`                             |
-| `<PROD_CLUSTER_NAME>`            | Prod GKE cluster name                          | `gcloud container clusters list --project=example-prod`                            |
-| `<UAT_CLUSTER_ENDPOINT>`         | UAT cluster API server IP                      | `gcloud container clusters describe <name> --format='value(endpoint)'`             |
-| `<PROD_CLUSTER_ENDPOINT>`        | Prod cluster API server IP                     | `gcloud container clusters describe <name> --format='value(endpoint)'`             |
-| `<UAT_CLUSTER_CA_CERT_BASE64>`   | UAT cluster CA certificate (base64)            | `gcloud container clusters describe <name> --format='value(masterAuth.clusterCaCertificate)'` |
-| `<PROD_CLUSTER_CA_CERT_BASE64>`  | Prod cluster CA certificate (base64)           | `gcloud container clusters describe <name> --format='value(masterAuth.clusterCaCertificate)'` |
-| `<HELM_CHARTS_PATH>`             | Path to helm charts in repo                    | e.g., `helm-charts` or `charts`                                                    |
-| `<TARGET_NAMESPACE>`             | Kubernetes namespace for applications          | e.g., `default`, `apps`, `example`                                                 |
-| `<GITHUB_PAT>`                   | GitHub Personal Access Token                   | Create at GitHub Settings > Developer settings > Personal access tokens            |
-| `<ARGOCD_DOMAIN>`                | ArgoCD UI domain                               | e.g., `argocd.example.com`                                                         |
+| Placeholder                     | Description                           | How to Get                                                                                    |
+| ------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `<YOUR_ORG>`                    | GitHub organization name              | Your org name (e.g., `example-org`)                                                           |
+| `<YOUR_REPO>`                   | Repository name                       | Your repo name (e.g., `devops-tools`)                                                         |
+| `<REGION>`                      | GCP region                            | e.g., `asia-southeast1`                                                                       |
+| `<UAT_CLUSTER_NAME>`            | UAT GKE cluster name                  | `gcloud container clusters list --project=example-uat`                                        |
+| `<PROD_CLUSTER_NAME>`           | Prod GKE cluster name                 | `gcloud container clusters list --project=example-prod`                                       |
+| `<UAT_CLUSTER_ENDPOINT>`        | UAT cluster API server IP             | `gcloud container clusters describe <name> --format='value(endpoint)'`                        |
+| `<PROD_CLUSTER_ENDPOINT>`       | Prod cluster API server IP            | `gcloud container clusters describe <name> --format='value(endpoint)'`                        |
+| `<UAT_CLUSTER_CA_CERT_BASE64>`  | UAT cluster CA certificate (base64)   | `gcloud container clusters describe <name> --format='value(masterAuth.clusterCaCertificate)'` |
+| `<PROD_CLUSTER_CA_CERT_BASE64>` | Prod cluster CA certificate (base64)  | `gcloud container clusters describe <name> --format='value(masterAuth.clusterCaCertificate)'` |
+| `<HELM_CHARTS_PATH>`            | Path to helm charts in repo           | e.g., `helm-charts` or `charts`                                                               |
+| `<TARGET_NAMESPACE>`            | Kubernetes namespace for applications | e.g., `default`, `apps`, `example`                                                            |
+| `<GITHUB_PAT>`                  | GitHub Personal Access Token          | Create at GitHub Settings > Developer settings > Personal access tokens                       |
+| `<ARGOCD_DOMAIN>`               | ArgoCD UI domain                      | e.g., `argocd.example.com`                                                                    |

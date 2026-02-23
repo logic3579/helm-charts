@@ -10,6 +10,10 @@ global:
     kubernetes.io/os: linux
     tier: mgmt
 
+## GKE Workload Identity - Service Account Annotations
+## GSA: argocd-cluster-access@example-uat.iam.gserviceaccount.com
+## Bound to KSA via: example-mgmt.svc.id.goog[argocd/argocd-application-controller]
+
 ## ArgoCD Server
 server:
   # Service configuration - ClusterIP for Istio integration
@@ -56,10 +60,10 @@ repoServer:
 
 ## ArgoCD Application Controller
 controller:
-  # Workload Identity: bind KSA to GSA for accessing all remote GKE clusters
+  # Workload Identity: bind KSA to GSA for accessing remote GKE clusters
   serviceAccount:
     annotations:
-      iam.gke.io/gcp-service-account: argocd-cluster-access@mgmt_project_id.iam.gserviceaccount.com
+      iam.gke.io/gcp-service-account: argocd-cluster-access@example-mgmt.iam.gserviceaccount.com
 
   resources:
     requests:
@@ -175,20 +179,19 @@ configs:
       # Bind local 'viewer' account to role:viewer
       g, viewer, role:viewer
 
-  # Credential templates for Git repositories
+  # Credential template for GitHub repositories
+  # Helm creates the secret with url and username only.
+  # After install/upgrade, patch the secret to add the GitHub PAT (see README Step 6).
   credentialTemplates:
-    github-https:
-      url: https://github.com/repo_owner
-      # Password will be set via secret
-      # kubectl create secret generic argocd-repo-creds-github \
-      #   --from-literal=password=<github-pat> \
-      #   -n argocd
+    github:
+      url: https://github.com/logic3579
+      username: logic3579
 
-  # Repository credentials (reference credential template)
+  # Repository definitions (credentials inherited from credential template above)
   repositories:
-    repo-name:
-      url: https://github.com/repo_owner/repo_name.git
-      name: devops-tools
+    helm-charts:
+      url: https://github.com/logic3579/helm-charts
+      name: helm-charts
       type: git
 
   # Secret configuration
