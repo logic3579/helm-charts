@@ -225,12 +225,14 @@ data:
   # Triggers
   trigger.on-sync-succeeded: |
     - description: Application synced successfully
+      oncePer: app.status.operationState.startedAt
       send:
         - app-sync-succeeded
       when: app.status.operationState != nil and app.status.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
 
   trigger.on-sync-failed: |
     - description: Application sync failed
+      oncePer: app.status.operationState.startedAt
       send:
         - app-sync-failed
       when: app.status.operationState != nil and app.status.operationState.phase in ['Error', 'Failed']
@@ -243,6 +245,7 @@ data:
 
   trigger.on-sync-running: |
     - description: Application sync started
+      oncePer: app.status.operationState.startedAt
       send:
         - app-sync-running
       when: app.status.operationState != nil and app.status.operationState.phase == 'Running'
