@@ -1,0 +1,10 @@
+namespace: stg
+resources:
+  - ../base
+labels:
+  - includeSelectors: true
+    pairs:
+      app: nginx
+      variant: stg
+patches:
+  - path: patch_deployment.yaml

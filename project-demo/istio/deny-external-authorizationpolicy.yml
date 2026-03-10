@@ -1,0 +1,25 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: ingress-deny-external
+  namespace: istio-ingress
+spec:
+  selector:
+    matchLabels:
+      istio: external-istio
+  action: DENY
+  rules:
+    - from:
+        - source:
+            notRemoteIpBlocks:
+              - "1.1.1.1/32" # TODO: Replace with actual whitelist IP(s)
+      to:
+        - operation:
+            paths:
+              - "/api/private/*"
+              - "/.env"
+            hosts:
+              - "api.example.com"
+            ports:
+              - "80"
+              - "443"

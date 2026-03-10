@@ -1,0 +1,10 @@
+namespace: prod
+resources:
+  - ../base
+labels:
+  - includeSelectors: true
+    pairs:
+      app: nginx
+      variant: prod
+patches:
+  - path: patch_deployment.yaml

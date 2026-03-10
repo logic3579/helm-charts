@@ -1,0 +1,182 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: categraf
+  namespace: monitoring
+data:
+  config.toml: |-
+    [global]
+    print_configs = false
+    hostname = "$HOSTNAME"
+    omit_hostname = true
+    precision = "ms"
+    interval = 15
+    providers = ["local"]
+    disable_usage_report = true
+
+    [global.labels]
+    env="prod"
+    source="categraf"
+
+    [log]
+    file_name = "stdout"
+    max_size = 100
+    max_age = 1
+    max_backups = 1
+    local_time = true
+    compress = false
+
+    [writer_opt]
+    batch = 1000
+    chan_size = 1000000
+
+    [[writers]]
+    url = "http://nightingale-center/prometheus/v1/write"
+    basic_auth_user = ""
+    basic_auth_pass = ""
+    timeout = 5000
+    dial_timeout = 2500
+    max_idle_conns_per_host = 100
+
+    [http]
+    enable = false
+    address = ":9100"
+    print_access = false
+    run_mode = "release"
+
+    [ibex]
+    enable = false
+    interval = "1000ms"
+    servers = ["127.0.0.1:20090"]
+    meta_dir = "./meta"
+
+    [heartbeat]
+    enable = false
+    url = "http://nightingale-center/v1/n9e/heartbeat"
+    interval = 10
+    basic_auth_user = ""
+    basic_auth_pass = ""
+    timeout = 5000
+    dial_timeout = 2500
+    max_idle_conns_per_host = 100
+
+  logs.toml: |-
+    [logs]
+    enable = false
+
+  prometheus.toml: |-
+    # kube-state-metrics
+    [[instances]]
+    urls = ["http://kube-state-metrics:8080/metrics"]
+    use_tls = false
+    url_label_key = "instance"
+    url_label_value = "{{.Host}}"
+    #labels = {job="kube-state-metrics"}
+
+    # prometheus-myql-exporter
+    [[instances]]
+    urls = ["http://prometheus-mysql-exporter:9104/metrics"]
+    use_tls = false
+    url_label_key = "instance"
+    url_label_value = "{{.Host}}"
+    labels = {job="prometheus-mysql-exporter"}
+
+    # loki
+    [[instances]]
+    urls = ["http://loki-read.logging.svc:3100/metrics"]
+    use_tls = false
+    labels = {job="loki-read"}
+    [[instances]]
+    urls = ["http://loki-write.logging.svc:3100/metrics"]
+    use_tls = false
+    labels = {job="loki-write"}
+    [[instances]]
+    urls = ["http://loki-backend.logging.svc:3100/metrics"]
+    use_tls = false
+    labels = {job="loki-backend"}
+
+  clickhouse.toml: |-
+    [[instances]]
+    servers = ["http://clickhouse.database.svc:8123"]
+    username = "${CLICKHOUSE_USERNAME}"
+    password = "${CLICKHOUSE_PASSWORD}"
+    url_label_key = "instance"
+    url_label_value = "{{.Host}}"
+    labels = { instance="clickhouse-cluster" }
+
+  kafka.toml: |-
+    [[instances]]
+    log_level = "error"
+    kafka_uris = ["kafka1.database.svc:9092","kafka2.database.svc:9092","kafka3.database.svc:9092"]
+    topic_exclude_regex="__consumer_offsets"
+    rename_uncommit_offset_to_lag = true
+    labels = { cluster="kafka-cluster" }
+
+  redis.toml: |-
+    [[instances]]
+    address = ""       # TODO: Replace with actual Redis host:port
+    username = ""
+    password = ""
+    labels = { instance="redis-1" }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: categraf
+  name: categraf
+  namespace: monitoring
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: categraf
+  template:
+    metadata:
+      labels:
+        app: categraf
+    spec:
+      containers:
+        - env:
+            - name: TZ
+              value: UTC
+          image: flashcatcloud/categraf:v0.4.5
+          imagePullPolicy: IfNotPresent
+          name: categraf
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/categraf
+      dnsPolicy: ClusterFirstWithHostNet
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: nightingale-categraf-v6
+      serviceAccountName: nightingale-categraf-v6
+      terminationGracePeriodSeconds: 30
+      nodeSelector:
+        tier: mgmt
+      volumes:
+        - name: config
+          configMap:
+            name: categraf-config
+            items:
+              - key: config.toml
+                path: conf/config.toml
+              - key: logs.toml
+                path: conf/logs.toml
+              - key: prometheus.toml
+                path: conf/input.prometheus/prometheus.toml
+              - key: clickhouse.toml
+                path: conf/input.clickhouse/clickhouse.toml
+              - key: kafka.toml
+                path: conf/input.kafka/kafka.toml
+              - key: redis.toml
+                path: conf/input.redis/redis.toml
