@@ -1,0 +1,17 @@
+apiVersion: v2
+name: frontend-app
+description: A generic Helm chart for frontend application deployment (nginx-based)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+home: https://github.com/logic3579/helm-charts
+maintainers:
+  - name: Logic
+    url: https://github.com/logic3579/helm-charts
+keywords:
+  - frontend
+  - nginx
+  - spa
+  - react
+  - vue
+  - angular

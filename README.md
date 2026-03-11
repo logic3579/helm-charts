@@ -1,5 +1,13 @@
 [![Artifact Hub](https://img.shields.io/badge/Artifact%20Hub-repo-blue)](https://artifacthub.io/) [![Release Charts](https://github.com/logic3579/helm-charts/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/logic3579/helm-charts/actions/workflows/release.yml)
 
+## Available Charts
+
+| Chart | Description | Default Port |
+|-------|-------------|-------------|
+| [go-app](./charts/go-app) | Generic Helm chart for Go application deployment | 8080 |
+| [python-app](./charts/python-app) | Generic Helm chart for Python application deployment (FastAPI, Django, Flask) | 8000 |
+| [frontend-app](./charts/frontend-app) | Generic Helm chart for frontend application deployment (nginx-based SPA) | 80 |
+
 ## Usage
 
 ### Build a Helm package
@@ -32,19 +40,26 @@ Index and publish helm package
 
 Once Helm has been set up correctly, add the repo as follows:
 
-    helm repo add my-repo https://logic3579.github.io/helm-charts
+    helm repo add logic-charts https://logic3579.github.io/helm-charts
 
 If you had already added this repo earlier, run `helm repo update` to retrieve
 the latest versions of the packages.
-You can then run `helm search repo my-repo` to see the charts.
+You can then run `helm search repo logic-charts` to see the charts.
 
-Install the chart:
+Install the charts:
 
-    helm install my-chart my-repo/my-chart
+    # Go application
+    helm install my-go-app logic-charts/go-app -f my-values.yaml
 
-Uninstall the chart:
+    # Python application
+    helm install my-python-app logic-charts/python-app -f my-values.yaml
 
-    helm uninstall my-chart
+    # Frontend application
+    helm install my-frontend-app logic-charts/frontend-app -f my-values.yaml
+
+Uninstall a chart:
+
+    helm uninstall my-go-app
 
 ### GitLab Package registry
 
@@ -61,12 +76,12 @@ Authenticate to the Helm repository, get username and token from GitLab
 Index and publish helm package
 
     helm repo add --username <username> --password <access_token> my-repo https://gitlab.example.com/api/v4/projects/<project_id>/packages/helm/stable
-    helm cm-push mychart-0.1.0.tgz my-repo
+    helm cm-push go-app-0.1.0.tgz my-repo
 
 Install the chart:
 
-    helm install my-chart my-repo/my-chart
+    helm install my-go-app my-repo/go-app
 
 Uninstall the chart:
 
-    helm uninstall my-chart
+    helm uninstall my-go-app

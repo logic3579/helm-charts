@@ -1,0 +1,145 @@
+# -- Number of pod replicas
+replicaCount: 1
+
+# -- Container image configuration
+image:
+  # -- Image repository
+  repository: example/go-app
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag (defaults to .Chart.AppVersion)
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full release name
+fullnameOverride: ""
+
+# -- Service account configuration
+serviceAccount:
+  # -- Whether to create a service account
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account (generated if not set)
+  name: ""
+
+# -- Annotations to add to pods
+podAnnotations: {}
+
+# -- Labels to add to pods
+podLabels: {}
+
+# -- Pod-level security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -- Container-level security context
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# -- Service configuration
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port (also used as the container port)
+  port: 8080
+
+# -- Ingress configuration
+ingress:
+  # -- Enable ingress
+  enabled: false
+  # -- Ingress class name
+  className: ""
+  # -- Ingress annotations
+  annotations: {}
+  # -- Ingress hosts
+  hosts:
+    - host: example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  # -- Ingress TLS configuration
+  tls: []
+
+# -- Resource requests and limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# -- Liveness probe configuration
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+# -- Readiness probe configuration
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+# -- Horizontal Pod Autoscaler configuration
+autoscaling:
+  # -- Enable HPA
+  enabled: false
+  # -- Minimum number of replicas
+  minReplicas: 1
+  # -- Maximum number of replicas
+  maxReplicas: 10
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+
+# -- Extra environment variables (list of name/value pairs)
+env: []
+  # - name: LOG_LEVEL
+  #   value: "info"
+
+# -- Extra environment variable sources (configMapRef / secretRef)
+envFrom: []
+  # - configMapRef:
+  #     name: my-config
+  # - secretRef:
+  #     name: my-secret
+
+# -- ConfigMap configuration
+configMap:
+  # -- Create a ConfigMap
+  enabled: false
+  # -- ConfigMap key-value data
+  data: {}
+    # key: value
+
+# -- Secret configuration
+secret:
+  # -- Create a Secret
+  enabled: false
+  # -- Secret key-value data (values will be base64-encoded)
+  data: {}
+    # key: value
+
+# -- Node selector for pod scheduling
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}

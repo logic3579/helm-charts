@@ -23,19 +23,17 @@ helm package charts/*
 # Update chart index for GitHub Pages publishing
 helm repo index ./charts --url https://logic3579.github.io/helm-charts
 
-# Update library chart dependency (mychart depends on mylibchart)
-cd charts/mychart && helm dependency update
-
 # Template a chart locally to inspect rendered output
-helm template mychart charts/mychart -f charts/mychart/values.yaml
+helm template my-release charts/go-app -f charts/go-app/values.yaml
 ```
 
 ## Architecture
 
 ### charts/
 
-- **mychart** — Application chart (type: application) that depends on `mylibchart` as a local file dependency (`file://mylibchart`)
-- **mylibchart** — Library chart (type: library) providing shared templates (`_configmap.tpl`, `_util.yaml`) that cannot be installed directly
+- **go-app** — Generic deployment chart for Go applications (port 8080, /healthz + /readyz probes, minimal resource footprint)
+- **python-app** — Generic deployment chart for Python applications (port 8000, /health probes, higher memory defaults for Python runtimes)
+- **frontend-app** — Generic deployment chart for compiled frontend apps served by nginx (port 80, optional custom nginx config, lightweight resources)
 
 ### project-demo/
 

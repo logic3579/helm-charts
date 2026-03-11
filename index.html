@@ -1043,6 +1043,35 @@
   <div class="markdown-body">
     <p><a href="https://artifacthub.io/"><img src="https://img.shields.io/badge/Artifact%20Hub-repo-blue"
           alt="Static Badge"></a></p>
+
+    <h2>Available Charts</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Chart</th>
+          <th>Description</th>
+          <th>Default Port</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/go-app">go-app</a></td>
+          <td>Generic Helm chart for Go application deployment</td>
+          <td>8080</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/python-app">python-app</a></td>
+          <td>Generic Helm chart for Python application deployment (FastAPI, Django, Flask)</td>
+          <td>8000</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/frontend-app">frontend-app</a></td>
+          <td>Generic Helm chart for frontend application deployment (nginx-based SPA)</td>
+          <td>80</td>
+        </tr>
+      </tbody>
+    </table>
+
     <h2>Usage</h2>
     <h3>Build a Helm package</h3>
     <p>To create a helm chart</p>
@@ -1066,16 +1095,23 @@
 </span><span class="code-line line-number" line="4">git push origin
 </span></code></pre>
     <p>Once Helm has been set up correctly, add the repo as follows:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm repo add my-repo https://logic3579.github.io/helm-charts
+    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm repo add logic-charts https://logic3579.github.io/helm-charts
 </span></code></pre>
     <p>If you had already added this repo earlier, run <code>helm repo update</code> to retrieve
       the latest versions of the packages.
-      You can then run <code>helm search repo my-repo</code> to see the charts.</p>
-    <p>Install the chart:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm install my-chart my-repo/my-chart
+      You can then run <code>helm search repo logic-charts</code> to see the charts.</p>
+    <p>Install the charts:</p>
+    <pre><code class="code-highlight"><span class="code-line line-number" line="1"># Go application
+</span><span class="code-line line-number" line="2">helm install my-go-app logic-charts/go-app -f my-values.yaml
+</span><span class="code-line line-number" line="3">
+</span><span class="code-line line-number" line="4"># Python application
+</span><span class="code-line line-number" line="5">helm install my-python-app logic-charts/python-app -f my-values.yaml
+</span><span class="code-line line-number" line="6">
+</span><span class="code-line line-number" line="7"># Frontend application
+</span><span class="code-line line-number" line="8">helm install my-frontend-app logic-charts/frontend-app -f my-values.yaml
 </span></code></pre>
-    <p>Uninstall the chart:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm uninstall my-chart
+    <p>Uninstall a chart:</p>
+    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm uninstall my-go-app
 </span></code></pre>
     <h3>GitLab Package registry</h3>
     <p><a href="https://gitlab.com/">GitLab</a> must be installed to use. Please refer to
@@ -1087,13 +1123,13 @@
     <p>Authenticate to the Helm repository, get username and token from GitLab</p>
     <p>Index and publish helm package</p>
     <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm repo add --username &lt;username&gt; --password &lt;access_token&gt; my-repo https://gitlab.example.com/api/v4/projects/&lt;project_id&gt;/packages/helm/stable
-</span><span class="code-line line-number" line="2">helm cm-push mychart-0.1.0.tgz my-repo
+</span><span class="code-line line-number" line="2">helm cm-push go-app-0.1.0.tgz my-repo
 </span></code></pre>
     <p>Install the chart:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm install my-chart my-repo/my-chart
+    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm install my-go-app my-repo/go-app
 </span></code></pre>
     <p>Uninstall the chart:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm uninstall my-chart
+    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm uninstall my-go-app
 </span></code></pre>
   </div>
 </body>

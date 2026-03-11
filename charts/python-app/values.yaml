@@ -1,0 +1,138 @@
+# -- Number of pod replicas
+replicaCount: 1
+
+# -- Container image configuration
+image:
+  repository: example/python-app
+  # -- Overrides the image tag (defaults to .Chart.AppVersion)
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full release name
+fullnameOverride: ""
+
+# -- Service account configuration
+serviceAccount:
+  # -- Whether to create a service account
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account (generated if not set)
+  name: ""
+
+# -- Annotations to add to pods
+podAnnotations: {}
+
+# -- Labels to add to pods
+podLabels: {}
+
+# -- Pod-level security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -- Container-level security context
+# readOnlyRootFilesystem is false because Python apps often need writable tmp directories
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# -- Service configuration
+service:
+  type: ClusterIP
+  # -- Default port for uvicorn/gunicorn
+  port: 8000
+
+# -- Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+# -- Resource requests and limits
+# Python applications typically need more memory than CPU
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+# -- Liveness probe configuration
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 15
+
+# -- Readiness probe configuration
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+# -- Horizontal Pod Autoscaler configuration
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+# -- Extra environment variables as a list of name/value pairs
+# Example:
+#   - name: DATABASE_URL
+#     value: "postgresql://localhost/mydb"
+#   - name: SECRET_KEY
+#     valueFrom:
+#       secretKeyRef:
+#         name: my-secret
+#         key: secret-key
+env: []
+
+# -- Extra envFrom sources (ConfigMap or Secret references)
+# Example:
+#   - configMapRef:
+#       name: my-config
+#   - secretRef:
+#       name: my-secret
+envFrom: []
+
+# -- ConfigMap configuration
+configMap:
+  enabled: false
+  # -- Key-value pairs to store in the ConfigMap
+  data: {}
+
+# -- Secret configuration
+secret:
+  enabled: false
+  # -- Key-value pairs to store in the Secret (values will be base64 encoded)
+  data: {}
+
+# -- Node selector for pod scheduling
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}

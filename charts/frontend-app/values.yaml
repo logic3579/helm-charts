@@ -1,0 +1,156 @@
+# -- Number of replicas for the frontend deployment
+replicaCount: 1
+
+image:
+  # -- Container image repository
+  repository: example/frontend-app
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full release name
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Whether to create a ServiceAccount
+  create: true
+  # -- Annotations to add to the ServiceAccount
+  annotations: {}
+  # -- The name of the ServiceAccount to use (generated if not set and create is true)
+  name: ""
+
+# -- Annotations to add to the pod
+podAnnotations: {}
+
+# -- Labels to add to the pod
+podLabels: {}
+
+podSecurityContext:
+  # -- Run containers as non-root user
+  runAsNonRoot: true
+  # -- User ID for the nginx process (default nginx user)
+  runAsUser: 101
+  # -- Group ID for filesystem access
+  fsGroup: 101
+
+securityContext:
+  # -- Prevent privilege escalation
+  allowPrivilegeEscalation: false
+  # -- Keep writable for nginx temp files (pid, cache, etc.)
+  readOnlyRootFilesystem: false
+  capabilities:
+    # -- Drop all Linux capabilities
+    drop:
+      - ALL
+
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port
+  port: 80
+
+ingress:
+  # -- Enable ingress resource
+  enabled: false
+  # -- Ingress class name
+  className: ""
+  # -- Annotations for the ingress
+  annotations: {}
+  hosts:
+    - host: example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  # -- TLS configuration for the ingress
+  tls: []
+  #  - secretName: example-tls
+  #    hosts:
+  #      - example.com
+
+# -- Resource requests and limits (static files are lightweight)
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  # -- Delay before first liveness check
+  initialDelaySeconds: 5
+  # -- Interval between liveness checks
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  # -- Delay before first readiness check
+  initialDelaySeconds: 5
+  # -- Interval between readiness checks
+  periodSeconds: 5
+
+autoscaling:
+  # -- Enable Horizontal Pod Autoscaler
+  enabled: false
+  # -- Minimum number of replicas
+  minReplicas: 1
+  # -- Maximum number of replicas
+  maxReplicas: 10
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Extra environment variables to set on the container
+# Example:
+#   - name: API_URL
+#     value: "https://api.example.com"
+env: []
+
+# -- Extra envFrom sources (ConfigMaps or Secrets)
+# Example:
+#   - configMapRef:
+#       name: my-config
+envFrom: []
+
+nginxConfig:
+  # -- Mount a custom nginx configuration as default.conf
+  enabled: false
+  # -- Custom nginx server block configuration
+  # Example:
+  #   customConf: |
+  #     server {
+  #       listen 80;
+  #       server_name _;
+  #       root /usr/share/nginx/html;
+  #       index index.html;
+  #       location / {
+  #         try_files $uri $uri/ /index.html;
+  #       }
+  #     }
+  customConf: ""
+
+configMap:
+  # -- Create a general-purpose ConfigMap
+  enabled: false
+  # -- Key-value pairs to store in the ConfigMap
+  data: {}
+
+# -- Node selector constraints
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}
