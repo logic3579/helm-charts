@@ -64,10 +64,11 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Copy index.html
+      - name: Prepare Pages content
         run: |
           mkdir -p ./public
           cp index.html ./public/
+          git show origin/gh-pages:index.yaml > ./public/index.yaml 2>/dev/null || true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
