@@ -1,0 +1,78 @@
+apiVersion: v1
+entries:
+  frontend-app:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-03-12T15:12:17.880426381Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: '>=0.1.0'
+    description: A generic Helm chart for frontend application deployment (nginx-based)
+    digest: 158ba1fb26323dd1883f489979a1799a1515b8d7a7d008ec4a4dd1b511812847
+    home: https://github.com/logic3579/helm-charts
+    keywords:
+    - frontend
+    - nginx
+    - spa
+    - react
+    - vue
+    - angular
+    maintainers:
+    - name: Logic
+      url: https://github.com/logic3579/helm-charts
+    name: frontend-app
+    type: application
+    urls:
+    - https://github.com/logic3579/helm-charts/releases/download/frontend-app-0.2.0/frontend-app-0.2.0.tgz
+    version: 0.2.0
+  go-app:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-03-12T15:12:18.059031639Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: '>=0.1.0'
+    description: A generic Helm chart for Go application deployment
+    digest: 21869d1bdb11b996f985c4a308e2a381be8765de5e1c628305aba03f9ff98264
+    home: https://github.com/logic3579/helm-charts
+    keywords:
+    - go
+    - golang
+    - backend
+    - microservice
+    maintainers:
+    - name: Logic
+      url: https://github.com/logic3579/helm-charts
+    name: go-app
+    type: application
+    urls:
+    - https://github.com/logic3579/helm-charts/releases/download/go-app-0.2.0/go-app-0.2.0.tgz
+    version: 0.2.0
+  python-app:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-03-12T15:12:18.206084283Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: '>=0.1.0'
+    description: A generic Helm chart for Python application deployment
+    digest: 7b9bd6ca362ed02f9d55b8a568f4b8d2ed6d361abda9f7f470df4fcd727743ea
+    home: https://github.com/logic3579/helm-charts
+    keywords:
+    - python
+    - fastapi
+    - django
+    - flask
+    - backend
+    maintainers:
+    - name: Logic
+      url: https://github.com/logic3579/helm-charts
+    name: python-app
+    type: application
+    urls:
+    - https://github.com/logic3579/helm-charts/releases/download/python-app-0.2.0/python-app-0.2.0.tgz
+    version: 0.2.0
+generated: "2026-03-12T15:12:18.20609297Z"
