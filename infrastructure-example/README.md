@@ -1,6 +1,6 @@
 # Infrastructure Reference Configs
 
-Production-ready reference configurations for Kubernetes cluster infrastructure components. These are **tool-agnostic** — they work regardless of whether you use Kustomize or Helm for application deployment.
+Production-ready reference configurations for Kubernetes cluster infrastructure components.
 
 ## Components
 

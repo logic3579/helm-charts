@@ -5,7 +5,7 @@
 This repo provides two things:
 
 1. **Publishable Helm charts** in [`charts/`](./charts/) — released via GitHub Pages
-2. **Quickstart examples** in `*-example/` directories — ready-to-use templates for Kustomize or Helm app deployment, plus infrastructure reference configs
+2. **Infrastructure examples** in `infrastructure-example/` — cluster infrastructure reference configs
 
 ## Available Charts
 
@@ -16,14 +16,10 @@ This repo provides two things:
 | [python-app](./charts/python-app) | Generic chart for Python application deployment (FastAPI, Django, Flask) | 8000 |
 | [frontend-app](./charts/frontend-app) | Generic chart for frontend application deployment (nginx-based SPA) | 80 |
 
-## Quickstart Examples
-
-Choose your app deployment tool when setting up a new K8S cluster:
+## Examples
 
 | Path | Description |
 |------|-------------|
-| [kustomize-example/](./kustomize-example/) | Kustomize base/components/overlays template — `kubectl apply -k` |
-| [helm-example/](./helm-example/) | Helm values examples using the charts above — `helm install` |
 | [infrastructure-example/](./infrastructure-example/) | Cluster infrastructure configs (ArgoCD, Istio, monitoring, etc.) |
 
 ## Usage
@@ -47,16 +43,11 @@ helm package charts/*
 helm repo index ./charts --url https://logic3579.github.io/helm-charts
 ```
 
-### Use quickstart examples
+### Deploy from local chart
 
 ```bash
-# Kustomize
-kustomize build kustomize-example/overlays/dev
-kubectl apply -k kustomize-example/overlays/dev
-
-# Helm
 helm dependency update charts/go-app
-helm install backend charts/go-app -f helm-example/backend-example/values.yaml
+helm install backend charts/go-app -f my-values.yaml
 ```
 
 ### GitLab Package registry
