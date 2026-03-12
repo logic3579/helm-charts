@@ -1,4 +1,0 @@
-env:
-  PROJECT: EXAMPLE
-  ENV: PROD
-  TZ: UTC

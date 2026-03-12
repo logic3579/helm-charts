@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-nginx
+  template:
+    metadata:
+      labels:
+        app: my-nginx
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        fsGroup: 101
+      containers:
+      - name: my-nginx
+        image: nginx:1.27
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        volumeMounts:
+        - name: config
+          mountPath: /config
+          readOnly: true
+        - name: password
+          mountPath: /secrets
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: example-configmap-1
+      - name: password
+        secret:
+          secretName: example-secret-1

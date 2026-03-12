@@ -1,0 +1,2 @@
+# Library chart — no default values.
+# Consumer charts define their own values and pass context to common templates.

@@ -1,3 +1,0 @@
-{{- if .Values.virtualservice }}
-{{- include "global.virtualservice" . }}
-{{- end }}

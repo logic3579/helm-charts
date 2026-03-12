@@ -1,0 +1,10 @@
+namespace: dev
+resources:
+  - ../../base
+labels:
+  - includeSelectors: true
+    pairs:
+      app: nginx
+      variant: dev
+components:
+  - ../../components/resource-standard

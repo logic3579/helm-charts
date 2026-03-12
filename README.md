@@ -1,87 +1,69 @@
 [![Artifact Hub](https://img.shields.io/badge/Artifact%20Hub-repo-blue)](https://artifacthub.io/) [![Release Charts](https://github.com/logic3579/helm-charts/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/logic3579/helm-charts/actions/workflows/release.yml)
 
+## Repository Overview
+
+This repo provides two things:
+
+1. **Publishable Helm charts** in [`charts/`](./charts/) — released via GitHub Pages
+2. **Quickstart examples** in `*-example/` directories — ready-to-use templates for Kustomize or Helm app deployment, plus infrastructure reference configs
+
 ## Available Charts
 
 | Chart | Description | Default Port |
 |-------|-------------|-------------|
-| [go-app](./charts/go-app) | Generic Helm chart for Go application deployment | 8080 |
-| [python-app](./charts/python-app) | Generic Helm chart for Python application deployment (FastAPI, Django, Flask) | 8000 |
-| [frontend-app](./charts/frontend-app) | Generic Helm chart for frontend application deployment (nginx-based SPA) | 80 |
+| [common](./charts/common) | Shared library chart (labels, VirtualService, PDB) | — |
+| [go-app](./charts/go-app) | Generic chart for Go application deployment | 8080 |
+| [python-app](./charts/python-app) | Generic chart for Python application deployment (FastAPI, Django, Flask) | 8000 |
+| [frontend-app](./charts/frontend-app) | Generic chart for frontend application deployment (nginx-based SPA) | 80 |
+
+## Quickstart Examples
+
+Choose your app deployment tool when setting up a new K8S cluster:
+
+| Path | Description |
+|------|-------------|
+| [kustomize-example/](./kustomize-example/) | Kustomize base/components/overlays template — `kubectl apply -k` |
+| [helm-example/](./helm-example/) | Helm values examples using the charts above — `helm install` |
+| [infrastructure-example/](./infrastructure-example/) | Cluster infrastructure configs (ArgoCD, Istio, monitoring, etc.) |
 
 ## Usage
 
-### Build a Helm package
+### Install from Helm repo
 
-To create a helm chart
+```bash
+helm repo add logic-charts https://logic3579.github.io/helm-charts
+helm repo update
+helm search repo logic-charts
 
-    helm create charts/my-chart
+# Install a chart
+helm install my-go-app logic-charts/go-app -f my-values.yaml
+```
 
-Check configuration for all charts
+### Build and publish charts
 
-    helm lint charts/*
+```bash
+helm lint charts/*
+helm package charts/*
+helm repo index ./charts --url https://logic3579.github.io/helm-charts
+```
 
-Package all helm chart into chart archive
+### Use quickstart examples
 
-    helm package charts/*
+```bash
+# Kustomize
+kustomize build kustomize-example/overlays/dev
+kubectl apply -k kustomize-example/overlays/dev
 
-### GitHub Pages example
-
-[Helm](https://helm.sh) must be installed to use the charts. Please refer to
-Helm's [documentation](https://helm.sh/docs/) to get started.
-
-[GitHub Pages settings](https://github.com/logic3579/helm-charts/settings/pages), use branch gh-pages and folder docs.
-
-Index and publish helm package
-
-    helm repo index ./charts --url https://logic3579.github.io/helm-charts
-    git add -A
-    git commit -m 'Update helm-charts index.yaml'
-    git push origin
-
-Once Helm has been set up correctly, add the repo as follows:
-
-    helm repo add logic-charts https://logic3579.github.io/helm-charts
-
-If you had already added this repo earlier, run `helm repo update` to retrieve
-the latest versions of the packages.
-You can then run `helm search repo logic-charts` to see the charts.
-
-Install the charts:
-
-    # Go application
-    helm install my-go-app logic-charts/go-app -f my-values.yaml
-
-    # Python application
-    helm install my-python-app logic-charts/python-app -f my-values.yaml
-
-    # Frontend application
-    helm install my-frontend-app logic-charts/frontend-app -f my-values.yaml
-
-Uninstall a chart:
-
-    helm uninstall my-go-app
+# Helm
+helm dependency update charts/go-app
+helm install backend charts/go-app -f helm-example/backend-example/values.yaml
+```
 
 ### GitLab Package registry
 
-[GitLab](https://gitlab.com/) must be installed to use. Please refer to
-GitLab's [documentation](https://docs.gitlab.com/ee/user/packages/helm_repository/) to get started.
-
-Install helm cm-push plugin
-
-    # https://github.com/chartmuseum/helm-push
-    helm plugin install https://github.com/chartmuseum/helm-push
-
-Authenticate to the Helm repository, get username and token from GitLab
-
-Index and publish helm package
-
-    helm repo add --username <username> --password <access_token> my-repo https://gitlab.example.com/api/v4/projects/<project_id>/packages/helm/stable
-    helm cm-push go-app-0.1.0.tgz my-repo
-
-Install the chart:
-
-    helm install my-go-app my-repo/go-app
-
-Uninstall the chart:
-
-    helm uninstall my-go-app
+```bash
+helm plugin install https://github.com/chartmuseum/helm-push
+helm repo add --username <username> --password <access_token> my-repo \
+  https://gitlab.example.com/api/v4/projects/<project_id>/packages/helm/stable
+helm cm-push go-app-0.1.0.tgz my-repo
+```

@@ -136,3 +136,38 @@ tolerations: []
 
 # -- Affinity rules for pod scheduling
 affinity: {}
+
+# -- Istio VirtualService configuration
+virtualservice:
+  # -- Enable VirtualService
+  enabled: false
+  # -- Istio gateway references
+  gateways: []
+    # - istio-ingress/external-gateway
+  # -- VirtualService hostnames
+  hosts: []
+    # - app.example.com
+  # -- Destination port (defaults to service.port)
+  port: ""
+  # -- CORS policy (optional)
+  # corsPolicy:
+  #   allowOrigins:
+  #     - "https://www.example.com"
+  #   allowMethods:
+  #     - GET
+  #     - POST
+  #     - OPTIONS
+  #   allowHeaders:
+  #     - Content-Type
+  #     - Authorization
+  #   allowCredentials: false
+  #   maxAge: "24h"
+
+# -- PodDisruptionBudget configuration
+podDisruptionBudget:
+  # -- Enable PDB
+  enabled: false
+  # -- Minimum number of available pods
+  minAvailable: 1
+  # -- Maximum number of unavailable pods (mutually exclusive with minAvailable)
+  # maxUnavailable: 1

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Helm charts repository that serves two purposes:
 
 1. **Publishable Helm charts** in `charts/` — released via GitHub Pages using `helm/chart-releaser-action`
-2. **Project templates** in `project-demo/` — reusable Kubernetes/Helm manifests for infrastructure components (ArgoCD, Istio, monitoring, logging, databases, etc.)
+2. **Quickstart examples** in `*-example/` directories — ready-to-use templates for Kustomize or Helm app deployment, plus infrastructure reference configs
 
 The repo is hosted at `https://logic3579.github.io/helm-charts` as a Helm chart repository.
 
@@ -23,24 +23,41 @@ helm package charts/*
 # Update chart index for GitHub Pages publishing
 helm repo index ./charts --url https://logic3579.github.io/helm-charts
 
+# Update chart dependencies (required after modifying Chart.yaml dependencies)
+helm dependency update charts/go-app
+
 # Template a chart locally to inspect rendered output
 helm template my-release charts/go-app -f charts/go-app/values.yaml
+
+# Template with example values
+helm template backend charts/go-app -f helm-example/backend-example/values.yaml
+
+# Build kustomize overlays
+kustomize build kustomize-example/overlays/dev
 ```
 
 ## Architecture
 
 ### charts/
 
+- **common** — Shared Helm library chart (`type: library`) providing reusable named templates: labels, helpers, VirtualService, PodDisruptionBudget. All app charts depend on this via `dependencies`
 - **go-app** — Generic deployment chart for Go applications (port 8080, /healthz + /readyz probes, minimal resource footprint)
 - **python-app** — Generic deployment chart for Python applications (port 8000, /health probes, higher memory defaults for Python runtimes)
 - **frontend-app** — Generic deployment chart for compiled frontend apps served by nginx (port 80, optional custom nginx config, lightweight resources)
 
-### project-demo/
+### kustomize-example/
 
-Reference configurations organized by concern:
+Kustomize base/components/overlays pattern: base manifests with security hardening, reusable Components for shared resource limits, per-environment overlays (dev/stg/prod)
 
-- **application/** — Helm charts for deploying apps. `common/` provides shared named templates (deployment, service, ingress, HPA, configmap, virtualservice) consumed by `backend-example` and `frontend-example` via template includes (`tpl/` defines, `yaml/` invokes)
-- **argocd/** — Multi-cluster GitOps setup with ApplicationSets, cluster secrets, projects, notifications. Uses GKE Workload Identity for cross-project auth. Example files (`.yaml.example`) need placeholders replaced before use
+### helm-example/
+
+Example values files (`backend-example/`, `frontend-example/`) that deploy apps using the `charts/` charts
+
+### infrastructure-example/
+
+Cluster infrastructure reference configs:
+
+- **argocd/** — Multi-cluster GitOps setup with ApplicationSets, cluster secrets, projects, notifications (GKE Workload Identity)
 - **istio/** — Gateway and AuthorizationPolicy configs for external/internal traffic
 - **monitoring/** — Nightingale (n9e) + Categraf + Grafana dashboards and alert rules
 - **cert-manager/, database/, bigdata/, logging/, streaming/, mgmt/** — Various infrastructure component manifests

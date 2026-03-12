@@ -1,3 +1,0 @@
-{{- if .Values.ingress }}
-{{- include "global.ingress" . }}
-{{- end }}
