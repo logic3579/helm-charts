@@ -1,0 +1,601 @@
+{
+    "id": 0,
+    "group_id": 0,
+    "name": "Istio Control Plane / istiod",
+    "ident": "",
+    "tags": "Istio,ControlPlane",
+    "create_at": 0,
+    "create_by": "",
+    "update_at": 0,
+    "update_by": "",
+    "configs": {
+        "panels": [
+            {
+                "collapsed": false,
+                "id": "row-overview",
+                "layout": {
+                    "h": 1,
+                    "i": "row-overview",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 0
+                },
+                "name": "Overview",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "calc": "lastNotNull",
+                    "colSpan": 1,
+                    "colorMode": "value",
+                    "textMode": "value",
+                    "textSize": {}
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Number of currently connected Envoy proxies (sidecars + gateways)",
+                "id": "stat-connected-proxies",
+                "layout": {
+                    "h": 4,
+                    "i": "stat-connected-proxies",
+                    "isResizable": true,
+                    "w": 6,
+                    "x": 0,
+                    "y": 1
+                },
+                "name": "Connected Proxies",
+                "options": {
+                    "standardOptions": {
+                        "decimals": 0
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {"value": 0, "color": "green"}
+                        ]
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(pilot_xds_pushes{job=\"istiod\", env=\"$env\"}) by (type)",
+                        "legend": "{{type}}",
+                        "refId": "A",
+                        "hide": true
+                    },
+                    {
+                        "expr": "pilot_xds{job=\"istiod\", env=\"$env\"}",
+                        "legend": "Connected Proxies",
+                        "refId": "B"
+                    }
+                ],
+                "type": "stat",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "calc": "lastNotNull",
+                    "colSpan": 1,
+                    "colorMode": "value",
+                    "textMode": "value",
+                    "textSize": {}
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Total xDS push errors. Non-zero indicates configuration push failures.",
+                "id": "stat-push-errors",
+                "layout": {
+                    "h": 4,
+                    "i": "stat-push-errors",
+                    "isResizable": true,
+                    "w": 6,
+                    "x": 6,
+                    "y": 1
+                },
+                "name": "xDS Push Errors",
+                "options": {
+                    "standardOptions": {
+                        "decimals": 0
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {"value": 0, "color": "green"},
+                            {"value": 1, "color": "yellow"},
+                            {"value": 10, "color": "red"}
+                        ]
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(pilot_xds_push_errors{job=\"istiod\", env=\"$env\"}) or vector(0)",
+                        "legend": "Push Errors",
+                        "refId": "A"
+                    }
+                ],
+                "type": "stat",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "calc": "lastNotNull",
+                    "colSpan": 1,
+                    "colorMode": "value",
+                    "textMode": "value",
+                    "textSize": {}
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Number of conflicting inbound/outbound listeners detected by Pilot",
+                "id": "stat-conflicts",
+                "layout": {
+                    "h": 4,
+                    "i": "stat-conflicts",
+                    "isResizable": true,
+                    "w": 6,
+                    "x": 12,
+                    "y": 1
+                },
+                "name": "Pilot Conflicts",
+                "options": {
+                    "standardOptions": {
+                        "decimals": 0
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {"value": 0, "color": "green"},
+                            {"value": 1, "color": "yellow"},
+                            {"value": 5, "color": "red"}
+                        ]
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "pilot_conflict_inbound_listener{job=\"istiod\", env=\"$env\"} + pilot_conflict_outbound_listener_tcp_over_current_tcp{job=\"istiod\", env=\"$env\"} or vector(0)",
+                        "legend": "Conflicts",
+                        "refId": "A"
+                    }
+                ],
+                "type": "stat",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "calc": "lastNotNull",
+                    "colSpan": 1,
+                    "colorMode": "value",
+                    "textMode": "value",
+                    "textSize": {}
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Total number of Istio virtual services, destination rules, and gateways",
+                "id": "stat-config-count",
+                "layout": {
+                    "h": 4,
+                    "i": "stat-config-count",
+                    "isResizable": true,
+                    "w": 6,
+                    "x": 18,
+                    "y": 1
+                },
+                "name": "Config Objects",
+                "options": {
+                    "standardOptions": {
+                        "decimals": 0
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {"value": 0, "color": "green"}
+                        ]
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "pilot_virt_services{job=\"istiod\", env=\"$env\"}",
+                        "legend": "VirtualServices",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "pilot_services{job=\"istiod\", env=\"$env\"}",
+                        "legend": "Services",
+                        "refId": "B"
+                    }
+                ],
+                "type": "stat",
+                "version": "2.0.0"
+            },
+            {
+                "collapsed": false,
+                "id": "row-xds",
+                "layout": {
+                    "h": 1,
+                    "i": "row-xds",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 5
+                },
+                "name": "xDS Push",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Rate of xDS configuration pushes by type (CDS, EDS, LDS, RDS)",
+                "id": "ts-xds-pushes",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-xds-pushes",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 0,
+                    "y": 6
+                },
+                "name": "xDS Push Rate by Type",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(rate(pilot_xds_pushes{job=\"istiod\", env=\"$env\"}[5m])) by (type)",
+                        "legend": "{{type}}",
+                        "refId": "A"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "P50 / P90 / P99 of proxy convergence time - how long it takes for config changes to reach all proxies",
+                "id": "ts-convergence-time",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-convergence-time",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 12,
+                    "y": 6
+                },
+                "name": "Proxy Convergence Time",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "util": "seconds",
+                        "decimals": 3,
+                        "min": 0
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.50, sum(rate(pilot_proxy_convergence_time_bucket{job=\"istiod\", env=\"$env\"}[5m])) by (le))",
+                        "legend": "P50",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.90, sum(rate(pilot_proxy_convergence_time_bucket{job=\"istiod\", env=\"$env\"}[5m])) by (le))",
+                        "legend": "P90",
+                        "refId": "B"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.99, sum(rate(pilot_proxy_convergence_time_bucket{job=\"istiod\", env=\"$env\"}[5m])) by (le))",
+                        "legend": "P99",
+                        "refId": "C"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "collapsed": false,
+                "id": "row-errors",
+                "layout": {
+                    "h": 1,
+                    "i": "row-errors",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 13
+                },
+                "name": "Errors & Rejections",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Rate of xDS push errors and config rejections",
+                "id": "ts-push-errors",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-push-errors",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 0,
+                    "y": 14
+                },
+                "name": "Push Errors & Rejections",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(rate(pilot_xds_push_errors{job=\"istiod\", env=\"$env\"}[5m])) or vector(0)",
+                        "legend": "Push Errors",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "sum(rate(pilot_total_xds_rejects{job=\"istiod\", env=\"$env\"}[5m])) or vector(0)",
+                        "legend": "Config Rejections",
+                        "refId": "B"
+                    },
+                    {
+                        "expr": "sum(rate(pilot_total_xds_internal_errors{job=\"istiod\", env=\"$env\"}[5m])) or vector(0)",
+                        "legend": "Internal Errors",
+                        "refId": "C"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Sidecar injection success and failure counts",
+                "id": "ts-sidecar-injection",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-sidecar-injection",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 12,
+                    "y": 14
+                },
+                "name": "Sidecar Injection",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(rate(sidecar_injection_success_total{job=\"istiod\", env=\"$env\"}[5m])) or vector(0)",
+                        "legend": "Success",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "sum(rate(sidecar_injection_failure_total{job=\"istiod\", env=\"$env\"}[5m])) or vector(0)",
+                        "legend": "Failure",
+                        "refId": "B"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "collapsed": false,
+                "id": "row-resources",
+                "layout": {
+                    "h": 1,
+                    "i": "row-resources",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 21
+                },
+                "name": "Resource Counts",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Number of Istio configuration objects tracked by Pilot",
+                "id": "ts-config-resources",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-config-resources",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 0,
+                    "y": 22
+                },
+                "name": "Pilot Config Resources",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull"]
+                    },
+                    "standardOptions": {
+                        "decimals": 0
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "pilot_virt_services{job=\"istiod\", env=\"$env\"}",
+                        "legend": "VirtualServices",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "pilot_services{job=\"istiod\", env=\"$env\"}",
+                        "legend": "Services",
+                        "refId": "B"
+                    },
+                    {
+                        "expr": "pilot_xds{job=\"istiod\", env=\"$env\"}",
+                        "legend": "Connected Proxies",
+                        "refId": "C"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "xDS push queue time - how long push requests wait in queue before being processed",
+                "id": "ts-push-time",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-push-time",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 12,
+                    "y": 22
+                },
+                "name": "xDS Push Duration",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "util": "seconds",
+                        "decimals": 3,
+                        "min": 0
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.50, sum(rate(pilot_xds_push_time_bucket{job=\"istiod\", env=\"$env\"}[5m])) by (le))",
+                        "legend": "P50",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.99, sum(rate(pilot_xds_push_time_bucket{job=\"istiod\", env=\"$env\"}[5m])) by (le))",
+                        "legend": "P99",
+                        "refId": "B"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            }
+        ],
+        "var": [
+            {
+                "name": "datasource",
+                "type": "datasource",
+                "definition": "prometheus"
+            },
+            {
+                "name": "env",
+                "type": "query",
+                "hide": false,
+                "datasource": {
+                    "cate": "prometheus",
+                    "value": "${datasource}"
+                },
+                "definition": "label_values(pilot_xds{job=\"istiod\"}, env)",
+                "reg": "",
+                "multi": false
+            }
+        ],
+        "version": "3.0.0"
+    },
+    "public": 0,
+    "public_cate": 0,
+    "bgids": null,
+    "built_in": 0,
+    "hide": 0
+}

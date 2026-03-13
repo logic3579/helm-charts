@@ -107,27 +107,27 @@
   },
   {
     "cate": "host",
-    "datasource_queries": [
-      {
-        "match_type": 0,
-        "op": "in",
-        "values": [
-          2
-        ]
-      }
-    ],
+    "datasource_queries": null,
     "name": "Lost connection with monitoring target",
     "note": "",
     "prod": "host",
     "delay": 0,
-    "prom_for_duration": 0,
+    "prom_for_duration": 180,
     "rule_config": {
       "inhibit": false,
       "queries": [
         {
-          "key": "all_hosts",
+          "key": "hosts",
           "op": "==",
-          "values": []
+          "values": [
+            "algorithm-as1-vm-a",
+            "algorithm-ew2-vm-a",
+            "algorithm-uc1-vm-a",
+            "algorithm-uc1-vm-b",
+            "hbase-prod-as1-vm-a",
+            "hbase-prod-ew2-vm-a",
+            "hbase-prod-uc1-vm-a"
+          ]
         }
       ],
       "triggers": [
@@ -135,94 +135,6 @@
           "duration": 60,
           "severity": 2,
           "type": "target_miss"
-        }
-      ]
-    },
-    "event_relabel_config": null,
-    "prom_eval_interval": 15,
-    "enable_in_bg": 0,
-    "notify_recovered": 1,
-    "notify_repeat_step": 60,
-    "notify_max_number": 0,
-    "recover_duration": 0,
-    "callbacks": [],
-    "append_tags": [],
-    "annotations": {},
-    "uuid": 0,
-    "cur_event_count": 0,
-    "update_by_nickname": "long",
-    "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
-    "notify_version": 1
-  },
-  {
-    "cate": "prometheus",
-    "datasource_queries": [
-      {
-        "match_type": 0,
-        "op": "in",
-        "values": [
-          2
-        ]
-      }
-    ],
-    "name": "Machine load - high cpu load",
-    "note": "",
-    "prod": "metric",
-    "delay": 0,
-    "prom_for_duration": 600,
-    "rule_config": {
-      "inhibit": true,
-      "queries": [
-        {
-          "prom_ql": "100 - cpu_usage_idle{env=\"prod\",cpu=\"cpu-total\"} > 95",
-          "severity": 1
-        }
-      ]
-    },
-    "event_relabel_config": null,
-    "prom_eval_interval": 15,
-    "enable_in_bg": 0,
-    "notify_recovered": 1,
-    "notify_repeat_step": 60,
-    "notify_max_number": 0,
-    "recover_duration": 0,
-    "callbacks": [],
-    "append_tags": [],
-    "annotations": {},
-    "uuid": 0,
-    "cur_event_count": 0,
-    "update_by_nickname": "long",
-    "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
-    "notify_version": 1
-  },
-  {
-    "cate": "prometheus",
-    "datasource_queries": [
-      {
-        "match_type": 0,
-        "op": "in",
-        "values": [
-          2
-        ]
-      }
-    ],
-    "name": "Machine load - high memory load",
-    "note": "",
-    "prod": "metric",
-    "delay": 0,
-    "prom_for_duration": 300,
-    "rule_config": {
-      "inhibit": true,
-      "queries": [
-        {
-          "prom_ql": "100 - mem_available_percent{env=\"prod\"} > 95",
-          "severity": 1
         }
       ]
     },
@@ -385,6 +297,98 @@
             "param_val": null
           },
           "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "System - high cpu load",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 600,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "100 - cpu_usage_idle{env=\"prod\",cpu=\"cpu-total\"} > 95",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [
+      1
+    ],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "System - high memory load",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "100 - mem_available_percent{env=\"prod\",ident!~\"algorithm.*\"} > 85",
+          "severity": 2
+        },
+        {
+          "prom_ql": "100 - mem_available_percent{env=\"prod\",ident=~\"algorithm.*\"} > 90",
+          "severity": 1
         }
       ]
     },

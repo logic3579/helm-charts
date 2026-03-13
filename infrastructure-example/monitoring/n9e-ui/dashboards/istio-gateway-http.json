@@ -1,0 +1,808 @@
+{
+    "id": 0,
+    "group_id": 0,
+    "name": "Istio Gateway - HTTP TCP and Bandwidth",
+    "ident": "",
+    "tags": "Istio,Gateway",
+    "create_at": 0,
+    "create_by": "",
+    "update_at": 0,
+    "update_by": "",
+    "configs": {
+        "panels": [
+            {
+                "collapsed": false,
+                "id": "row-overview",
+                "layout": {
+                    "h": 1,
+                    "i": "row-overview",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 0
+                },
+                "name": "Overview",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "calc": "lastNotNull",
+                    "colSpan": 1,
+                    "colorMode": "value",
+                    "textMode": "value",
+                    "textSize": {}
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Total requests per second across all gateways (ops/s)",
+                "id": "stat-request-volume",
+                "layout": {
+                    "h": 4,
+                    "i": "stat-request-volume",
+                    "isResizable": true,
+                    "w": 6,
+                    "x": 0,
+                    "y": 1
+                },
+                "name": "Request Volume (ops/s)",
+                "options": {
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {"value": 0, "color": "green"}
+                        ]
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "round(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[1m])), 0.01)",
+                        "legend": "Request Volume",
+                        "refId": "A"
+                    }
+                ],
+                "type": "stat",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "calc": "lastNotNull",
+                    "colSpan": 1,
+                    "colorMode": "value",
+                    "textMode": "value",
+                    "textSize": {}
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Ratio of non-5xx responses to total requests",
+                "id": "stat-success-rate",
+                "layout": {
+                    "h": 4,
+                    "i": "stat-success-rate",
+                    "isResizable": true,
+                    "w": 6,
+                    "x": 6,
+                    "y": 1
+                },
+                "name": "Success Rate (non-5xx)",
+                "options": {
+                    "standardOptions": {
+                        "util": "percentUnit",
+                        "decimals": 2
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {"value": 0, "color": "red"},
+                            {"value": 0.95, "color": "yellow"},
+                            {"value": 0.99, "color": "green"}
+                        ]
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\", response_code!~\"5..\"}[1m])) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[1m]))",
+                        "legend": "Success Rate",
+                        "refId": "A"
+                    }
+                ],
+                "type": "stat",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "calc": "lastNotNull",
+                    "colSpan": 1,
+                    "colorMode": "value",
+                    "textMode": "value",
+                    "textSize": {}
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Client error requests per second (4xx status codes)",
+                "id": "stat-4xx",
+                "layout": {
+                    "h": 4,
+                    "i": "stat-4xx",
+                    "isResizable": true,
+                    "w": 6,
+                    "x": 12,
+                    "y": 1
+                },
+                "name": "4xx (ops/s)",
+                "options": {
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {"value": 0, "color": "green"},
+                            {"value": 0.5, "color": "yellow"},
+                            {"value": 5, "color": "red"}
+                        ]
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "round(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\", response_code=~\"4..\"}[1m])), 0.01) or vector(0)",
+                        "legend": "4xx",
+                        "refId": "A"
+                    }
+                ],
+                "type": "stat",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "calc": "lastNotNull",
+                    "colSpan": 1,
+                    "colorMode": "value",
+                    "textMode": "value",
+                    "textSize": {}
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Server error requests per second (5xx status codes)",
+                "id": "stat-5xx",
+                "layout": {
+                    "h": 4,
+                    "i": "stat-5xx",
+                    "isResizable": true,
+                    "w": 6,
+                    "x": 18,
+                    "y": 1
+                },
+                "name": "5xx (ops/s)",
+                "options": {
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {
+                        "steps": [
+                            {"value": 0, "color": "green"},
+                            {"value": 0.1, "color": "yellow"},
+                            {"value": 1, "color": "red"}
+                        ]
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "round(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\", response_code=~\"5..\"}[1m])), 0.01) or vector(0)",
+                        "legend": "5xx",
+                        "refId": "A"
+                    }
+                ],
+                "type": "stat",
+                "version": "2.0.0"
+            },
+            {
+                "collapsed": false,
+                "id": "row-traffic",
+                "layout": {
+                    "h": 1,
+                    "i": "row-traffic",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 5
+                },
+                "name": "HTTP Traffic",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Requests per second grouped by host (ops/s)",
+                "id": "ts-rps-by-host",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-rps-by-host",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 0,
+                    "y": 6
+                },
+                "name": "Request Volume by Host (ops/s)",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "round(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[1m])) by (request_host), 0.001)",
+                        "legend": "{{request_host}}",
+                        "refId": "A"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Requests per second grouped by gateway type (external / internal)",
+                "id": "ts-rps-by-gateway",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-rps-by-gateway",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 12,
+                    "y": 6
+                },
+                "name": "Request Volume by Gateway (ops/s)",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "round(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[1m])) by (gateway), 0.001)",
+                        "legend": "{{gateway}}",
+                        "refId": "A"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "collapsed": false,
+                "id": "row-duration",
+                "layout": {
+                    "h": 1,
+                    "i": "row-duration",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 13
+                },
+                "name": "Request Duration",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "P50 / P90 / P99 latency quantiles across all gateway requests",
+                "id": "ts-latency-quantiles",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-latency-quantiles",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 0,
+                    "y": 14
+                },
+                "name": "Request Duration (P50 / P90 / P99)",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "util": "milliseconds",
+                        "decimals": 1,
+                        "min": 0
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.50, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[5m])) by (le))",
+                        "legend": "P50",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.90, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[5m])) by (le))",
+                        "legend": "P90",
+                        "refId": "B"
+                    },
+                    {
+                        "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[5m])) by (le))",
+                        "legend": "P99",
+                        "refId": "C"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "P99 latency per host, useful for identifying slow endpoints. If NaN appears, verify that the Telemetry CRD is applied and gateway pods have been restarted.",
+                "id": "ts-p99-by-host",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-p99-by-host",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 12,
+                    "y": 14
+                },
+                "name": "P99 Latency by Host",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "util": "milliseconds",
+                        "decimals": 1,
+                        "min": 0
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\", request_host!=\"\"}[5m])) by (le, request_host))",
+                        "legend": "{{request_host}}",
+                        "refId": "A"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "collapsed": false,
+                "id": "row-response",
+                "layout": {
+                    "h": 1,
+                    "i": "row-response",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 21
+                },
+                "name": "Response Codes",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Request volume breakdown by host and response code (ops/s)",
+                "id": "ts-requests-by-code",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-requests-by-code",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 0,
+                    "y": 22
+                },
+                "name": "Requests by Host and Response Code (ops/s)",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull"]
+                    },
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "round(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[1m])) by (request_host, response_code), 0.001)",
+                        "legend": "{{request_host}} : {{response_code}}",
+                        "refId": "A"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Non-5xx success rate per host over time",
+                "id": "ts-success-rate-by-host",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-success-rate-by-host",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 12,
+                    "y": 22
+                },
+                "name": "Success Rate by Host (non-5xx)",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "min"]
+                    },
+                    "standardOptions": {
+                        "util": "percentUnit",
+                        "decimals": 2,
+                        "min": 0,
+                        "max": 1
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "asc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\", response_code!~\"5..\"}[1m])) by (request_host) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[1m])) by (request_host)",
+                        "legend": "{{request_host}}",
+                        "refId": "A"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "collapsed": false,
+                "id": "row-bandwidth",
+                "layout": {
+                    "h": 1,
+                    "i": "row-bandwidth",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 29
+                },
+                "name": "Bandwidth / Throughput",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Inbound request body size rate per host (bytes/s). Useful for detecting abnormal payload sizes in RTB traffic.",
+                "id": "ts-request-bytes-by-host",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-request-bytes-by-host",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 0,
+                    "y": 30
+                },
+                "name": "Request Size by Host (bytes/s)",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "util": "bytesSecSI",
+                        "decimals": 1
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(rate(istio_request_bytes_sum{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[5m])) by (request_host)",
+                        "legend": "{{request_host}}",
+                        "refId": "A"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "Outbound response body size rate per host (bytes/s). Spikes may indicate large response payloads or data leaks.",
+                "id": "ts-response-bytes-by-host",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-response-bytes-by-host",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 12,
+                    "y": 30
+                },
+                "name": "Response Size by Host (bytes/s)",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "util": "bytesSecSI",
+                        "decimals": 1
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(rate(istio_response_bytes_sum{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[5m])) by (request_host)",
+                        "legend": "{{request_host}}",
+                        "refId": "A"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "collapsed": false,
+                "id": "row-tcp",
+                "layout": {
+                    "h": 1,
+                    "i": "row-tcp",
+                    "isResizable": false,
+                    "w": 24,
+                    "x": 0,
+                    "y": 37
+                },
+                "name": "TCP Traffic",
+                "type": "row"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "TCP connection open/close rate by destination service (ClickHouse, Neo4j, HBase, etc.)",
+                "id": "ts-tcp-connections",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-tcp-connections",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 0,
+                    "y": 38
+                },
+                "name": "TCP Connections (open/close rate)",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "decimals": 2
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(rate(istio_tcp_connections_opened_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[5m])) by (destination_service_name)",
+                        "legend": "opened: {{destination_service_name}}",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "sum(rate(istio_tcp_connections_closed_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[5m])) by (destination_service_name)",
+                        "legend": "closed: {{destination_service_name}}",
+                        "refId": "B"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            },
+            {
+                "custom": {
+                    "drawStyle": "lines",
+                    "fillOpacity": 0.3,
+                    "gradientMode": "opacity",
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "stack": "off"
+                },
+                "datasourceCate": "prometheus",
+                "datasourceValue": "${datasource}",
+                "description": "TCP bytes sent/received rate by destination service (bytes/s)",
+                "id": "ts-tcp-bytes",
+                "layout": {
+                    "h": 7,
+                    "i": "ts-tcp-bytes",
+                    "isResizable": true,
+                    "w": 12,
+                    "x": 12,
+                    "y": 38
+                },
+                "name": "TCP Throughput (bytes/s)",
+                "options": {
+                    "legend": {
+                        "displayMode": "table",
+                        "placement": "bottom",
+                        "calcs": ["lastNotNull", "max"]
+                    },
+                    "standardOptions": {
+                        "util": "bytesSecSI",
+                        "decimals": 1
+                    },
+                    "thresholds": {},
+                    "tooltip": {
+                        "mode": "all",
+                        "sort": "desc"
+                    }
+                },
+                "targets": [
+                    {
+                        "expr": "sum(rate(istio_tcp_sent_bytes_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[5m])) by (destination_service_name)",
+                        "legend": "sent: {{destination_service_name}}",
+                        "refId": "A"
+                    },
+                    {
+                        "expr": "sum(rate(istio_tcp_received_bytes_total{job=\"istio-gateway\", env=\"$env\", gateway=~\"$gateway\"}[5m])) by (destination_service_name)",
+                        "legend": "received: {{destination_service_name}}",
+                        "refId": "B"
+                    }
+                ],
+                "type": "timeseries",
+                "version": "2.0.0"
+            }
+        ],
+        "var": [
+            {
+                "name": "datasource",
+                "type": "datasource",
+                "definition": "prometheus"
+            },
+            {
+                "name": "env",
+                "type": "query",
+                "hide": false,
+                "datasource": {
+                    "cate": "prometheus",
+                    "value": "${datasource}"
+                },
+                "definition": "label_values(istio_requests_total{job=\"istio-gateway\"}, env)",
+                "reg": "",
+                "multi": false
+            },
+            {
+                "name": "gateway",
+                "type": "query",
+                "hide": false,
+                "datasource": {
+                    "cate": "prometheus",
+                    "value": "${datasource}"
+                },
+                "definition": "label_values(istio_requests_total{job=\"istio-gateway\", env=\"$env\"}, gateway)",
+                "reg": "",
+                "multi": true,
+                "allOption": true
+            }
+        ],
+        "version": "3.0.0"
+    },
+    "public": 0,
+    "public_cate": 0,
+    "bgids": null,
+    "built_in": 0,
+    "hide": 0
+}

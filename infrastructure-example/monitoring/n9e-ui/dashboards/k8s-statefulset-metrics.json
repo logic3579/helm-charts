@@ -2,7 +2,7 @@
     "name": "Kubernetes Statefulset Metrics",
     "tags": "",
     "ident": "",
-    "uuid": 1763992206620000,
+    "uuid": 1773287941838000,
     "configs": {
         "version": "3.1.0",
         "links": [],
@@ -37,6 +37,16 @@
                 },
                 "reg": "",
                 "definition": "label_values(kube_statefulset_status_replicas{namespace=\"$namespace\"},statefulset)"
+            },
+            {
+                "name": "env",
+                "type": "query",
+                "hide": false,
+                "datasource": {
+                    "cate": "prometheus",
+                    "value": "${datasource}"
+                },
+                "definition": "label_values(kube_statefulset_status_replicas,env)"
             }
         ],
         "panels": [
@@ -118,7 +128,7 @@
                 "targets": [
                     {
                         "refId": "A",
-                        "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",container!=\"\"}[2m])) by (pod)",
+                        "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",container!=\"\",env=\"$env\"}[2m])) by (pod)",
                         "legend": "{{pod}}"
                     }
                 ]
@@ -201,7 +211,7 @@
                 "targets": [
                     {
                         "refId": "A",
-                        "expr": "sum(container_memory_usage_bytes{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",container!=\"\"}) by (pod)",
+                        "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",container!=\"\",env=\"$env\"}) by (pod)",
                         "legend": "{{pod}}"
                     }
                 ]
@@ -284,7 +294,7 @@
                 "targets": [
                     {
                         "refId": "A",
-                        "expr": "(sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",container!=\"\"}[2m])) by (pod) / max(kube_pod_container_resource_limits{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",resource=\"cpu\"}) by (pod)) * 100",
+                        "expr": "(sum(rate(container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",container!=\"\",env=\"$env\"}[2m])) by (pod) / max(kube_pod_container_resource_limits{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",resource=\"cpu\",env=\"$env\"}) by (pod)) * 100",
                         "legend": "{{pod}}",
                         "instant": false
                     }
@@ -368,7 +378,7 @@
                 "targets": [
                     {
                         "refId": "A",
-                        "expr": "(sum(container_memory_usage_bytes{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",container!=\"\"}) by (pod)/ max(kube_pod_container_resource_limits{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",resource=\"memory\"}) by (pod)) * 100",
+                        "expr": "(sum(container_memory_usage_bytes{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",container!=\"\",env=\"$env\"}) by (pod)/ max(kube_pod_container_resource_limits{namespace=\"$namespace\",pod=~\"$statefulset.*\",image!~\".*pause.*\",resource=\"memory\",env=\"$env\"}) by (pod)) * 100",
                         "legend": "{{pod}}"
                     }
                 ]

@@ -2,7 +2,7 @@
     "name": "Kubernetes Deployments Metrics",
     "tags": "",
     "ident": "",
-    "uuid": 1763992153982000,
+    "uuid": 1773287963881000,
     "configs": {
         "version": "3.1.0",
         "links": [],
@@ -37,6 +37,16 @@
                 },
                 "reg": "",
                 "definition": "label_values(kube_deployment_status_condition{namespace=\"$Namespace\"},deployment)"
+            },
+            {
+                "name": "env",
+                "type": "query",
+                "hide": false,
+                "datasource": {
+                    "cate": "prometheus",
+                    "value": "${Datasource}"
+                },
+                "definition": "label_values(kube_deployment_status_condition,env)"
             }
         ],
         "panels": [
@@ -118,7 +128,7 @@
                 "targets": [
                     {
                         "refId": "A",
-                        "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",container!=\"\"}[2m])) by (pod)",
+                        "expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",container!=\"\",env=\"$env\"}[2m])) by (pod)",
                         "legend": "{{pod}}"
                     }
                 ]
@@ -137,19 +147,6 @@
                 "version": "3.1.0",
                 "datasourceCate": "prometheus",
                 "datasourceValue": "${Datasource}",
-                "targets": [
-                    {
-                        "refId": "A",
-                        "expr": "sum(container_memory_usage_bytes{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",container!=\"\"}) by (pod)",
-                        "legend": "{{pod}}"
-                    }
-                ],
-                "transformations": [
-                    {
-                        "id": "organize",
-                        "options": {}
-                    }
-                ],
                 "name": "MEMORY Usage",
                 "links": [],
                 "description": "",
@@ -209,6 +206,13 @@
                         "properties": {
                             "rightYAxisDisplay": "off"
                         }
+                    }
+                ],
+                "targets": [
+                    {
+                        "refId": "A",
+                        "expr": "sum(container_memory_usage_bytes{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",container!=\"\",env=\"$env\"}) by (pod)",
+                        "legend": "{{pod}}"
                     }
                 ]
             },
@@ -290,7 +294,7 @@
                 "targets": [
                     {
                         "refId": "A",
-                        "expr": "(sum(rate(container_cpu_usage_seconds_total{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",container!=\"\"}[2m])) by (pod) / max(kube_pod_container_resource_limits{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",resource=\"cpu\"}) by (pod)) * 100",
+                        "expr": "(sum(rate(container_cpu_usage_seconds_total{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",container!=\"\",env=\"$env\"}[2m])) by (pod) / max(kube_pod_container_resource_limits{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",resource=\"cpu\",env=\"$env\"}) by (pod)) * 100",
                         "legend": "{{pod}}"
                     }
                 ]
@@ -309,19 +313,6 @@
                 "version": "3.1.0",
                 "datasourceCate": "prometheus",
                 "datasourceValue": "${Datasource}",
-                "targets": [
-                    {
-                        "refId": "A",
-                        "expr": "(sum(container_memory_usage_bytes{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",container!=\"\"}) by (pod)/ max(kube_pod_container_resource_limits{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",resource=\"memory\"}) by (pod)) * 100",
-                        "legend": "{{pod}}"
-                    }
-                ],
-                "transformations": [
-                    {
-                        "id": "organize",
-                        "options": {}
-                    }
-                ],
                 "name": "MEMORY Usage Percent",
                 "links": [],
                 "description": "",
@@ -381,6 +372,13 @@
                         "properties": {
                             "rightYAxisDisplay": "off"
                         }
+                    }
+                ],
+                "targets": [
+                    {
+                        "refId": "A",
+                        "expr": "(sum(container_memory_usage_bytes{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",container!=\"\",env=\"$env\"}) by (pod)/ max(kube_pod_container_resource_limits{namespace=\"$Namespace\",pod=~\"$Deployment.*\",image!~\".*pause.*\",resource=\"memory\",env=\"$env\"}) by (pod)) * 100",
+                        "legend": "{{pod}}"
                     }
                 ]
             }
