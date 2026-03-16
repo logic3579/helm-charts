@@ -4,8 +4,8 @@
 
 This repo provides two things:
 
-1. **Publishable Helm charts** in [`charts/`](./charts/) — released via GitHub Pages
-2. **Infrastructure examples** in `infrastructure-example/` — cluster infrastructure reference configs
+1. **Publishable Helm charts** in [`charts/`](./charts/) — released via GitHub Pages and GitHub Releases
+2. **Infrastructure examples** in [`infrastructure-example/`](./infrastructure-example/) — cluster infrastructure reference configs
 
 ## Available Charts
 
@@ -16,45 +16,59 @@ This repo provides two things:
 | [python-app](./charts/python-app) | Generic chart for Python application deployment (FastAPI, Django, Flask) | 8000 |
 | [frontend-app](./charts/frontend-app) | Generic chart for frontend application deployment (nginx-based SPA) | 80 |
 
-## Examples
-
-| Path | Description |
-|------|-------------|
-| [infrastructure-example/](./infrastructure-example/) | Cluster infrastructure configs (ArgoCD, Istio, monitoring, etc.) |
-
-## Usage
-
-### Install from Helm repo
+## Install from Helm Repo
 
 ```bash
+# Add the chart repository
 helm repo add logic-charts https://logic3579.github.io/helm-charts
+
+# Update repository
 helm repo update
+
+# Search for available charts
 helm search repo logic-charts
 
 # Install a chart
 helm install my-go-app logic-charts/go-app -f my-values.yaml
 ```
 
-### Build and publish charts
+## Deploy from Local Chart
 
 ```bash
-helm lint charts/*
-helm package charts/*
-helm repo index ./charts --url https://logic3579.github.io/helm-charts
-```
-
-### Deploy from local chart
-
-```bash
+# Update dependencies (required for charts with common library)
 helm dependency update charts/go-app
-helm install backend charts/go-app -f my-values.yaml
+
+# Template and inspect rendered manifests
+helm template my-release charts/go-app -f charts/go-app/values.yaml
+
+# Install from local chart
+helm install my-release charts/go-app -f my-values.yaml
 ```
 
-### GitLab Package registry
+## Release a New Version
+
+To release a new version of the charts:
+
+1. Modify chart source under `charts/`
+2. **Bump `version` in `Chart.yaml`** — this is the release trigger
+3. Commit and push to `main`
 
 ```bash
-helm plugin install https://github.com/chartmuseum/helm-push
-helm repo add --username <username> --password <access_token> my-repo \
-  https://gitlab.example.com/api/v4/projects/<project_id>/packages/helm/stable
-helm cm-push go-app-0.1.0.tgz my-repo
+# Example: bump version to 0.3.0
+# Edit charts/go-app/Chart.yaml, charts/python-app/Chart.yaml, charts/frontend-app/Chart.yaml
+# Set version: 0.3.0
+
+git add charts/
+git commit -m "release: bump charts to v0.3.0"
+git push origin main
 ```
+
+The GitHub Actions workflow will automatically:
+- Lint and package the charts
+- Create GitHub Releases with `.tgz` assets
+- Update `index.yaml` on the `gh-pages` branch
+- Deploy to GitHub Pages
+
+## ArgoCD Integration
+
+The `charts/` directory can also be used directly with ArgoCD. Point ArgoCD to a chart path (e.g., `charts/go-app`) and provide deployment-specific values in the Application's `values` field.
