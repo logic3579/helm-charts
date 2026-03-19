@@ -1094,34 +1094,16 @@
     </table>
 
     <h2>Usage</h2>
-    <h3>Build a Helm package</h3>
-    <p>To create a helm chart</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm create charts/my-chart
-</span></code></pre>
-    <p>Check configuration for all charts</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm lint charts/*
-</span></code></pre>
-    <p>Package all helm chart into chart archive</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm package charts/*
-</span></code></pre>
-    <h3>GitHub Pages example</h3>
+    <h3>Install from Helm Repo</h3>
     <p><a href="https://helm.sh">Helm</a> must be installed to use the charts. Please refer to
       Helm's <a href="https://helm.sh/docs/">documentation</a> to get started.</p>
-    <p><a href="https://github.com/logic3579/helm-charts/settings/pages">GitHub Pages settings</a>, use GitHub Actions
-    </p>
-    <p>Index and publish helm package</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm repo index ./charts --url https://logic3579.github.io/helm-charts/
-</span><span class="code-line line-number" line="2">git add -A
-</span><span class="code-line line-number" line="3">git commit -m 'update: update helm-charts index.yaml'
-</span><span class="code-line line-number" line="4">git push origin
-</span></code></pre>
-    <p>Once Helm has been set up correctly, add the repo as follows:</p>
+    <p>Add the repository:</p>
     <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm repo add logic-charts https://logic3579.github.io/helm-charts
 </span></code></pre>
     <p>If you had already added this repo earlier, run <code>helm repo update</code> to retrieve
       the latest versions of the packages.
       You can then run <code>helm search repo logic-charts</code> to see the charts.</p>
-    <p>Install the charts:</p>
+    <p>Install a chart:</p>
     <pre><code class="code-highlight"><span class="code-line line-number" line="1"># Go application
 </span><span class="code-line line-number" line="2">helm install my-go-app logic-charts/go-app -f my-values.yaml
 </span><span class="code-line line-number" line="3">
@@ -1134,24 +1116,28 @@
     <p>Uninstall a chart:</p>
     <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm uninstall my-go-app
 </span></code></pre>
-    <h3>GitLab Package registry</h3>
-    <p><a href="https://gitlab.com/">GitLab</a> must be installed to use. Please refer to
-      GitLab's <a href="https://docs.gitlab.com/ee/user/packages/helm_repository/">documentation</a> to get started.</p>
-    <p>Install helm cm-push plugin</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1"># https://github.com/chartmuseum/helm-push
-</span><span class="code-line line-number" line="2">helm plugin install https://github.com/chartmuseum/helm-push
+    <h3>Local Development</h3>
+    <p>Resolve the <code>common</code> library dependency before linting or templating:</p>
+    <pre><code class="code-highlight"><span class="code-line line-number" line="1"># Resolve common library dependency
+</span><span class="code-line line-number" line="2">helm dependency update charts/go-app
+</span><span class="code-line line-number" line="3">
+</span><span class="code-line line-number" line="4"># Lint (application charts only — common is a library and not linted standalone)
+</span><span class="code-line line-number" line="5">helm lint charts/go-app
+</span><span class="code-line line-number" line="6">
+</span><span class="code-line line-number" line="7"># Inspect rendered manifests
+</span><span class="code-line line-number" line="8">helm template my-release charts/go-app -f charts/go-app/values.yaml
 </span></code></pre>
-    <p>Authenticate to the Helm repository, get username and token from GitLab</p>
-    <p>Index and publish helm package</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm repo add --username &lt;username&gt; --password &lt;access_token&gt; my-repo https://gitlab.example.com/api/v4/projects/&lt;project_id&gt;/packages/helm/stable
-</span><span class="code-line line-number" line="2">helm cm-push go-app-0.1.0.tgz my-repo
-</span></code></pre>
-    <p>Install the chart:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm install my-go-app my-repo/go-app
-</span></code></pre>
-    <p>Uninstall the chart:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm uninstall my-go-app
-</span></code></pre>
+    <h3>Release a New Version</h3>
+    <p>Publishing is fully automated via GitHub Actions. To release a new version:</p>
+    <ol>
+      <li>Modify chart source under <code>charts/</code></li>
+      <li>Bump <code>version</code> in <code>Chart.yaml</code> — this is the release trigger</li>
+      <li>Commit and push to <code>main</code></li>
+    </ol>
+    <p>The workflow will automatically lint, package, create a GitHub Release with the <code>.tgz</code>
+      asset, update <code>index.yaml</code> on the <code>gh-pages</code> branch, and deploy to GitHub Pages.
+      Do <strong>not</strong> manually run <code>helm repo index</code> — the index is managed by
+      <a href="https://github.com/helm/chart-releaser-action">chart-releaser-action</a>.</p>
   </div>
 </body>
 

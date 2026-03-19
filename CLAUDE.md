@@ -14,8 +14,12 @@ The repo is hosted at `https://logic3579.github.io/helm-charts` as a Helm chart 
 ## Common Commands
 
 ```bash
-# Lint all charts
-helm lint charts/*
+# Lint application charts only (common is a library chart — not linted standalone)
+for chart in charts/*/; do
+  if [ -f "$chart/Chart.yaml" ] && ! grep -q 'type: library' "$chart/Chart.yaml"; then
+    helm lint "$chart"
+  fi
+done
 
 # Update chart dependencies (required after modifying Chart.yaml dependencies)
 helm dependency update charts/go-app
@@ -32,10 +36,12 @@ helm install my-go-app logic-charts/go-app -f my-values.yaml
 
 ### charts/
 
-- **common** — Shared Helm library chart (`type: library`) providing reusable named templates: labels, helpers, VirtualService, PodDisruptionBudget. All app charts depend on this via `dependencies` using `file://../common`. Not published to the registry — it is embedded into each app chart's `.tgz` during packaging
-- **go-app** — Generic deployment chart for Go applications (port 8080, /healthz + /readyz probes, minimal resource footprint)
-- **python-app** — Generic deployment chart for Python applications (port 8000, /health probes, higher memory defaults for Python runtimes)
-- **frontend-app** — Generic deployment chart for compiled frontend apps served by nginx (port 80, optional custom nginx config, lightweight resources)
+- **common** — Shared Helm library chart (`type: library`) providing reusable named templates: labels, helpers, VirtualService, PodDisruptionBudget. All app charts depend on this via `dependencies` using `file://../common` pinned to version `0.2.0`. Not published to the registry — it is embedded into each app chart's `.tgz` during packaging
+- **go-app** — Generic deployment chart for Go applications (port 8080, /healthz + /readyz probes, `readOnlyRootFilesystem: true`, minimal resource footprint)
+- **python-app** — Generic deployment chart for Python applications (port 8000, /health probes, `readOnlyRootFilesystem: false` for Python tmp needs, `startupProbe` enabled by default with 30×5s window, higher memory defaults)
+- **frontend-app** — Generic deployment chart for compiled frontend apps served by nginx (port 80, `readOnlyRootFilesystem: true` with `emptyDir` volumes auto-mounted for `/var/cache/nginx`, `/var/run`, `/tmp`, optional custom nginx config)
+
+All three app charts support: `startupProbe`, `volumes`/`volumeMounts`, HPA with CPU+memory targets, and Istio VirtualService CORS with `exact`/`prefix`/`regex` origin match types.
 
 Each chart has a single `values.yaml` that serves as both the default values and the configuration reference. Deployment-specific overrides (image repo, resources, env vars, etc.) should be provided via ArgoCD Application `values` or `helm install -f`.
 
@@ -73,15 +79,17 @@ The GitHub Actions workflow (`.github/workflows/release.yml`) automates chart pu
 ### Workflow steps
 
 ```
-checkout (fetch-depth: 0, full history + tags for chart-releaser)
+checkout (fetch-depth: 0, full history + tags for chart-releaser)  [ubuntu-24.04]
     ↓
 helm dependency update (resolve file://../common for each app chart)
     ↓
-helm lint (validate all charts)
+helm lint (application charts only — filters type: library)
     ↓
-helm package (only type: application charts → .cr-release-packages/)
+helm package (application charts only → .cr-release-packages/)
     ↓
-chart-releaser-action (skip_packaging: true):
+check for new versions (gh release view per package; skip chart-releaser if all exist)
+    ↓
+chart-releaser-action (skip_packaging: true, only runs when new versions detected):
   a. cr upload — create GitHub Release per new version, .tgz as asset
   b. cr index  — regenerate index.yaml, push to gh-pages branch
     ↓
@@ -89,6 +97,8 @@ Prepare Pages (index.html from main + index.yaml from gh-pages → ./public/)
     ↓
 Deploy to GitHub Pages (serves both index.html and index.yaml)
 ```
+
+**Important**: Do NOT manually run `helm repo index` — `index.yaml` is exclusively managed by chart-releaser on the `gh-pages` branch.
 
 ### Key branches
 
@@ -108,9 +118,13 @@ helm install my-app logic-charts/go-app
 
 - Template files use `.example` suffix for configs requiring secret/environment-specific values
 - ArgoCD notification templates use `.template` suffix for secret templates
-- **Secrets management**: All credentials use Kubernetes Secrets with `secretKeyRef` or environment variable placeholders (`${VAR_NAME}`) — never hardcode secrets in ConfigMaps or manifests
+- **Secrets management**: All credentials use Kubernetes Secrets with `secretKeyRef` or environment variable placeholders (`${VAR_NAME}`) — never hardcode secrets in ConfigMaps or manifests. The built-in `secret:` chart feature base64-encodes plaintext values at render time — for production use External Secrets Operator (ESO) or Sealed Secrets instead
 - **Image tags**: Always pin container images to specific versions, never use `:latest`
 - **Istio gateways**: Internal services use `istio-ingress/internal-gateway`, external services use `istio-ingress/external-gateway`
-- **CORS**: Use parameterized origins via values (`.Values.ingress.corsAllowOrigin`, `.Values.virtualservice.corsAllowOrigins`), never wildcard `*` with credentials
-- **Library chart**: `common` is never packaged or published; it is embedded via `helm dependency update`
+- **CORS**: VirtualService `corsPolicy.allowOrigins` accepts strings (shorthand for `exact`) or maps (`exact`/`prefix`/`regex`). Never use wildcard `*` with credentials
+- **Library chart**: `common` is never packaged or published; it is embedded via `helm dependency update`. Pin the dependency to an explicit version (e.g. `"0.2.0"`) in each app chart's `Chart.yaml` — avoid version ranges like `">=0.x.x"`
 - **Helm dependency artifacts**: `charts/*/charts/` and `charts/*/Chart.lock` are gitignored (generated by `helm dependency update`)
+- **PodDisruptionBudget**: `minAvailable` and `maxUnavailable` are mutually exclusive — setting both causes a `helm template` failure by design
+- **Startup probes**: python-app enables `startupProbe` by default (`failureThreshold: 30, periodSeconds: 5` = 150s max startup window). For go-app and frontend-app, `startupProbe` is optional and empty by default
+- **Volumes**: All app charts accept `volumes` and `volumeMounts` lists for injecting arbitrary volumes. For go-app (`readOnlyRootFilesystem: true`), mount a tmpfs `emptyDir` for `/tmp` if the app writes temp files. frontend-app auto-mounts nginx writable dirs (`nginxWritableDirs`) — customize in values if using a non-standard nginx image
+- **Linting**: Always lint with the loop command above (or the CI workflow pattern) — never `helm lint charts/*` which includes the library chart and may produce misleading errors

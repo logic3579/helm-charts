@@ -81,6 +81,9 @@ livenessProbe:
     port: http
   initialDelaySeconds: 10
   periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
 
 # -- Readiness probe configuration
 readinessProbe:
@@ -89,6 +92,17 @@ readinessProbe:
     port: http
   initialDelaySeconds: 10
   periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+# -- Startup probe configuration (gives Python apps up to 150s to start before liveness kicks in)
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+  failureThreshold: 30
+  periodSeconds: 5
 
 # -- Horizontal Pod Autoscaler configuration
 autoscaling:
@@ -96,6 +110,14 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80
+  # -- Target memory utilization percentage (optional)
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Additional volumes to add to the pod
+volumes: []
+
+# -- Additional volume mounts for the container
+volumeMounts: []
 
 # -- Extra environment variables as a list of name/value pairs
 # Example:
@@ -123,6 +145,8 @@ configMap:
   data: {}
 
 # -- Secret configuration
+# WARNING: values are stored as plaintext and base64-encoded at render time.
+# For production secrets, use External Secrets Operator (ESO) or Sealed Secrets instead.
 secret:
   enabled: false
   # -- Key-value pairs to store in the Secret (values will be base64 encoded)
@@ -152,7 +176,10 @@ virtualservice:
   # -- CORS policy (optional)
   # corsPolicy:
   #   allowOrigins:
-  #     - "https://www.example.com"
+  #     - "https://www.example.com"          # shorthand: exact match
+  #     - exact: "https://api.example.com"   # explicit exact match
+  #     - prefix: "https://"                 # prefix match
+  #     - regex: "https://.*\\.example\\.com" # regex match
   #   allowMethods:
   #     - GET
   #     - POST

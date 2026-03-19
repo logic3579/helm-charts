@@ -19,3 +19,5 @@
 .idea/
 *.tmproj
 .vscode/
+# Documentation (not needed in the packaged chart)
+README.md

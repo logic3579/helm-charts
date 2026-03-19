@@ -24,3 +24,5 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+# Documentation (not needed in the packaged chart)
+README.md

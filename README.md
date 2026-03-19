@@ -11,7 +11,7 @@ This repo provides two things:
 
 | Chart | Description | Default Port |
 |-------|-------------|-------------|
-| [common](./charts/common) | Shared library chart (labels, VirtualService, PDB) | — |
+| [common](./charts/common) | Shared library chart (labels, VirtualService, PDB) — embedded into app charts, not published to the registry | — |
 | [go-app](./charts/go-app) | Generic chart for Go application deployment | 8080 |
 | [python-app](./charts/python-app) | Generic chart for Python application deployment (FastAPI, Django, Flask) | 8000 |
 | [frontend-app](./charts/frontend-app) | Generic chart for frontend application deployment (nginx-based SPA) | 80 |
@@ -68,6 +68,22 @@ The GitHub Actions workflow will automatically:
 - Create GitHub Releases with `.tgz` assets
 - Update `index.yaml` on the `gh-pages` branch
 - Deploy to GitHub Pages
+
+## Chart Features
+
+All application charts (`go-app`, `python-app`, `frontend-app`) support:
+
+| Feature | Key | Notes |
+|---------|-----|-------|
+| Liveness / Readiness probe | `livenessProbe`, `readinessProbe` | Configurable path, timing, thresholds |
+| Startup probe | `startupProbe` | Optional; python-app enables it by default (30×5s window) |
+| Horizontal Pod Autoscaler | `autoscaling.*` | CPU and memory targets |
+| Pod Disruption Budget | `podDisruptionBudget.*` | `minAvailable` or `maxUnavailable` (mutually exclusive) |
+| Istio VirtualService | `virtualservice.*` | CORS origins support `exact`/`prefix`/`regex` match types |
+| Extra volumes | `volumes`, `volumeMounts` | Inject arbitrary volumes (e.g. tmpfs for `/tmp`) |
+| ConfigMap / Secret | `configMap.*`, `secret.*` | Secret values are base64-encoded at render time — use ESO for production |
+
+`frontend-app` additionally mounts `emptyDir` volumes for nginx writable directories (`/var/cache/nginx`, `/var/run`, `/tmp`) and runs with `readOnlyRootFilesystem: true`.
 
 ## ArgoCD Integration
 

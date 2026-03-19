@@ -2,6 +2,13 @@
 Render an Istio VirtualService resource.
 Expects .Values.virtualservice with: enabled, gateways, hosts, port.
 Optional: corsPolicy with allowOrigins, allowMethods, allowHeaders.
+
+corsPolicy.allowOrigins supports two forms:
+  - String (shorthand for exact match): "https://www.example.com"
+  - Map (explicit match type):
+      exact: "https://www.example.com"
+      prefix: "https://"
+      regex: "https://.*\\.example\\.com"
 */}}
 {{- define "common.virtualservice" -}}
 {{- if .Values.virtualservice.enabled }}
@@ -33,7 +40,11 @@ spec:
       corsPolicy:
         allowOrigins:
           {{- range .allowOrigins }}
+          {{- if kindIs "string" . }}
           - exact: {{ . | quote }}
+          {{- else }}
+          - {{ toYaml . | trim }}
+          {{- end }}
           {{- end }}
         allowMethods:
           {{- toYaml .allowMethods | nindent 10 }}

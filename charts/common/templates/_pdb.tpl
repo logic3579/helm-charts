@@ -4,6 +4,9 @@ Expects .Values.podDisruptionBudget with: enabled, minAvailable or maxUnavailabl
 */}}
 {{- define "common.pdb" -}}
 {{- if .Values.podDisruptionBudget.enabled }}
+{{- if and .Values.podDisruptionBudget.minAvailable .Values.podDisruptionBudget.maxUnavailable }}
+{{- fail "podDisruptionBudget: minAvailable and maxUnavailable are mutually exclusive, set only one" }}
+{{- end }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:

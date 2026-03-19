@@ -42,8 +42,8 @@ podSecurityContext:
 securityContext:
   # -- Prevent privilege escalation
   allowPrivilegeEscalation: false
-  # -- Keep writable for nginx temp files (pid, cache, etc.)
-  readOnlyRootFilesystem: false
+  # -- Root filesystem is read-only; nginx writable dirs are mounted via nginxWritableDirs
+  readOnlyRootFilesystem: true
   capabilities:
     # -- Drop all Linux capabilities
     drop:
@@ -90,6 +90,9 @@ livenessProbe:
   initialDelaySeconds: 5
   # -- Interval between liveness checks
   periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
 
 readinessProbe:
   httpGet:
@@ -99,6 +102,17 @@ readinessProbe:
   initialDelaySeconds: 5
   # -- Interval between readiness checks
   periodSeconds: 5
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+# -- Startup probe configuration (optional)
+startupProbe: {}
+  # httpGet:
+  #   path: /
+  #   port: http
+  # failureThreshold: 12
+  # periodSeconds: 5
 
 autoscaling:
   # -- Enable Horizontal Pod Autoscaler
@@ -109,7 +123,24 @@ autoscaling:
   maxReplicas: 10
   # -- Target CPU utilization percentage
   targetCPUUtilizationPercentage: 80
+  # -- Target memory utilization percentage (optional)
   # targetMemoryUtilizationPercentage: 80
+
+# -- Writable directories mounted as emptyDir for nginx (required by readOnlyRootFilesystem: true)
+# Adjust paths if using a custom nginx image with different directory layout.
+nginxWritableDirs:
+  - name: nginx-cache
+    mountPath: /var/cache/nginx
+  - name: nginx-run
+    mountPath: /var/run
+  - name: nginx-tmp
+    mountPath: /tmp
+
+# -- Additional volumes to add to the pod
+volumes: []
+
+# -- Additional volume mounts for the container
+volumeMounts: []
 
 # -- Extra environment variables to set on the container
 # Example:
@@ -170,7 +201,10 @@ virtualservice:
   # -- CORS policy (optional)
   # corsPolicy:
   #   allowOrigins:
-  #     - "https://www.example.com"
+  #     - "https://www.example.com"          # shorthand: exact match
+  #     - exact: "https://api.example.com"   # explicit exact match
+  #     - prefix: "https://"                 # prefix match
+  #     - regex: "https://.*\\.example\\.com" # regex match
   #   allowMethods:
   #     - GET
   #     - POST

@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
       pages: write
@@ -42,7 +42,12 @@ jobs:
           done
 
       - name: Lint charts
-        run: helm lint charts/*/
+        run: |
+          for chart in charts/*/; do
+            if [ -f "$chart/Chart.yaml" ] && ! grep -q 'type: library' "$chart/Chart.yaml"; then
+              helm lint "$chart"
+            fi
+          done
 
       - name: Package application charts
         run: |
@@ -53,11 +58,28 @@ jobs:
             fi
           done
 
+      - name: Check for new chart versions
+        id: check-new
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          has_new=false
+          for pkg in .cr-release-packages/*.tgz; do
+            [ -f "$pkg" ] || continue
+            name=$(helm show chart "$pkg" | grep '^name:' | awk '{print $2}')
+            version=$(helm show chart "$pkg" | grep '^version:' | awk '{print $2}')
+            if ! gh release view "${name}-${version}" --repo "$GITHUB_REPOSITORY" &>/dev/null; then
+              has_new=true
+              break
+            fi
+          done
+          echo "has_new=$has_new" >> $GITHUB_OUTPUT
+
       - name: Run chart-releaser
+        if: steps.check-new.outputs.has_new == 'true'
         uses: helm/chart-releaser-action@v1.7.0
         with:
           skip_packaging: true
-        continue-on-error: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
           CR_SKIP_EXISTING: true
@@ -79,7 +101,7 @@ jobs:
   deploy:
     name: Deploy
     needs: release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       pages: write
       id-token: write
