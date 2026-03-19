@@ -59,3 +59,24 @@ Create the name of the service account to use.
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Container image string. Supports digest override.
+*/}}
+{{- define "common.image" -}}
+{{- if .Values.image.digest -}}
+{{ printf "%s@%s" .Values.image.repository .Values.image.digest }}
+{{- else -}}
+{{ printf "%s:%s" .Values.image.repository (.Values.image.tag | default .Chart.AppVersion) }}
+{{- end -}}
+{{- end }}
+
+{{/*
+Pod labels: standard labels merged with user-supplied podLabels.
+*/}}
+{{- define "common.podLabels" -}}
+{{ include "common.labels" . }}
+{{- with .Values.podLabels }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}

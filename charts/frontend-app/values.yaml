@@ -24,6 +24,8 @@ serviceAccount:
   annotations: {}
   # -- The name of the ServiceAccount to use (generated if not set and create is true)
   name: ""
+  # -- Mount the service account token into pods (disabled for frontend security)
+  automountServiceAccountToken: false
 
 # -- Annotations to add to the pod
 podAnnotations: {}
@@ -54,24 +56,6 @@ service:
   type: ClusterIP
   # -- Service port
   port: 80
-
-ingress:
-  # -- Enable ingress resource
-  enabled: false
-  # -- Ingress class name
-  className: ""
-  # -- Annotations for the ingress
-  annotations: {}
-  hosts:
-    - host: example.com
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  # -- TLS configuration for the ingress
-  tls: []
-  #  - secretName: example-tls
-  #    hosts:
-  #      - example.com
 
 # -- Resource requests and limits (static files are lightweight)
 resources:

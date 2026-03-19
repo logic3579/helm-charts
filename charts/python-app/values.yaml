@@ -24,6 +24,8 @@ serviceAccount:
   annotations: {}
   # -- The name of the service account (generated if not set)
   name: ""
+  # -- Mount the service account token into pods
+  automountServiceAccountToken: true
 
 # -- Annotations to add to pods
 podAnnotations: {}
@@ -51,18 +53,6 @@ service:
   type: ClusterIP
   # -- Default port for uvicorn/gunicorn
   port: 8000
-
-# -- Ingress configuration
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-  hosts:
-    - host: example.com
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
 
 # -- Resource requests and limits
 # Python applications typically need more memory than CPU
