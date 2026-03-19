@@ -36,10 +36,14 @@ helm install my-go-app logic-charts/go-app -f my-values.yaml
 
 ### charts/
 
-- **common** — Shared Helm library chart (`type: library`) providing reusable named templates: labels, helpers, VirtualService, PodDisruptionBudget. All app charts depend on this via `dependencies` using `file://../common` pinned to version `0.2.0`. Not published to the registry — it is embedded into each app chart's `.tgz` during packaging
+- **common** — Shared Helm library chart (`type: library`) providing reusable named templates. All app charts depend on this via `dependencies` using `file://../common` pinned to version `0.2.0`. Not published to the registry — it is embedded into each app chart's `.tgz` during packaging. Provides:
+  - **Helpers**: `common.name`, `common.fullname`, `common.chart`, `common.labels`, `common.selectorLabels`, `common.serviceAccountName`, `common.image` (with digest support), `common.podLabels` (standard labels + user podLabels)
+  - **Resource templates**: `common.service`, `common.serviceaccount` (parameterized `automountServiceAccountToken`), `common.configmap`, `common.secret` (with ESO warning), `common.hpa` (CPU + memory), `common.pdb` (with mutual exclusivity validation), `common.virtualservice` (CORS `exact`/`prefix`/`regex`)
 - **go-app** — Generic deployment chart for Go applications (port 8080, /healthz + /readyz probes, `readOnlyRootFilesystem: true`, minimal resource footprint)
 - **python-app** — Generic deployment chart for Python applications (port 8000, /health probes, `readOnlyRootFilesystem: false` for Python tmp needs, `startupProbe` enabled by default with 30×5s window, higher memory defaults)
 - **frontend-app** — Generic deployment chart for compiled frontend apps served by nginx (port 80, `readOnlyRootFilesystem: true` with `emptyDir` volumes auto-mounted for `/var/cache/nginx`, `/var/run`, `/tmp`, optional custom nginx config)
+
+All three app charts delegate most templates to `common` via one-line `{{- include "common.xxx" . }}` calls. Only `deployment.yaml` and `NOTES.txt` remain as full templates per chart (deployment has chart-specific logic like nginx volumes for frontend-app).
 
 All three app charts support: `startupProbe`, `volumes`/`volumeMounts`, HPA with CPU+memory targets, and Istio VirtualService CORS with `exact`/`prefix`/`regex` origin match types.
 
@@ -127,4 +131,7 @@ helm install my-app logic-charts/go-app
 - **PodDisruptionBudget**: `minAvailable` and `maxUnavailable` are mutually exclusive — setting both causes a `helm template` failure by design
 - **Startup probes**: python-app enables `startupProbe` by default (`failureThreshold: 30, periodSeconds: 5` = 150s max startup window). For go-app and frontend-app, `startupProbe` is optional and empty by default
 - **Volumes**: All app charts accept `volumes` and `volumeMounts` lists for injecting arbitrary volumes. For go-app (`readOnlyRootFilesystem: true`), mount a tmpfs `emptyDir` for `/tmp` if the app writes temp files. frontend-app auto-mounts nginx writable dirs (`nginxWritableDirs`) — customize in values if using a non-standard nginx image
+- **No Ingress**: Ingress resources have been removed from all charts (deprecated in newer Kubernetes). Use Istio VirtualService (`virtualservice.*` in values) for traffic routing instead
+- **ServiceAccount token**: `serviceAccount.automountServiceAccountToken` is parameterized in values — defaults to `true` for go-app/python-app and `false` for frontend-app (frontend pods don't need API access)
+- **Template structure**: App chart templates (service, serviceaccount, configmap, secret, hpa, pdb, virtualservice) are one-line `include` calls to `common.*`. Only `deployment.yaml` and `NOTES.txt` contain chart-specific logic. Do not duplicate template logic in app charts — add new shared templates to common instead
 - **Linting**: Always lint with the loop command above (or the CI workflow pattern) — never `helm lint charts/*` which includes the library chart and may produce misleading errors
