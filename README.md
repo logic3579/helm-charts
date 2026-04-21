@@ -5,7 +5,7 @@
 This repo provides two things:
 
 1. **Publishable Helm charts** in [`charts/`](./charts/) — released via GitHub Pages and GitHub Releases
-2. **Infrastructure examples** in [`infrastructure-example/`](./infrastructure-example/) — cluster infrastructure reference configs
+2. **Infrastructure examples** in [`infrastructure/`](./infrastructure/) — cluster infrastructure reference configs
 
 ## Available Charts
 

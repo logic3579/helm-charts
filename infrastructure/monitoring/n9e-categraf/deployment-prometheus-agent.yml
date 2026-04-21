@@ -1,0 +1,201 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations: {}
+  labels:
+    app: n9e
+    component: categraf
+    release: nightingale
+  name: n9e-categraf
+rules:
+  - apiGroups: [""]
+    resources: ["nodes/metrics", "nodes/stats", "nodes/proxy"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["endpoints", "pods", "services"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations: {}
+  labels:
+    app: n9e
+    component: categraf
+    release: nightingale
+  name: n9e-categraf
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations: {}
+  labels:
+    app: n9e
+    component: categraf
+    release: nightingale
+  name: n9e-categraf
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: n9e-categraf
+subjects:
+  - kind: ServiceAccount
+    name: n9e-categraf
+    namespace: monitoring
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: n9e-categraf-prometheus-agent
+  namespace: monitoring
+data:
+  config.toml: |-
+    [global]
+    print_configs = false
+    hostname = "$HOSTNAME"
+    omit_hostname = true
+    precision = "ms"
+    interval = 15
+    providers = ["local"]
+    disable_usage_report = true
+
+    [global.labels]
+    env="prod"
+    source="categraf"
+    region="europe-west2"
+
+    [log]
+    file_name = "stdout"
+    max_size = 100
+    max_age = 1
+    max_backups = 1
+    local_time = true
+    compress = false
+    [writer_opt]
+    batch = 1000
+    chan_size = 1000000
+
+    [[writers]]
+    url = "http://nightingale-center.monitoring.svc/prometheus/v1/write"
+    basic_auth_user = ""
+    basic_auth_pass = ""
+    timeout = 5000
+    dial_timeout = 2500
+    max_idle_conns_per_host = 100
+
+    [http]
+    enable = false
+    address = ":9100"
+    print_access = false
+    run_mode = "release"
+
+    [ibex]
+    enable = false
+    interval = "1000ms"
+    servers = ["127.0.0.1:20090"]
+    meta_dir = "./meta"
+
+    [heartbeat]
+    enable = false
+    url = "http://nightingale-center.monitoring.svc/v1/n9e/heartbeat"
+    interval = 10
+    basic_auth_user = ""
+    basic_auth_pass = ""
+    timeout = 5000
+    dial_timeout = 2500
+    max_idle_conns_per_host = 100
+
+    [prometheus]
+    enable = true
+    scrape_config_file = "/etc/categraf/conf/scrape.yml"
+
+  logs.toml: |-
+    [logs]
+    enable = false
+
+  scrape.yml: |-
+    global:
+      scrape_interval: 15s
+      external_labels:
+        env: dev
+        source: categraf
+        region: europe-west2
+
+    remote_write:
+      - url: http://nightingale-center.monitoring.svc/prometheus/v1/write
+
+    scrape_configs:
+      # python-app — all pods via kubernetes endpoints SD
+      - job_name: python-app
+        metrics_path: /metrics
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: [app]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_endpointslice_label_kubernetes_io_service_name]
+            regex: python-app
+            action: keep
+          - source_labels: [__meta_kubernetes_endpointslice_port_name]
+            regex: http
+            action: keep
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: hostname
+          - source_labels: [__address__]
+            target_label: instance
+          - target_label: service
+            replacement: python-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: n9e-categraf-prometheus-agent
+  name: n9e-categraf-prometheus-agent
+  namespace: monitoring
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: n9e-categraf-prometheus-agent
+  template:
+    metadata:
+      labels:
+        app: n9e-categraf-prometheus-agent
+    spec:
+      containers:
+        - env:
+            - name: TZ
+              value: UTC
+          image: flashcatcloud/categraf:latest
+          imagePullPolicy: Always
+          name: categraf
+          resources: {}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/categraf
+      dnsPolicy: ClusterFirstWithHostNet
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: n9e-categraf
+      serviceAccountName: n9e-categraf
+      terminationGracePeriodSeconds: 30
+      nodeSelector:
+        tier: mgmt
+      volumes:
+        - name: config
+          configMap:
+            name: n9e-categraf-prometheus-agent
+            items:
+              - key: config.toml
+                path: conf/config.toml
+              - key: logs.toml
+                path: conf/logs.toml
+              - key: scrape.yml
+                path: conf/scrape.yml

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: categraf
+  name: n9e-categraf
   namespace: monitoring
 data:
   config.toml: |-
@@ -15,8 +15,9 @@ data:
     disable_usage_report = true
 
     [global.labels]
-    env="prod"
-    source="categraf"
+    env="dev"
+    source="n9e-categraf"
+    region="asia-southeast1"
 
     [log]
     file_name = "stdout"
@@ -71,7 +72,7 @@ data:
     use_tls = false
     url_label_key = "instance"
     url_label_value = "{{.Host}}"
-    #labels = {job="kube-state-metrics"}
+    labels = {job="kube-state-metrics"}
 
     # prometheus-myql-exporter
     [[instances]]
@@ -114,36 +115,36 @@ data:
 
   redis.toml: |-
     [[instances]]
-    address = ""       # TODO: Replace with actual Redis host:port
+    address = "redis.database.svc:6379"
     username = ""
     password = ""
-    labels = { instance="redis-1" }
+    labels = { instance="redis-standalone" }
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: categraf
-  name: categraf
+    app: n9e-categraf
+  name: n9e-categraf
   namespace: monitoring
 spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: categraf
+      app: n9e-categraf
   template:
     metadata:
       labels:
-        app: categraf
+        app: n9e-categraf
     spec:
       containers:
         - env:
             - name: TZ
               value: UTC
-          image: flashcatcloud/categraf:v0.4.5
+          image: flashcatcloud/categraf:latest
           imagePullPolicy: IfNotPresent
-          name: categraf
+          name: n9e-categraf
           resources:
             requests:
               cpu: 100m

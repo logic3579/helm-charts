@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Helm charts repository that serves two purposes:
 
 1. **Publishable Helm charts** in `charts/` — released via GitHub Pages using `helm/chart-releaser-action`
-2. **Infrastructure examples** in `infrastructure-example/` — cluster infrastructure reference configs
+2. **Infrastructure examples** in `infrastructure/` — cluster infrastructure reference configs
 
 The repo is hosted at `https://logic3579.github.io/helm-charts` as a Helm chart repository.
 
@@ -49,7 +49,7 @@ All three app charts support: `startupProbe`, `volumes`/`volumeMounts`, HPA with
 
 Each chart has a single `values.yaml` that serves as both the default values and the configuration reference. Deployment-specific overrides (image repo, resources, env vars, etc.) should be provided via ArgoCD Application `values` or `helm install -f`.
 
-### infrastructure-example/
+### infrastructure/
 
 Cluster infrastructure reference configs:
 

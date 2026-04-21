@@ -27,6 +27,7 @@ metadata:
     component: categraf
     release: nightingale
   name: n9e-categraf
+  namespace: monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -71,7 +72,8 @@ data:
 
     [global.labels]
     env = "dev"
-    source = "categraf"
+    source = "n9e-categraf"
+    region= "europe-east2"
 
     [writer_opt]
     batch = 2000

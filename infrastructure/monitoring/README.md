@@ -11,6 +11,7 @@ kubectl create namespace monitoring
 ## kube-state-metrics
 
 ```bash
+# Install
 helm upgrade --install \
   --namespace monitoring \
   kube-state-metrics prometheus-community/kube-state-metrics
@@ -19,6 +20,7 @@ helm upgrade --install \
 ## prometheus-mysql-exporter
 
 ```bash
+# Install
 helm upgrade --install \
   --namespace monitoring \
   prometheus-mysql-exporter prometheus-community/prometheus-mysql-exporter \
@@ -30,6 +32,7 @@ helm upgrade --install \
 ## prometheus-redis-exporter
 
 ```bash
+# Install
 helm upgrade --install \
   --namespace monitoring \
   prometheus-redis-exporter prometheus-community/prometheus-redis-exporter \
@@ -43,6 +46,7 @@ helm upgrade --install \
 ## Grafana
 
 ```bash
+# Install
 helm upgrade --install \
   --namespace monitoring \
   grafana grafana/grafana \
@@ -50,25 +54,22 @@ helm upgrade --install \
   --set persistence.enabled="true" \
   --set persistence.storageClassName="standard-rwo" \
   --set useStatefulSet="true"
-
 kubectl apply -f grafana-virtualservice.yml
 ```
 
 ## Nightingale
 
 ```bash
-# get helm-charts
+# Get helm-charts
 git clone http://github.com/flashcatcloud/n9e-helm.git nightingale
 cd nightingale
 
-# timezone(optional)
+# Set timezone(optional)
 grep "name: TZ" ./ -r
 
-# configure categraf
+# Configure categraf plugins and n9e
 vim categraf/conf/input.cadvisor/cadvisor.toml
 vim categraf/conf/input.prometheus/prometheus.toml
-
-# configure values.yaml
 vim values.yaml
 
 # Install
@@ -76,11 +77,13 @@ helm upgrade --install \
   --namespace monitoring \
   nightingale . \
   -f values.yaml
-
 kubectl apply -n monitoring -f nightingale-virtualservice.yml
-# collect kube-state-metrics, prometheus-mysql-exporter, clickhouse and so on.
-kubectl apply -n monitoring -f categraf-deployment.yml
 
-# optional: for other cluster
-kubectl apply -n monitoring -f categraf-daemonset.yml
+# Collect kube-state-metrics, prometheus-mysql-exporter, clickhouse and so on.
+kubectl apply -n monitoring -f n9e-categraf/deployment.yml
+kubectl apply -n monitoring -f n9e-categraf/prometheus-agent.yml
+
+# For other cluster(optional)
+kubectl apply -n monitoring -f n9e-categraf/daemonset.yml
+kubectl apply -n monitoring -f n9e-categraf/prometheus-agent.yml
 ```
