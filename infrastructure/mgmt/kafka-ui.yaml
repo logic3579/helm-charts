@@ -5,8 +5,8 @@ metadata:
   namespace: mgmt
 type: Opaque
 stringData:
-  username: ""    # Replace with your Kafka UI username
-  password: ""    # Replace with your Kafka UI password
+  username: "" # Replace with your Kafka UI username
+  password: "" # Replace with your Kafka UI password
 ---
 apiVersion: apps/v1
 kind: Deployment

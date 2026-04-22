@@ -6,7 +6,8 @@ metadata:
 spec:
   workloadSelector:
     labels:
-      istio: external-istio
+      app: external-istio-ingress
+      istio: external-istio-ingress
   configPatches:
     - applyTo: NETWORK_FILTER
       match:

@@ -6,7 +6,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      istio: external-istio
+      app: external-istio-ingress
   action: DENY
   rules:
     - from:

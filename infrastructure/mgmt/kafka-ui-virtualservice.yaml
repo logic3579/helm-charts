@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: kafka-ui
+  namespace: mgmt
+spec:
+  gateways:
+    - istio-ingress/external-gateway
+  hosts:
+    - kafka-ui.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: kafka-ui.mgmt.svc.cluster.local
+            port:
+              number: 8080

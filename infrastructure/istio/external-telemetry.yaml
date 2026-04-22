@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-telemetry
+  namespace: istio-ingress
+  labels:
+    app: external-istio-ingress
+spec:
+  type: ClusterIP
+  selector:
+    app: external-istio-ingress
+  ports:
+    - name: http-envoy-prom
+      port: 15020
+      protocol: TCP
+      targetPort: 15020
+---
+apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata:
+  name: external-telemetry
+  namespace: istio-ingress
+spec:
+  selector:
+    matchLabels:
+      app: external-istio-ingress
+  metrics:
+    - providers:
+        - name: prometheus
+      overrides:
+        - match:
+            metric: REQUEST_COUNT
+          tagOverrides:
+            request_host:
+              operation: UPSERT
+              value: "request.host"
+        - match:
+            metric: REQUEST_DURATION
+          tagOverrides:
+            request_host:
+              operation: UPSERT
+              value: "request.host"
+        - match:
+            metric: REQUEST_SIZE
+          tagOverrides:
+            request_host:
+              operation: UPSERT
+              value: "request.host"
+        - match:
+            metric: RESPONSE_SIZE
+          tagOverrides:
+            request_host:
+              operation: UPSERT
+              value: "request.host"
