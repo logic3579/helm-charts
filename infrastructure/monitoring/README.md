@@ -54,7 +54,7 @@ helm upgrade --install \
   --set persistence.enabled="true" \
   --set persistence.storageClassName="standard-rwo" \
   --set useStatefulSet="true"
-kubectl apply -f grafana-virtualservice.yml
+kubectl apply -f grafana-virtualservice.yaml
 ```
 
 ## Nightingale
@@ -77,13 +77,13 @@ helm upgrade --install \
   --namespace monitoring \
   nightingale . \
   -f values.yaml
-kubectl apply -n monitoring -f nightingale-virtualservice.yml
+kubectl apply -n monitoring -f nightingale-virtualservice.yaml
 
 # Collect kube-state-metrics, prometheus-mysql-exporter, clickhouse and so on.
-kubectl apply -n monitoring -f n9e-categraf/deployment.yml
-kubectl apply -n monitoring -f n9e-categraf/prometheus-agent.yml
+kubectl apply -n monitoring -f n9e-categraf/deployment.yaml
+kubectl apply -n monitoring -f n9e-categraf/prometheus-agent.yaml
 
 # For other cluster(optional)
-kubectl apply -n monitoring -f n9e-categraf/daemonset.yml
-kubectl apply -n monitoring -f n9e-categraf/prometheus-agent.yml
+kubectl apply -n monitoring -f n9e-categraf/daemonset.yaml
+kubectl apply -n monitoring -f n9e-categraf/prometheus-agent.yaml
 ```

@@ -17,7 +17,7 @@ helm upgrade --install \
   flink bitnami/flink \
   --set image.repository="bitnamilegacy/flink"
 
-kubectl apply -n bigdata -f flink-virtualservice.yml
+kubectl apply -n bigdata -f flink-virtualservice.yaml
 ```
 
 ## HBase
@@ -27,7 +27,7 @@ helm upgrade --install \
   --namespace bigdata \
   hbase gradiant-bigdata/hbase
 
-kubectl apply -n bigdata -f hbase-virtualservice.yml
+kubectl apply -n bigdata -f hbase-virtualservice.yaml
 ```
 
 ## MLflow
@@ -44,5 +44,5 @@ helm upgrade --install \
   --set auth.adminPassword="my_password" \
   --version=1.8.1
 
-kubectl apply -n bigdata -f mlflow-virtualservice.yml
+kubectl apply -n bigdata -f mlflow-virtualservice.yaml
 ```

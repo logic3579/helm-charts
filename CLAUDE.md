@@ -67,7 +67,7 @@ The `charts/` directory supports two deployment methods simultaneously:
 
 ## CI/CD — Release Workflow
 
-The GitHub Actions workflow (`.github/workflows/release.yml`) automates chart publishing.
+The GitHub Actions workflow (`.github/workflows/release.yaml`) automates chart publishing.
 
 ### Trigger
 

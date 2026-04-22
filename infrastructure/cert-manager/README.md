@@ -19,8 +19,8 @@ helm install \
 # create gcp iam serviceaccount key to secret
 kubectl create -n cert-manager secret generic gcp-dns-key --from-file=./dns01-solver.json
 # create gcp clusterissuer
-kubectl apply -f gcp-clusterissuer.yml
+kubectl apply -f gcp-clusterissuer.yaml
 
 # create certificate
-kubectl apply -n istio-ingress -f certificate.yml
+kubectl apply -n istio-ingress -f certificate.yaml
 ```

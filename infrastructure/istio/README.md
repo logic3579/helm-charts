@@ -32,14 +32,14 @@ helm upgrade --install \
   --version=1.27.1
 
 # create gateway resources
-kubectl apply -n istio-ingress -f external-gateway.yml
-kubectl apply -n istio-ingress -f internal-gateway.yml
+kubectl apply -n istio-ingress -f external-gateway.yaml
+kubectl apply -n istio-ingress -f internal-gateway.yaml
 
 # create authorizationpolicy(optional)
-kubectl apply -n istio-ingress -f allow-external-authorizationpolicy.yml
-kubectl apply -n istio-ingress -f deny-external-authorizationpolicy.yml
+kubectl apply -n istio-ingress -f allow-external-authorizationpolicy.yaml
+kubectl apply -n istio-ingress -f deny-external-authorizationpolicy.yaml
 
 # create envoyfilter(optional)
-kubectl apply -n istio-ingress -f external-envoyfilter.yml
-kubectl apply -n istio-ingress -f internal-envoyfilter.yml
+kubectl apply -n istio-ingress -f external-envoyfilter.yaml
+kubectl apply -n istio-ingress -f internal-envoyfilter.yaml
 ```

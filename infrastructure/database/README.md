@@ -16,7 +16,7 @@ helm upgrade --install \
   clickhouse bitnami/clickhouse \
   --set image.repository="bitnamilegacy/clickhouse"
 
-kubectl apply -n database -f clickhouse-virtualservice.yml
+kubectl apply -n database -f clickhouse-virtualservice.yaml
 ```
 
 ## Neo4j
@@ -28,5 +28,5 @@ helm upgrade --install \
   --set neo4j.name="my-neo4j" \
   --set neo4j.password="my-password"
 
-kubectl apply -n database -f neo4j-virtualservice.yml
+kubectl apply -n database -f neo4j-virtualservice.yaml
 ```

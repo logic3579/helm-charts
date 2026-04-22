@@ -16,7 +16,7 @@ helm upgrade --install \
   -f loki-values.yaml \
   --version=6.34.0
 
-kubectl apply -n monitoring -f loki-virtualservice.yml
+kubectl apply -n monitoring -f loki-virtualservice.yaml
 ```
 
 ## Promtail

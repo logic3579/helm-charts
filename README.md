@@ -1,4 +1,4 @@
-[![Artifact Hub](https://img.shields.io/badge/Artifact%20Hub-repo-blue)](https://artifacthub.io/) [![Release Charts](https://github.com/logic3579/helm-charts/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/logic3579/helm-charts/actions/workflows/release.yml)
+[![Artifact Hub](https://img.shields.io/badge/Artifact%20Hub-repo-blue)](https://artifacthub.io/) [![Release Charts](https://github.com/logic3579/helm-charts/actions/workflows/release.yaml/badge.svg?branch=main)](https://github.com/logic3579/helm-charts/actions/workflows/release.yaml)
 
 ## Repository Overview
 
