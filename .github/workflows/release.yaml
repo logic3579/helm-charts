@@ -91,6 +91,7 @@ jobs:
         run: |
           mkdir -p ./public
           cp index.html ./public/
+          cp artifacthub-repo.yml ./public/
           git show origin/gh-pages:index.yaml > ./public/index.yaml 2>/dev/null || true
 
       - name: Upload artifact

@@ -3,9 +3,9 @@ replicaCount: 1
 
 # -- Container image configuration
 image:
-  repository: example/python-app
+  repository: python
   # -- Overrides the image tag (defaults to .Chart.AppVersion)
-  tag: ""
+  tag: "3.12-alpine"
   pullPolicy: IfNotPresent
 
 # -- Image pull secrets for private registries

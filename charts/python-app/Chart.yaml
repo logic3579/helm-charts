@@ -2,7 +2,7 @@ apiVersion: v2
 name: python-app
 description: A generic Helm chart for Python application deployment
 type: application
-version: 0.3.0
+version: 0.3.1
 appVersion: "1.0.0"
 home: https://github.com/logic3579/helm-charts
 maintainers:

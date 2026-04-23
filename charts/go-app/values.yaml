@@ -4,11 +4,11 @@ replicaCount: 1
 # -- Container image configuration
 image:
   # -- Image repository
-  repository: example/go-app
+  repository: alpine
   # -- Image pull policy
   pullPolicy: IfNotPresent
   # -- Overrides the image tag (defaults to .Chart.AppVersion)
-  tag: ""
+  tag: "3.20"
 
 # -- Image pull secrets for private registries
 imagePullSecrets: []
