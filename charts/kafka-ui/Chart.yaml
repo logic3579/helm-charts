@@ -5,7 +5,7 @@ type: application
 version: 0.1.0
 appVersion: "v0.7.2"
 home: https://github.com/logic3579/helm-charts
-icon: https://raw.githubusercontent.com/kafbat/kafka-ui/main/documentation/images/kafka-ui-logo.png
+icon: https://raw.githubusercontent.com/kafbat/kafka-ui/main/documentation/images/logo.png
 maintainers:
   - name: Logic
     url: https://github.com/logic3579/helm-charts
