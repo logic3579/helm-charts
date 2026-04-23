@@ -77,6 +77,7 @@ jobs:
 
       - name: Run chart-releaser
         if: steps.check-new.outputs.has_new == 'true'
+        continue-on-error: true  # chart-releaser-action v1.7.0 has a known latest_tag bug that errors after successful release
         uses: helm/chart-releaser-action@v1.7.0
         with:
           skip_packaging: true
@@ -92,6 +93,7 @@ jobs:
           mkdir -p ./public
           cp index.html ./public/
           cp artifacthub-repo.yml ./public/
+          git fetch origin gh-pages 2>/dev/null || true
           git show origin/gh-pages:index.yaml > ./public/index.yaml 2>/dev/null || true
 
       - name: Upload artifact
