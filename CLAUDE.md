@@ -42,10 +42,11 @@ helm install my-go-app logic-charts/go-app -f my-values.yaml
 - **go-app** — Generic deployment chart for Go applications (port 8080, /healthz + /readyz probes, `readOnlyRootFilesystem: true`, minimal resource footprint)
 - **python-app** — Generic deployment chart for Python applications (port 8000, /health probes, `readOnlyRootFilesystem: false` for Python tmp needs, `startupProbe` enabled by default with 30×5s window, higher memory defaults)
 - **frontend-app** — Generic deployment chart for compiled frontend apps served by nginx (port 80, `readOnlyRootFilesystem: true` with `emptyDir` volumes auto-mounted for `/var/cache/nginx`, `/var/run`, `/tmp`, optional custom nginx config)
+- **kafka-ui** — Chart for UI for Apache Kafka (port 8080, Spring Boot actuator probes, `readOnlyRootFilesystem: false` for Java tmp needs, `startupProbe` enabled by default with 30×5s window). Deployment template includes kafka-specific logic: `auth` config (LOGIN_FORM/DISABLED/LDAP/OAUTH2 with secretKeyRef), `kafkaClusters` list rendered as `KAFKA_CLUSTERS_N_*` env vars (bootstrapServers, readonly, schemaRegistry, ksqldbServer, arbitrary properties)
 
-All three app charts delegate most templates to `common` via one-line `{{- include "common.xxx" . }}` calls. Only `deployment.yaml` and `NOTES.txt` remain as full templates per chart (deployment has chart-specific logic like nginx volumes for frontend-app).
+All four app charts delegate most templates to `common` via one-line `{{- include "common.xxx" . }}` calls. Only `deployment.yaml` and `NOTES.txt` remain as full templates per chart (deployment has chart-specific logic like nginx volumes for frontend-app, kafka cluster env vars for kafka-ui).
 
-All three app charts support: `startupProbe`, `volumes`/`volumeMounts`, HPA with CPU+memory targets, and Istio VirtualService CORS with `exact`/`prefix`/`regex` origin match types.
+All four app charts support: `startupProbe`, `volumes`/`volumeMounts`, HPA with CPU+memory targets, and Istio VirtualService CORS with `exact`/`prefix`/`regex` origin match types.
 
 Each chart has a single `values.yaml` that serves as both the default values and the configuration reference. Deployment-specific overrides (image repo, resources, env vars, etc.) should be provided via ArgoCD Application `values` or `helm install -f`.
 

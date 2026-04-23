@@ -15,6 +15,7 @@ This repo provides two things:
 | [go-app](./charts/go-app) | Generic chart for Go application deployment | 8080 |
 | [python-app](./charts/python-app) | Generic chart for Python application deployment (FastAPI, Django, Flask) | 8000 |
 | [frontend-app](./charts/frontend-app) | Generic chart for frontend application deployment (nginx-based SPA) | 80 |
+| [kafka-ui](./charts/kafka-ui) | Web UI for monitoring and managing Apache Kafka clusters | 8080 |
 
 ## Install from Helm Repo
 

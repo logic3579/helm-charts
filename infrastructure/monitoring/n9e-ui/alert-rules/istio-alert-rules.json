@@ -1,0 +1,592 @@
+[
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayHighErrorRate",
+    "note": "Gateway {{ $labels.gateway }} has high 5xx error rate.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code=~\"5..\"}[5m])) by (gateway) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) * 100 > 1",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code=~\"5..\"}[5m])) by (gateway) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) * 100 > 5",
+          "severity": 2
+        },
+        {
+          "prom_ql": "sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code=~\"5..\"}[5m])) by (gateway) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) * 100 > 10",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Gateway {{ $labels.gateway }} 5xx error rate is {{ $value }}%.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway high 5xx error rate ({{ $labels.gateway }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayHigh5xxByHost",
+    "note": "Host {{ $labels.request_host }} on gateway {{ $labels.gateway }} has high 5xx error rate.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code=~\"5..\"}[5m])) by (gateway, request_host) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway, request_host) * 100 > 5) and sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway, request_host) > 0.1",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code=~\"5..\"}[5m])) by (gateway, request_host) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway, request_host) * 100 > 20) and sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway, request_host) > 0.1",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Host {{ $labels.request_host }} on gateway {{ $labels.gateway }} 5xx error rate is {{ $value }}%.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway host high 5xx error rate ({{ $labels.gateway }}/{{ $labels.request_host }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayHigh4xxRate",
+    "note": "Gateway {{ $labels.gateway }} has high 4xx client error rate.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code=~\"4..\"}[5m])) by (gateway) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) * 100 > 25",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code=~\"4..\"}[5m])) by (gateway) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) * 100 > 50",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Gateway {{ $labels.gateway }} 4xx error rate is {{ $value }}%.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway high 4xx error rate ({{ $labels.gateway }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayHighLatencyP99",
+    "note": "Gateway {{ $labels.gateway }} P99 latency is too high.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"prod\"}[5m])) by (le, gateway)) > 1000",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"prod\"}[5m])) by (le, gateway)) > 3000",
+          "severity": 2
+        },
+        {
+          "prom_ql": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"prod\"}[5m])) by (le, gateway)) > 5000",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Gateway {{ $labels.gateway }} P99 request latency is {{ $value }}ms.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway high P99 latency ({{ $labels.gateway }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayHighLatencyP99ByHost",
+    "note": "Host {{ $labels.request_host }} P99 latency is too high.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "histogram_quantile(0.99, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"prod\", request_host!=\"\"}[5m])) by (le, gateway, request_host)) > 5000",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Host {{ $labels.request_host }} on gateway {{ $labels.gateway }} P99 latency is {{ $value }}ms.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway host high P99 latency ({{ $labels.gateway }}/{{ $labels.request_host }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayHighLatencyP90",
+    "note": "Gateway {{ $labels.gateway }} P90 latency is too high.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "histogram_quantile(0.90, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"prod\"}[5m])) by (le, gateway)) > 500",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "histogram_quantile(0.90, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"prod\"}[5m])) by (le, gateway)) > 1000",
+          "severity": 2
+        },
+        {
+          "prom_ql": "histogram_quantile(0.90, sum(rate(istio_request_duration_milliseconds_bucket{job=\"istio-gateway\", env=\"prod\"}[5m])) by (le, gateway)) > 3000",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Gateway {{ $labels.gateway }} P90 request latency is {{ $value }}ms.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway high P90 latency ({{ $labels.gateway }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayLowSuccessRate",
+    "note": "Gateway {{ $labels.gateway }} success rate (non-5xx) has dropped below threshold.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": true,
+      "queries": [
+        {
+          "prom_ql": "(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code!~\"5..\"}[5m])) by (gateway) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) < 0.99) and sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) > 1",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 3,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        },
+        {
+          "prom_ql": "(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code!~\"5..\"}[5m])) by (gateway) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) < 0.95) and sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) > 1",
+          "severity": 2
+        },
+        {
+          "prom_ql": "(sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\", response_code!~\"5..\"}[5m])) by (gateway) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) < 0.90) and sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) > 1",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Gateway {{ $labels.gateway }} success rate has dropped to {{ $value }}.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway low success rate ({{ $labels.gateway }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayNoTraffic",
+    "note": "Gateway {{ $labels.gateway }} has received no requests.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) == 0",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 1,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Gateway {{ $labels.gateway }} has received zero requests in the last 5 minutes. The gateway may be down or misconfigured.\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway no traffic ({{ $labels.gateway }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayTrafficSpike",
+    "note": "Gateway {{ $labels.gateway }} request volume has spiked significantly.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway) / sum(rate(istio_requests_total{job=\"istio-gateway\", env=\"prod\"}[5m] offset 1h)) by (gateway) > 3",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Gateway {{ $labels.gateway }} request volume is {{ $value }}x compared to 1 hour ago. Possible traffic spike or DDoS.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway traffic spike ({{ $labels.gateway }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [
+          2
+        ]
+      }
+    ],
+    "name": "IstioGatewayTcpConnectionSurge",
+    "note": "Gateway {{ $labels.gateway }} TCP connections opening rate is abnormally high for {{ $labels.destination_service_name }}.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 300,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum(rate(istio_tcp_connections_opened_total{job=\"istio-gateway\", env=\"prod\"}[5m])) by (gateway, destination_service_name) / sum(rate(istio_tcp_connections_opened_total{job=\"istio-gateway\", env=\"prod\"}[5m] offset 1h)) by (gateway, destination_service_name) > 5",
+          "recover_config": {
+            "judge_type": 0,
+            "recover_exp": ""
+          },
+          "severity": 2,
+          "unit": "",
+          "var_config": {
+            "child_var_configs": null,
+            "param_val": null
+          },
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {
+      "description": "Gateway {{ $labels.gateway }} TCP connection open rate for {{ $labels.destination_service_name }} is {{ $value }}x compared to 1 hour ago.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}",
+      "summary": "Istio Gateway TCP connection surge ({{ $labels.gateway }}/{{ $labels.destination_service_name }})"
+    },
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "long",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [],
+    "notify_version": 1
+  }
+]

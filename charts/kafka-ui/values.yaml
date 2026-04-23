@@ -1,0 +1,205 @@
+# -- Number of pod replicas
+replicaCount: 1
+
+# -- Container image configuration
+image:
+  # -- Image repository
+  repository: provectuslabs/kafka-ui
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag (defaults to .Chart.AppVersion)
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full release name
+fullnameOverride: ""
+
+# -- Authentication configuration
+auth:
+  # -- Auth type: LOGIN_FORM, DISABLED, LDAP, OAUTH2
+  type: "LOGIN_FORM"
+  # -- Use an existing secret for credentials (must contain 'username' and 'password' keys).
+  # When set, the chart-managed secret (secret.*) is not used for auth.
+  existingSecret: ""
+
+# -- Kafka cluster connections
+kafkaClusters:
+  - # -- Display name for the cluster in the UI
+    name: ""
+    # -- Kafka bootstrap servers address
+    bootstrapServers: "kafka:9092"
+    # -- Enable read-only mode for this cluster
+    readonly: false
+    # -- Schema Registry URL (optional)
+    schemaRegistry: ""
+    # -- ksqlDB server URL (optional)
+    ksqldbServer: ""
+    # -- Additional cluster properties as KAFKA_CLUSTERS_N_<KEY> env vars
+    # Example: { ZOOKEEPER: "zk:2181", JMXPORT: "9997" }
+    properties: {}
+
+# -- Service account configuration
+serviceAccount:
+  # -- Whether to create a service account
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account (generated if not set)
+  name: ""
+  # -- Mount the service account token into pods (kafka-ui does not need API access)
+  automountServiceAccountToken: false
+
+# -- Annotations to add to pods
+podAnnotations: {}
+
+# -- Labels to add to pods
+podLabels: {}
+
+# -- Pod-level security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -- Container-level security context
+# Note: readOnlyRootFilesystem is false because kafka-ui (Java/Spring) writes temp files
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# -- Service configuration
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port (also used as the container port)
+  port: 8080
+
+# -- Resource requests and limits
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 500m
+    memory: 1Gi
+
+# -- Liveness probe configuration (Spring Boot actuator)
+livenessProbe:
+  httpGet:
+    path: /actuator/health
+    port: http
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+  successThreshold: 1
+
+# -- Readiness probe configuration (Spring Boot actuator)
+readinessProbe:
+  httpGet:
+    path: /actuator/health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 10
+  failureThreshold: 3
+  successThreshold: 1
+
+# -- Startup probe configuration (Java apps are slow to start)
+startupProbe:
+  httpGet:
+    path: /actuator/health
+    port: http
+  failureThreshold: 30
+  periodSeconds: 5
+
+# -- Horizontal Pod Autoscaler configuration
+autoscaling:
+  # -- Enable HPA
+  enabled: false
+  # -- Minimum number of replicas
+  minReplicas: 1
+  # -- Maximum number of replicas
+  maxReplicas: 10
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+  # -- Target memory utilization percentage (optional)
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Additional volumes to add to the pod
+volumes: []
+
+# -- Additional volume mounts for the container
+volumeMounts: []
+
+# -- Extra environment variables (list of name/value pairs)
+# Use this for additional kafka-ui configuration not covered by kafkaClusters
+env: []
+  # - name: DYNAMIC_CONFIG_ENABLED
+  #   value: "true"
+
+# -- Extra environment variable sources (configMapRef / secretRef)
+envFrom: []
+  # - configMapRef:
+  #     name: my-config
+  # - secretRef:
+  #     name: my-secret
+
+# -- ConfigMap configuration
+configMap:
+  # -- Create a ConfigMap
+  enabled: false
+  # -- ConfigMap key-value data
+  data: {}
+    # key: value
+
+# -- Secret configuration
+# WARNING: values are stored as plaintext and base64-encoded at render time.
+# For production secrets, use External Secrets Operator (ESO) or Sealed Secrets instead.
+# When auth.existingSecret is empty and auth.type is not DISABLED,
+# this secret is also used for auth credentials (must include 'username' and 'password' keys).
+secret:
+  # -- Create a Secret
+  enabled: false
+  # -- Secret key-value data (values will be base64-encoded)
+  data: {}
+    # username: admin
+    # password: changeme
+
+# -- Node selector for pod scheduling
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}
+
+# -- Istio VirtualService configuration
+virtualservice:
+  # -- Enable VirtualService
+  enabled: false
+  # -- Istio gateway references
+  gateways: []
+    # - istio-ingress/internal-gateway
+  # -- VirtualService hostnames
+  hosts: []
+    # - kafka-ui.example.com
+  # -- Destination port (defaults to service.port)
+  port: ""
+
+# -- PodDisruptionBudget configuration
+podDisruptionBudget:
+  # -- Enable PDB
+  enabled: false
+  # -- Minimum number of available pods
+  minAvailable: 1
+  # -- Maximum number of unavailable pods (mutually exclusive with minAvailable)
+  # maxUnavailable: 1

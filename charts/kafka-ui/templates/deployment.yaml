@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "common.fullname" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "common.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "common.podLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "common.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "common.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: SERVICE_NAME
+              value: {{ include "common.fullname" . }}
+            {{- if .Values.auth.type }}
+            - name: AUTH_TYPE
+              value: {{ .Values.auth.type | quote }}
+            {{- end }}
+            {{- if ne .Values.auth.type "DISABLED" }}
+            {{- $authSecret := .Values.auth.existingSecret | default (include "common.fullname" .) }}
+            - name: SPRING_SECURITY_USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $authSecret }}
+                  key: username
+            - name: SPRING_SECURITY_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $authSecret }}
+                  key: password
+            {{- end }}
+            {{- range $i, $cluster := .Values.kafkaClusters }}
+            {{- if $cluster.name }}
+            - name: {{ printf "KAFKA_CLUSTERS_%d_NAME" $i }}
+              value: {{ $cluster.name | quote }}
+            {{- end }}
+            - name: {{ printf "KAFKA_CLUSTERS_%d_BOOTSTRAPSERVERS" $i }}
+              value: {{ $cluster.bootstrapServers | quote }}
+            {{- if $cluster.readonly }}
+            - name: {{ printf "KAFKA_CLUSTERS_%d_READONLY" $i }}
+              value: {{ $cluster.readonly | quote }}
+            {{- end }}
+            {{- if $cluster.schemaRegistry }}
+            - name: {{ printf "KAFKA_CLUSTERS_%d_SCHEMAREGISTRY" $i }}
+              value: {{ $cluster.schemaRegistry | quote }}
+            {{- end }}
+            {{- if $cluster.ksqldbServer }}
+            - name: {{ printf "KAFKA_CLUSTERS_%d_KSQLDBSERVER" $i }}
+              value: {{ $cluster.ksqldbServer | quote }}
+            {{- end }}
+            {{- range $key, $value := $cluster.properties }}
+            - name: {{ printf "KAFKA_CLUSTERS_%d_%s" $i ($key | upper) }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
