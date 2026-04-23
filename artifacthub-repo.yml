@@ -5,5 +5,5 @@
 # below with the value provided by Artifact Hub.
 repositoryID: # <your-artifact-hub-repo-id>
 owners:
-  - name: Logic
-    email: # <your-email>
+  - name: logic3579
+    email: logic3579@duck.com
