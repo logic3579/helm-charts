@@ -3,6 +3,31 @@ entries:
   frontend-app:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2026-04-23T08:21:27.081849834Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.2.0
+    description: A generic Helm chart for frontend application deployment (nginx-based)
+    digest: 971149ae33229734498461d8effb4abe4c596b06cde80c809740b105cc8c5fa0
+    home: https://github.com/logic3579/helm-charts
+    keywords:
+    - frontend
+    - nginx
+    - spa
+    - react
+    - vue
+    - angular
+    maintainers:
+    - name: Logic
+      url: https://github.com/logic3579/helm-charts
+    name: frontend-app
+    type: application
+    urls:
+    - https://github.com/logic3579/helm-charts/releases/download/frontend-app-0.3.1/frontend-app-0.3.1.tgz
+    version: 0.3.1
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2026-03-16T13:49:21.613803746Z"
     dependencies:
     - name: common
@@ -27,6 +52,29 @@ entries:
     - https://github.com/logic3579/helm-charts/releases/download/frontend-app-0.3.0/frontend-app-0.3.0.tgz
     version: 0.3.0
   go-app:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-04-23T08:21:27.209378881Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.2.0
+    description: A generic Helm chart for Go application deployment
+    digest: 01cd1905d78d0db9ae058a2cc4d7030a62aa5ef761f929c6f0aaa1cdbed6a005
+    home: https://github.com/logic3579/helm-charts
+    keywords:
+    - go
+    - golang
+    - backend
+    - microservice
+    maintainers:
+    - name: Logic
+      url: https://github.com/logic3579/helm-charts
+    name: go-app
+    type: application
+    urls:
+    - https://github.com/logic3579/helm-charts/releases/download/go-app-0.3.1/go-app-0.3.1.tgz
+    version: 0.3.1
   - apiVersion: v2
     appVersion: 1.0.0
     created: "2026-03-16T13:49:21.786548639Z"
@@ -122,6 +170,30 @@ entries:
   python-app:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2026-04-23T08:21:27.498156269Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.2.0
+    description: A generic Helm chart for Python application deployment
+    digest: 627b4d4558b23fecdf9540f4f9b5314e096e6b09efab002a0bb96f69dbddcdc7
+    home: https://github.com/logic3579/helm-charts
+    keywords:
+    - python
+    - fastapi
+    - django
+    - flask
+    - backend
+    maintainers:
+    - name: Logic
+      url: https://github.com/logic3579/helm-charts
+    name: python-app
+    type: application
+    urls:
+    - https://github.com/logic3579/helm-charts/releases/download/python-app-0.3.1/python-app-0.3.1.tgz
+    version: 0.3.1
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2026-03-16T13:49:21.972893915Z"
     dependencies:
     - name: common
@@ -144,4 +216,4 @@ entries:
     urls:
     - https://github.com/logic3579/helm-charts/releases/download/python-app-0.3.0/python-app-0.3.0.tgz
     version: 0.3.0
-generated: "2026-04-23T08:11:01.509695642Z"
+generated: "2026-04-23T08:21:27.498173635Z"
