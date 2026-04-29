@@ -9,7 +9,7 @@ This is a Helm charts repository that serves two purposes:
 1. **Publishable Helm charts** in `charts/` — released via GitHub Pages using `helm/chart-releaser-action`
 2. **Infrastructure examples** in `infrastructure/` — cluster infrastructure reference configs
 
-The repo is hosted at `https://logic3579.github.io/helm-charts` as a Helm chart repository.
+The repo is hosted at `https://logic3579.github.io/helm-charts` as a Helm chart repository, and is also listed on Artifact Hub (ownership verified via `artifacthub-repo.yml` at the repo root, which is deployed to Pages alongside `index.yaml`).
 
 ## Common Commands
 
@@ -41,8 +41,8 @@ helm install my-go-app logic-charts/go-app -f my-values.yaml
   - **Resource templates**: `common.service`, `common.serviceaccount` (parameterized `automountServiceAccountToken`), `common.configmap`, `common.secret` (with ESO warning), `common.hpa` (CPU + memory), `common.pdb` (with mutual exclusivity validation), `common.virtualservice` (CORS `exact`/`prefix`/`regex`)
 - **go-app** — Generic deployment chart for Go applications (port 8080, /healthz + /readyz probes, `readOnlyRootFilesystem: true`, minimal resource footprint)
 - **python-app** — Generic deployment chart for Python applications (port 8000, /health probes, `readOnlyRootFilesystem: false` for Python tmp needs, `startupProbe` enabled by default with 30×5s window, higher memory defaults)
-- **frontend-app** — Generic deployment chart for compiled frontend apps served by nginx (port 80, `readOnlyRootFilesystem: true` with `emptyDir` volumes auto-mounted for `/var/cache/nginx`, `/var/run`, `/tmp`, optional custom nginx config)
-- **kafka-ui** — Chart for UI for Apache Kafka (port 8080, Spring Boot actuator probes, `readOnlyRootFilesystem: false` for Java tmp needs, `startupProbe` enabled by default with 30×5s window). Deployment template includes kafka-specific logic: `auth` config (LOGIN_FORM/DISABLED/LDAP/OAUTH2 with secretKeyRef), `kafkaClusters` list rendered as `KAFKA_CLUSTERS_N_*` env vars (bootstrapServers, readonly, schemaRegistry, ksqldbServer, arbitrary properties)
+- **frontend-app** — Generic deployment chart for compiled frontend apps served by nginx (port 80, `readOnlyRootFilesystem: true` with `emptyDir` volumes auto-mounted for `/var/cache/nginx`, `/var/run`, `/tmp`, optional custom nginx config). Has an extra `nginx-configmap.yaml` template (unique to frontend-app) and intentionally no `secret.yaml` (frontends should not embed secrets)
+- **kafka-ui** — Chart for UI for Apache Kafka (port 8080, Spring Boot actuator probes, `readOnlyRootFilesystem: false` for Java tmp needs, `startupProbe` enabled by default with 30×5s window). Deployment template includes kafka-specific logic: `auth` config (LOGIN_FORM/DISABLED/LDAP/OAUTH2 with secretKeyRef), `kafkaClusters` list rendered as `KAFKA_CLUSTERS_N_*` env vars (bootstrapServers, readonly, schemaRegistry, ksqldbServer, arbitrary properties). `Chart.yaml` carries `artifacthub.io/*` annotations (`license`, `links`, `changes`) — bump the `changes` block when releasing a new version so Artifact Hub renders an accurate changelog
 
 All four app charts delegate most templates to `common` via one-line `{{- include "common.xxx" . }}` calls. Only `deployment.yaml` and `NOTES.txt` remain as full templates per chart (deployment has chart-specific logic like nginx volumes for frontend-app, kafka cluster env vars for kafka-ui).
 
@@ -94,16 +94,19 @@ helm package (application charts only → .cr-release-packages/)
     ↓
 check for new versions (gh release view per package; skip chart-releaser if all exist)
     ↓
-chart-releaser-action (skip_packaging: true, only runs when new versions detected):
+chart-releaser-action (skip_packaging: true, continue-on-error: true, only runs when new versions detected):
   a. cr upload — create GitHub Release per new version, .tgz as asset
   b. cr index  — regenerate index.yaml, push to gh-pages branch
     ↓
-Prepare Pages (index.html from main + index.yaml from gh-pages → ./public/)
+Prepare Pages (index.html + artifacthub-repo.yml from main + index.yaml from gh-pages → ./public/)
     ↓
-Deploy to GitHub Pages (serves both index.html and index.yaml)
+Deploy to GitHub Pages (serves index.html, index.yaml, and artifacthub-repo.yml)
 ```
 
-**Important**: Do NOT manually run `helm repo index` — `index.yaml` is exclusively managed by chart-releaser on the `gh-pages` branch.
+**Important**:
+- Do NOT manually run `helm repo index` — `index.yaml` is exclusively managed by chart-releaser on the `gh-pages` branch.
+- `chart-releaser-action@v1.7.0` has a known `latest_tag` bug that surfaces an error AFTER a successful release; the workflow uses `continue-on-error: true` to keep the pipeline green. Don't remove this flag without first verifying the upstream bug is fixed.
+- `artifacthub-repo.yml` must be reachable at `https://logic3579.github.io/helm-charts/artifacthub-repo.yml` for ownership verification — keep it deployed via the Prepare Pages step.
 
 ### Key branches
 
@@ -136,3 +139,5 @@ helm install my-app logic-charts/go-app
 - **ServiceAccount token**: `serviceAccount.automountServiceAccountToken` is parameterized in values — defaults to `true` for go-app/python-app and `false` for frontend-app (frontend pods don't need API access)
 - **Template structure**: App chart templates (service, serviceaccount, configmap, secret, hpa, pdb, virtualservice) are one-line `include` calls to `common.*`. Only `deployment.yaml` and `NOTES.txt` contain chart-specific logic. Do not duplicate template logic in app charts — add new shared templates to common instead
 - **Linting**: Always lint with the loop command above (or the CI workflow pattern) — never `helm lint charts/*` which includes the library chart and may produce misleading errors
+- **YAML extension**: All manifests use `.yaml` (never `.yml`). The repo was normalized to `.yaml` in a prior refactor — keep new files consistent
+- **Artifact Hub metadata**: When publishing a new chart, add `annotations.artifacthub.io/license` and `annotations.artifacthub.io/links` to its `Chart.yaml` (kafka-ui is the reference). On every version bump, append a `kind/description` entry under `annotations.artifacthub.io/changes` so the changelog renders correctly on Artifact Hub
