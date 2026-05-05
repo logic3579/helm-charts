@@ -9,6 +9,7 @@ spec:
       app: internal-istio-ingress
       istio: internal-istio-ingress
   configPatches:
+    # HTTP access_log
     - applyTo: NETWORK_FILTER
       match:
         listener:
@@ -47,3 +48,31 @@ spec:
                       "downstream_local_address": "%DOWNSTREAM_LOCAL_ADDRESS%"
                       "requested_server_name": "%REQUESTED_SERVER_NAME%"
                       "route_name": "%ROUTE_NAME%"
+    # TCP access_log
+    - applyTo: NETWORK_FILTER
+      match:
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.tcp_proxy
+      patch:
+        operation: MERGE
+        value:
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
+            access_log:
+              - name: envoy.access_loggers.stdout
+                typed_config:
+                  "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                  log_format:
+                    json_format:
+                      "start_time": "%START_TIME%"
+                      "client_ip": "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%"
+                      "downstream_local_address": "%DOWNSTREAM_LOCAL_ADDRESS%"
+                      "upstream_host": "%UPSTREAM_HOST%"
+                      "upstream_cluster": "%UPSTREAM_CLUSTER%"
+                      "bytes_received": "%BYTES_RECEIVED%"
+                      "bytes_sent": "%BYTES_SENT%"
+                      "duration_ms": "%DURATION%"
+                      "response_flags": "%RESPONSE_FLAGS%"
+                      "connection_termination_details": "%CONNECTION_TERMINATION_DETAILS%"
