@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "agents-infrastructure-operations@buildwithclaude": true,
+    "commands-monitoring-observability@buildwithclaude": true
+  }
+}
