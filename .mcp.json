@@ -18,7 +18,7 @@
     "kubernetes": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "kubernetes-mcp-server@0.0.62", "--read-only"],
+      "args": ["-y", "kubernetes-mcp-server@latest", "--read-only"],
       "env": {}
     },
     "nightingale": {
