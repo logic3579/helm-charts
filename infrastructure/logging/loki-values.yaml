@@ -261,7 +261,7 @@ loki:
     per_stream_rate_limit_burst: 15MB
     max_chunks_per_query: 2000000
     max_query_length: 7d1h
-    max_query_parallelism: 32
+    max_query_parallelism: 8
     split_queries_by_interval: 1h
     query_timeout: 300s
     volume_enabled: true
@@ -395,7 +395,7 @@ loki:
     retention_delete_delay: 2h
     delete_request_store: gcs
   pattern_ingester:
-    enabled: false
+    enabled: true
   analytics: {}
   ui:
     enabled: false
@@ -403,7 +403,7 @@ loki:
       enabled: true
   query_range: {}
   querier:
-    max_concurrent: 4
+    max_concurrent: 16
   ingester:
     chunk_retain_period: 0s
     chunk_idle_period: 30m
@@ -753,7 +753,10 @@ gateway:
       main '$remote_addr - $remote_user [$time_local]  $status '
               '"$request" $body_bytes_sent "$http_referer" '
               '"$http_user_agent" "$http_x_forwarded_for"';
-    serverSnippet: ""
+    serverSnippet: |
+      proxy_connect_timeout 5s;
+      proxy_read_timeout 300s;
+      proxy_send_timeout 300s;
     httpSnippet: >-
       {{ if .Values.loki.tenants }}proxy_set_header X-Scope-OrgID $remote_user;{{ end }}
     locationSnippet: ""
@@ -970,7 +973,7 @@ write:
 read:
   replicas: 2
   autoscaling:
-    enabled: false
+    enabled: true
     minReplicas: 2
     maxReplicas: 6
     targetCPUUtilizationPercentage: 60
@@ -997,7 +1000,13 @@ read:
   lifecycle: {}
   extraVolumeMounts: []
   extraVolumes: []
-  resources: {}
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 2Gi
   livenessProbe: {}
   terminationGracePeriodSeconds: 30
   affinity:
