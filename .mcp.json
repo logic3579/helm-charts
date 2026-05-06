@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "gcloud": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@google-cloud/gcloud-mcp"],
+      "env": {}
+    },
+    "grafana": {
+      "type": "stdio",
+      "command": "mcp-grafana",
+      "args": [],
+      "env": {
+        "GRAFANA_URL": "${GRAFANA_URL}",
+        "GRAFANA_SERVICE_ACCOUNT_TOKEN": "${GRAFANA_SERVICE_ACCOUNT_TOKEN}"
+      }
+    },
+    "kubernetes": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "kubernetes-mcp-server@0.0.62", "--read-only"],
+      "env": {}
+    },
+    "nightingale": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@n9e/n9e-mcp-server", "stdio"],
+      "env": {
+        "N9E_BASE_URL": "${N9E_BASE_URL}",
+        "N9E_TOKEN": "${N9E_TOKEN}"
+      }
+    }
+  }
+}
