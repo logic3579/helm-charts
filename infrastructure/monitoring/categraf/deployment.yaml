@@ -8,7 +8,7 @@ data:
     [global]
     print_configs = false
     hostname = "$HOSTNAME"
-    omit_hostname = true
+    omit_hostname = false
     precision = "ms"
     interval = 15
     providers = ["local"]
@@ -32,7 +32,8 @@ data:
     chan_size = 1000000
 
     [[writers]]
-    url = "http://nightingale-center/prometheus/v1/write"
+    #url = "http://nightingale-center.monitoring.svc/prometheus/v1/write"
+    url = "http://nightingale-center.monitoring.svc/prometheus/v1/write?ignore_ident=true"
     basic_auth_user = ""
     basic_auth_pass = ""
     timeout = 5000
@@ -52,6 +53,7 @@ data:
     meta_dir = "./meta"
 
     [heartbeat]
+    #enable = true
     enable = false
     url = "http://nightingale-center/v1/n9e/heartbeat"
     interval = 10

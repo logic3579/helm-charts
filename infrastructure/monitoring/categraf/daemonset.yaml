@@ -80,7 +80,8 @@ data:
     chan_size = 10000
 
     [[writers]]
-    url = "http://nightingale-center.monitoring.svc/prometheus/v1/write"
+    #url = "http://nightingale-center.monitoring.svc/prometheus/v1/write"
+    url = "http://nightingale-center.monitoring.svc/prometheus/v1/write?ignore_ident=true"
 
     basic_auth_user = ""
     basic_auth_pass = ""
@@ -89,7 +90,8 @@ data:
     max_idle_conns_per_host = 100
 
     [heartbeat]
-    enable = true
+    #enable = true
+    enable = false
     url = "http://nightingale-center.monitoring.svc/v1/n9e/heartbeat"
     interval = 10
     basic_auth_user = ""

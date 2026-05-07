@@ -72,18 +72,21 @@ vim categraf/conf/input.cadvisor/cadvisor.toml
 vim categraf/conf/input.prometheus/prometheus.toml
 vim values.yaml
 
-# Install
+# Install nightingale and categraf(daemonset)
 helm upgrade --install \
   --namespace monitoring \
   nightingale . \
   -f values.yaml
 kubectl apply -n monitoring -f nightingale-virtualservice.yaml
 
-# Collect kube-state-metrics, prometheus-mysql-exporter, clickhouse and so on.
-kubectl apply -n monitoring -f n9e-categraf/deployment.yaml
-kubectl apply -n monitoring -f n9e-categraf/prometheus-agent.yaml
+# Install categraf(deployment) for collect metrics
+# kube-state-metrics, prometheus-mysql-exporter, clickhouse
+kubectl apply -n monitoring -f categraf/deployment.yaml
+# kubernetes services metrics with prometheus-agent scape
+kubectl apply -n monitoring -f categraf/prometheus-agent.yaml
 
-# For other cluster(optional)
-kubectl apply -n monitoring -f n9e-categraf/daemonset.yaml
-kubectl apply -n monitoring -f n9e-categraf/prometheus-agent.yaml
+# Optional: other cluster install categraf(daemonset and deployment) for collect metrics
+kubectl apply -n monitoring -f categraf/daemonset.yaml
+kubectl apply -n monitoring -f categraf/deployment.yaml
+kubectl apply -n monitoring -f categraf/prometheus-agent.yaml
 ```
