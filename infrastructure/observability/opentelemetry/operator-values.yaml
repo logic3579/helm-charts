@@ -1,0 +1,59 @@
+replicaCount: 2
+
+# Manager — the operator process that watches OpenTelemetryCollector and
+# Instrumentation CRs and reconciles them into Deployments/DaemonSets/sidecars.
+manager:
+  image:
+    repository: ghcr.io/open-telemetry/opentelemetry-operator/opentelemetry-operator
+    tag: 0.150.0
+  collectorImage:
+    repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
+    tag: 0.150.1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  serviceAccount:
+    create: true
+    # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/otel-operator-role
+    # GCP Workload Identity:   iam.gke.io/gcp-service-account: otel-operator@PROJECT_ID.iam.gserviceaccount.com
+    annotations: {}
+  serviceMonitor:
+    enabled: false
+  prometheusRule:
+    enabled: false
+  leaderElection:
+    enabled: true
+  createRbacPermissions: false
+
+nodeSelector:
+  tier: mgmt
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: opentelemetry-operator
+        topologyKey: kubernetes.io/hostname
+
+pdb:
+  create: true
+  minAvailable: 1
+
+# Webhook TLS — default is cert-manager. The repo already runs cert-manager
+# (see infrastructure/cert-manager/), so we reuse it. Use the default
+# self-signer issuer; provide issuerRef to use a project Issuer/ClusterIssuer.
+admissionWebhooks:
+  create: true
+  certManager:
+    enabled: true
+    issuerRef: {}
+  autoGenerateCert:
+    enabled: false
+
+crds:
+  create: true

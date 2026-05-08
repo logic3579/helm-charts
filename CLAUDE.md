@@ -59,6 +59,7 @@ Cluster infrastructure reference configs:
 - **nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules
 - **observability/grafana-lgtm/** — Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail collectors
 - **observability/victoriametrics/** — VictoriaMetrics stack (VMCluster + VictoriaLogs + VictoriaTraces) with vmagent / vmalert / vlagent collectors and bundled vmauth gateway
+- **observability/opentelemetry/** — OpenTelemetry Operator + agent/gateway Collector CRs + Instrumentation CR (auto-injects Java/Python SDKs); collection layer that exports to either grafana-lgtm or victoriametrics
 - **cert-manager/, database/, bigdata/, streaming/, mgmt/** — Various infrastructure component manifests
 
 ## Dual Deployment Model

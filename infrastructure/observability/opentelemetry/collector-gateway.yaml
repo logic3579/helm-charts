@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-gateway
+  namespace: otel
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/otel-gateway-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: otel-gateway@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-gateway
+rules:
+  # k8sattributes processor (also runs on the gateway for any direct-to-gateway pushes).
+  - apiGroups: [""]
+    resources: [pods, namespaces, nodes]
+    verbs: [get, list, watch]
+  - apiGroups: [apps]
+    resources: [replicasets, deployments, statefulsets, daemonsets]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-gateway
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-gateway
+subjects:
+  - kind: ServiceAccount
+    name: otel-gateway
+    namespace: otel
+---
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: gateway
+  namespace: otel
+spec:
+  mode: deployment
+  replicas: 2
+  serviceAccount: otel-gateway
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: gateway-collector
+          topologyKey: kubernetes.io/hostname
+  podDisruptionBudget:
+    minAvailable: 1
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_percentage: 80
+        spike_limit_percentage: 25
+      k8sattributes:
+        auth_type: serviceAccount
+        passthrough: false
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.deployment.name
+            - k8s.node.name
+      # Keep 100% of errored / slow traces, sample the rest at 10%.
+      tail_sampling:
+        decision_wait: 10s
+        num_traces: 50000
+        expected_new_traces_per_sec: 10
+        policies:
+          - name: errors
+            type: status_code
+            status_code:
+              status_codes: [ERROR]
+          - name: slow
+            type: latency
+            latency:
+              threshold_ms: 1000
+          - name: probabilistic
+            type: probabilistic
+            probabilistic:
+              sampling_percentage: 10
+      batch:
+        timeout: 10s
+        send_batch_size: 8192
+        send_batch_max_size: 10000
+
+    exporters:
+      # === grafana-lgtm — DEFAULT ===
+      otlp/tempo:
+        endpoint: tempo-distributor.lgtm.svc.cluster.local:4317
+        tls:
+          insecure: true
+        sending_queue:
+          enabled: true
+          num_consumers: 4
+          queue_size: 5000
+      otlphttp/loki:
+        endpoint: http://loki-gateway.lgtm.svc.cluster.local/otlp
+        sending_queue:
+          enabled: true
+          num_consumers: 4
+          queue_size: 5000
+      prometheusremotewrite/mimir:
+        endpoint: http://mimir-gateway.lgtm.svc.cluster.local/api/v1/push
+        target_info:
+          enabled: true
+        resource_to_telemetry_conversion:
+          enabled: true
+
+      # === victoriametrics — alternative; uncomment + swap pipelines below to switch ===
+      # otlphttp/victoriatraces:
+      #   traces_endpoint: http://victoriatraces-server.vm.svc.cluster.local:10428/api/v1/otlp/v1/traces
+      # otlphttp/victorialogs:
+      #   logs_endpoint: http://victorialogs-server.vm.svc.cluster.local:9428/insert/opentelemetry/v1/logs
+      # prometheusremotewrite/victoriametrics:
+      #   endpoint: http://vmcluster-vmauth.vm.svc.cluster.local:8427/insert/0/prometheus/api/v1/write
+
+    extensions:
+      health_check: {}
+
+    service:
+      extensions:
+        - health_check
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, tail_sampling, batch]
+          exporters: [otlp/tempo]
+          # exporters: [otlphttp/victoriatraces]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, batch]
+          exporters: [prometheusremotewrite/mimir]
+          # exporters: [prometheusremotewrite/victoriametrics]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, k8sattributes, batch]
+          exporters: [otlphttp/loki]
+          # exporters: [otlphttp/victorialogs]

@@ -1,0 +1,54 @@
+# Instrumentation CR — referenced by application pods via the annotation:
+#   instrumentation.opentelemetry.io/inject-java:   "otel/default"
+#   instrumentation.opentelemetry.io/inject-python: "otel/default"
+#
+# The operator's mutating webhook then injects an init container that drops
+# the agent into a shared volume, plus the right env vars (OTEL_*) so the
+# app process picks up the SDK at startup. No application code change required.
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: default
+  namespace: otel
+spec:
+  # All injected SDKs push OTLP gRPC to the per-node agent's headless Service.
+  # 4317 is gRPC; switch to 4318 for OTLP/HTTP if your runtime can't do gRPC.
+  exporter:
+    endpoint: http://agent-collector.otel.svc.cluster.local:4318
+
+  propagators:
+    - tracecontext
+    - baggage
+    - b3
+    - b3multi
+
+  # 25% head sampling — final shape decided by the gateway's tail_sampling.
+  # Use parentbased_traceidratio so child spans inherit the parent decision.
+  sampler:
+    type: parentbased_traceidratio
+    argument: "0.25"
+
+  # Resource attributes added to every span/metric/log emitted by injected SDKs.
+  resource:
+    addK8sUIDAttributes: true
+
+  # Defaults applied to every injected language runtime.
+  env:
+    - name: OTEL_EXPORTER_OTLP_PROTOCOL
+      value: http/protobuf
+    - name: OTEL_METRIC_EXPORT_INTERVAL
+      value: "30000"
+
+  java:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.13.3
+    env:
+      - name: OTEL_INSTRUMENTATION_JDBC_ENABLED
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_KAFKA_ENABLED
+        value: "true"
+
+  python:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.55b1
+    env:
+      - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+        value: "true"
