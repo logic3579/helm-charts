@@ -1,33 +1,33 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) when working in this repository.
 
 ## Repository Overview
 
-This is a Helm charts repository that serves two purposes:
+Two purposes:
 
-1. **Publishable Helm charts** in `charts/` — released via GitHub Pages using `helm/chart-releaser-action`
-2. **Infrastructure examples** in `infrastructure/` — cluster infrastructure reference configs
+1. **Publishable Helm charts** in `charts/` — released via GitHub Pages using `helm/chart-releaser-action`.
+2. **Infrastructure references** in `infrastructure/` — cluster infrastructure example configs.
 
-The repo is hosted at `https://logic3579.github.io/helm-charts` as a Helm chart repository, and is also listed on Artifact Hub (ownership verified via `artifacthub-repo.yml` at the repo root, which is deployed to Pages alongside `index.yaml`).
+Repo is hosted at `https://logic3579.github.io/helm-charts` and listed on Artifact Hub (verified via `artifacthub-repo.yml` at the repo root, deployed to Pages alongside `index.yaml`).
 
 ## Common Commands
 
 ```bash
-# Lint application charts only (common is a library chart — not linted standalone)
+# Lint application charts only (common is a library chart — skip)
 for chart in charts/*/; do
   if [ -f "$chart/Chart.yaml" ] && ! grep -q 'type: library' "$chart/Chart.yaml"; then
     helm lint "$chart"
   fi
 done
 
-# Update chart dependencies (required after modifying Chart.yaml dependencies)
+# Update chart dependencies (after modifying Chart.yaml dependencies)
 helm dependency update charts/go-app
 
-# Template a chart locally to inspect rendered output
+# Render locally
 helm template my-release charts/go-app -f charts/go-app/values.yaml
 
-# Install from Helm registry
+# Install from registry
 helm repo add logic-charts https://logic3579.github.io/helm-charts
 helm install my-go-app logic-charts/go-app -f my-values.yaml
 ```
@@ -36,111 +36,80 @@ helm install my-go-app logic-charts/go-app -f my-values.yaml
 
 ### charts/
 
-- **common** — Shared Helm library chart (`type: library`) providing reusable named templates. All app charts depend on this via `dependencies` using `file://../common` pinned to version `0.2.0`. Not published to the registry — it is embedded into each app chart's `.tgz` during packaging. Provides:
-  - **Helpers**: `common.name`, `common.fullname`, `common.chart`, `common.labels`, `common.selectorLabels`, `common.serviceAccountName`, `common.image` (with digest support), `common.podLabels` (standard labels + user podLabels)
-  - **Resource templates**: `common.service`, `common.serviceaccount` (parameterized `automountServiceAccountToken`), `common.configmap`, `common.secret` (with ESO warning), `common.hpa` (CPU + memory), `common.pdb` (with mutual exclusivity validation), `common.virtualservice` (CORS `exact`/`prefix`/`regex`)
-- **go-app** — Generic deployment chart for Go applications (port 8080, /healthz + /readyz probes, `readOnlyRootFilesystem: true`, minimal resource footprint)
-- **python-app** — Generic deployment chart for Python applications (port 8000, /health probes, `readOnlyRootFilesystem: false` for Python tmp needs, `startupProbe` enabled by default with 30×5s window, higher memory defaults)
-- **frontend-app** — Generic deployment chart for compiled frontend apps served by nginx (port 80, `readOnlyRootFilesystem: true` with `emptyDir` volumes auto-mounted for `/var/cache/nginx`, `/var/run`, `/tmp`, optional custom nginx config). Has an extra `nginx-configmap.yaml` template (unique to frontend-app) and intentionally no `secret.yaml` (frontends should not embed secrets)
-- **kafka-ui** — Chart for UI for Apache Kafka (port 8080, Spring Boot actuator probes, `readOnlyRootFilesystem: false` for Java tmp needs, `startupProbe` enabled by default with 30×5s window). Deployment template includes kafka-specific logic: `auth` config (LOGIN_FORM/DISABLED/LDAP/OAUTH2 with secretKeyRef), `kafkaClusters` list rendered as `KAFKA_CLUSTERS_N_*` env vars (bootstrapServers, readonly, schemaRegistry, ksqldbServer, arbitrary properties). `Chart.yaml` carries `artifacthub.io/*` annotations (`license`, `links`, `changes`) — bump the `changes` block when releasing a new version so Artifact Hub renders an accurate changelog
+- **common** — Library chart (`type: library`, version `0.2.0`) embedded into every app chart via `file://../common`. Not published to the registry. Provides `common.{name,fullname,chart,labels,selectorLabels,serviceAccountName,image,podLabels}` helpers plus reusable templates: `service`, `serviceaccount` (parameterized `automountServiceAccountToken`), `configmap`, `secret` (with ESO warning), `hpa` (CPU+memory), `pdb` (mutual-exclusivity validation), `virtualservice` (CORS exact/prefix/regex).
+- **go-app** — Go (port 8080, `/healthz` + `/readyz`, `readOnlyRootFilesystem: true`, minimal resources).
+- **python-app** — Python (port 8000, `/health`, `readOnlyRootFilesystem: false`, `startupProbe` enabled by default, 30×5s window, higher memory defaults).
+- **frontend-app** — Compiled SPA served by nginx (port 80, `readOnlyRootFilesystem: true` with `emptyDir` mounts to `/var/cache/nginx`, `/var/run`, `/tmp`, optional custom nginx config). Has a chart-specific `nginx-configmap.yaml` and intentionally no `secret.yaml`.
+- **kafka-ui** — Kafka UI (port 8080, Spring Boot actuator probes, `startupProbe` enabled). Deployment template injects kafka-specific env: `auth` (LOGIN_FORM/DISABLED/LDAP/OAUTH2 via `secretKeyRef`) and `kafkaClusters` rendered as `KAFKA_CLUSTERS_N_*` (bootstrapServers, readonly, schemaRegistry, ksqldbServer, arbitrary properties). On every version bump, append a `kind/description` entry to `Chart.yaml`'s `annotations.artifacthub.io/changes` block.
 
-All four app charts delegate most templates to `common` via one-line `{{- include "common.xxx" . }}` calls. Only `deployment.yaml` and `NOTES.txt` remain as full templates per chart (deployment has chart-specific logic like nginx volumes for frontend-app, kafka cluster env vars for kafka-ui).
-
-All four app charts support: `startupProbe`, `volumes`/`volumeMounts`, HPA with CPU+memory targets, and Istio VirtualService CORS with `exact`/`prefix`/`regex` origin match types.
-
-Each chart has a single `values.yaml` that serves as both the default values and the configuration reference. Deployment-specific overrides (image repo, resources, env vars, etc.) should be provided via ArgoCD Application `values` or `helm install -f`.
+App charts delegate most templates to `common` via one-line `{{- include "common.xxx" . }}`. Only `deployment.yaml` and `NOTES.txt` carry chart-specific logic. All four support `startupProbe`, `volumes`/`volumeMounts`, HPA (CPU+memory), and Istio VirtualService CORS (`exact`/`prefix`/`regex`). Each chart's `values.yaml` doubles as the configuration reference — deployment-specific overrides go in ArgoCD `values` or `helm install -f`.
 
 ### infrastructure/
 
-Cluster infrastructure reference configs:
-
-- **argocd/** — Multi-cluster GitOps setup with ApplicationSets, cluster secrets, projects, notifications (GKE Workload Identity)
-- **istio/** — Gateway and AuthorizationPolicy configs for external/internal traffic
-- **nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules
-- **observability/grafana-lgtm/** — Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail collectors
-- **observability/victoriametrics/** — VictoriaMetrics stack (VMCluster + VictoriaLogs + VictoriaTraces) with vmagent / vmalert / vlagent collectors and bundled vmauth gateway
-- **observability/opentelemetry/** — OpenTelemetry Operator + agent/gateway Collector CRs + Instrumentation CR (auto-injects Java/Python SDKs); collection layer that exports to either grafana-lgtm or victoriametrics
-- **cert-manager/, database/, bigdata/, streaming/, mgmt/** — Various infrastructure component manifests
+- **argocd/** — Multi-cluster GitOps (ApplicationSets, GKE Workload Identity, Slack notifications).
+- **istio/** — Gateway and AuthorizationPolicy configs.
+- **nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules.
+- **observability/grafana-lgtm/** — Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail collectors.
+- **observability/victoriametrics/** — VictoriaMetrics stack (VMCluster + VictoriaLogs + VictoriaTraces) with vmagent / vmalert / vlagent and bundled vmauth gateway.
+- **observability/opentelemetry/** — OTel Operator + agent/gateway Collector CRs + Instrumentation CR (auto-injects Java/Python SDKs); collection layer that exports to either grafana-lgtm or victoriametrics.
+- **cert-manager/, database/, bigdata/, streaming/, mgmt/** — Various component manifests.
 
 ## Dual Deployment Model
 
-The `charts/` directory supports two deployment methods simultaneously:
+`charts/` supports two methods simultaneously:
 
-1. **Helm Registry** — Charts are packaged, released to GitHub Releases, and indexed on GitHub Pages. Users install via `helm repo add` / `helm install`
-2. **ArgoCD Directory** — ArgoCD points directly to a chart path in this Git repo (e.g., `charts/go-app`) with `source.helm` type. ArgoCD auto-runs `helm dependency build` to resolve the `file://../common` dependency
+1. **Helm Registry** — packaged, released to GitHub Releases, indexed on GitHub Pages. Users install via `helm repo add` / `helm install`.
+2. **ArgoCD Directory** — ArgoCD points at a chart path (e.g. `charts/go-app`) with `source.helm`. ArgoCD auto-runs `helm dependency build` to resolve `file://../common`.
 
 ## CI/CD — Release Workflow
 
-The GitHub Actions workflow (`.github/workflows/release.yaml`) automates chart publishing.
+`.github/workflows/release.yaml`. Trigger: auto on push to `main` modifying `charts/**`, or manual `workflow_dispatch`.
 
-### Trigger
+To publish a new chart version:
 
-- **Auto**: Push to `main` that modifies `charts/**`
-- **Manual**: `workflow_dispatch`
+1. Modify chart source under `charts/`.
+2. Bump `version` in `Chart.yaml` — chart-releaser skips versions that already have a Git tag.
+3. `git commit && git push origin main`.
 
-### How to publish a new chart version
-
-1. Modify chart source under `charts/`
-2. **Bump `version` in `Chart.yaml`** — this is the release trigger; chart-releaser skips versions that already have a corresponding Git tag
-3. `git commit && git push origin main`
-
-### Workflow steps
-
-```
-checkout (fetch-depth: 0, full history + tags for chart-releaser)  [ubuntu-24.04]
-    ↓
-helm dependency update (resolve file://../common for each app chart)
-    ↓
-helm lint (application charts only — filters type: library)
-    ↓
-helm package (application charts only → .cr-release-packages/)
-    ↓
-check for new versions (gh release view per package; skip chart-releaser if all exist)
-    ↓
-chart-releaser-action (skip_packaging: true, continue-on-error: true, only runs when new versions detected):
-  a. cr upload — create GitHub Release per new version, .tgz as asset
-  b. cr index  — regenerate index.yaml, push to gh-pages branch
-    ↓
-Prepare Pages (index.html + artifacthub-repo.yml from main + index.yaml from gh-pages → ./public/)
-    ↓
-Deploy to GitHub Pages (serves index.html, index.yaml, and artifacthub-repo.yml)
-```
+Workflow (ubuntu-24.04): checkout (full history+tags) → `helm dependency update` → `helm lint` (app charts only) → `helm package` → check existing GH Releases → `chart-releaser-action` (`skip_packaging: true`, `continue-on-error: true`) uploads `.tgz` per new version + regenerates `index.yaml` on `gh-pages` → Prepare Pages (`index.html` + `artifacthub-repo.yml` from main + `index.yaml` from gh-pages) → Deploy Pages.
 
 **Important**:
-- Do NOT manually run `helm repo index` — `index.yaml` is exclusively managed by chart-releaser on the `gh-pages` branch.
-- `chart-releaser-action@v1.7.0` has a known `latest_tag` bug that surfaces an error AFTER a successful release; the workflow uses `continue-on-error: true` to keep the pipeline green. Don't remove this flag without first verifying the upstream bug is fixed.
-- `artifacthub-repo.yml` must be reachable at `https://logic3579.github.io/helm-charts/artifacthub-repo.yml` for ownership verification — keep it deployed via the Prepare Pages step.
+- `index.yaml` is exclusively managed by chart-releaser on `gh-pages`. Never run `helm repo index` manually.
+- `chart-releaser-action@v1.7.0` has a known `latest_tag` bug; `continue-on-error: true` keeps the pipeline green. Don't remove until the upstream bug is verified fixed.
+- `artifacthub-repo.yml` must remain reachable at `https://logic3579.github.io/helm-charts/artifacthub-repo.yml` for ownership verification.
 
-### Key branches
+Branches: **main** (chart source, workflow, docs) — **gh-pages** (chart-releaser-managed, do not edit manually).
 
-- **main** — Chart source code, workflow, docs
-- **gh-pages** — Managed by chart-releaser; stores `index.yaml` only. Do not manually edit
+## Chart Conventions
 
-### How users install
+- **`.example` suffix** for configs needing secret/environment-specific values; **`.template` suffix** for ArgoCD notification secret templates.
+- **Secrets**: use Kubernetes Secrets with `secretKeyRef` or env var placeholders (`${VAR_NAME}`). The built-in `secret:` chart template base64-encodes plaintext at render time — for production prefer External Secrets Operator (ESO) or Sealed Secrets.
+- **Image tags**: pin to specific versions, never `:latest`.
+- **Istio gateways**: internal services use `istio-ingress/internal-gateway`; external services use `istio-ingress/external-gateway`.
+- **CORS**: VirtualService `corsPolicy.allowOrigins` accepts strings (shorthand for `exact`) or maps (`exact`/`prefix`/`regex`). Never combine wildcard `*` with credentials.
+- **Library chart pinning**: each app chart's `Chart.yaml` pins `common` to an explicit version (e.g. `"0.2.0"`); avoid ranges like `">=0.x.x"`. `charts/*/charts/` and `charts/*/Chart.lock` are gitignored.
+- **PDB**: `minAvailable` and `maxUnavailable` are mutually exclusive — setting both fails `helm template` by design.
+- **Volumes**: app charts accept `volumes` and `volumeMounts` lists. For `readOnlyRootFilesystem: true` charts (go-app, frontend-app), mount a tmpfs `emptyDir` for `/tmp` if the app writes temp files. frontend-app auto-mounts nginx writable dirs (`nginxWritableDirs`) — adjust if using non-standard nginx images.
+- **No Ingress**: route via Istio VirtualService (`virtualservice.*` in values), not Ingress resources.
+- **ServiceAccount token**: `serviceAccount.automountServiceAccountToken` defaults to `true` for go-app/python-app and `false` for frontend-app.
+- **Template structure**: only `deployment.yaml` and `NOTES.txt` are chart-specific. Don't duplicate template logic across charts — add new shared templates to `common`.
+- **Linting**: use the loop above (or the CI pattern). Never `helm lint charts/*` — it includes the library chart and produces misleading errors.
+- **YAML extension**: always `.yaml`, never `.yml`. The repo was normalized in a prior refactor.
+- **Artifact Hub metadata**: when publishing a new chart, add `annotations.artifacthub.io/license` and `annotations.artifacthub.io/links` to `Chart.yaml` (kafka-ui is the reference).
 
-```
-helm repo add logic-charts https://logic3579.github.io/helm-charts
-  → fetches /index.yaml from GitHub Pages
-helm install my-app logic-charts/go-app
-  → downloads .tgz from GitHub Releases (URL recorded in index.yaml)
-```
+## Infrastructure Conventions
 
-## Conventions
+These fix recurring decisions across `infrastructure/` so they don't get re-debated.
 
-- Template files use `.example` suffix for configs requiring secret/environment-specific values
-- ArgoCD notification templates use `.template` suffix for secret templates
-- **Secrets management**: All credentials use Kubernetes Secrets with `secretKeyRef` or environment variable placeholders (`${VAR_NAME}`) — never hardcode secrets in ConfigMaps or manifests. The built-in `secret:` chart feature base64-encodes plaintext values at render time — for production use External Secrets Operator (ESO) or Sealed Secrets instead
-- **Image tags**: Always pin container images to specific versions, never use `:latest`
-- **Istio gateways**: Internal services use `istio-ingress/internal-gateway`, external services use `istio-ingress/external-gateway`
-- **CORS**: VirtualService `corsPolicy.allowOrigins` accepts strings (shorthand for `exact`) or maps (`exact`/`prefix`/`regex`). Never use wildcard `*` with credentials
-- **Library chart**: `common` is never packaged or published; it is embedded via `helm dependency update`. Pin the dependency to an explicit version (e.g. `"0.2.0"`) in each app chart's `Chart.yaml` — avoid version ranges like `">=0.x.x"`
-- **Helm dependency artifacts**: `charts/*/charts/` and `charts/*/Chart.lock` are gitignored (generated by `helm dependency update`)
-- **PodDisruptionBudget**: `minAvailable` and `maxUnavailable` are mutually exclusive — setting both causes a `helm template` failure by design
-- **Startup probes**: python-app enables `startupProbe` by default (`failureThreshold: 30, periodSeconds: 5` = 150s max startup window). For go-app and frontend-app, `startupProbe` is optional and empty by default
-- **Volumes**: All app charts accept `volumes` and `volumeMounts` lists for injecting arbitrary volumes. For go-app (`readOnlyRootFilesystem: true`), mount a tmpfs `emptyDir` for `/tmp` if the app writes temp files. frontend-app auto-mounts nginx writable dirs (`nginxWritableDirs`) — customize in values if using a non-standard nginx image
-- **No Ingress**: Ingress resources have been removed from all charts (deprecated in newer Kubernetes). Use Istio VirtualService (`virtualservice.*` in values) for traffic routing instead
-- **ServiceAccount token**: `serviceAccount.automountServiceAccountToken` is parameterized in values — defaults to `true` for go-app/python-app and `false` for frontend-app (frontend pods don't need API access)
-- **Template structure**: App chart templates (service, serviceaccount, configmap, secret, hpa, pdb, virtualservice) are one-line `include` calls to `common.*`. Only `deployment.yaml` and `NOTES.txt` contain chart-specific logic. Do not duplicate template logic in app charts — add new shared templates to common instead
-- **Linting**: Always lint with the loop command above (or the CI workflow pattern) — never `helm lint charts/*` which includes the library chart and may produce misleading errors
-- **YAML extension**: All manifests use `.yaml` (never `.yml`). The repo was normalized to `.yaml` in a prior refactor — keep new files consistent
-- **Artifact Hub metadata**: When publishing a new chart, add `annotations.artifacthub.io/license` and `annotations.artifacthub.io/links` to its `Chart.yaml` (kafka-ui is the reference). On every version bump, append a `kind/description` entry under `annotations.artifacthub.io/changes` so the changelog renders correctly on Artifact Hub
+- **Flat layout under each observability stack**: `infrastructure/observability/<stack>/` keeps every values + VirtualService manifest at the top level — no per-component subdirectories. Filenames carry the component prefix (`loki-values.yaml`, `vmcluster-values.yaml`, `collector-agent.yaml`). All three stacks (`grafana-lgtm/`, `victoriametrics/`, `opentelemetry/`) follow this.
+- **Per-stack short namespace**: each stack lives in a namespace named after the stack — `lgtm`, `vm`, `otel`. Cross-stack service hostnames read as `<svc>.<ns>.svc.cluster.local`.
+- **IRSA + Workload Identity annotation block**: every component values file with a `serviceAccount.annotations` field carries a two-line comment showing both AWS IRSA and GCP Workload Identity formats above the (empty) annotations map. Mirror the existing shape:
+  ```yaml
+  serviceAccount:
+    create: true
+    # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/<comp>-role
+    # GCP Workload Identity:   iam.gke.io/gcp-service-account: <comp>@PROJECT_ID.iam.gserviceaccount.com
+    annotations: {}
+  ```
+- **VirtualService skip rule for OTLP-receiving components**: Tempo, VictoriaTraces, and the OpenTelemetry collector skip VS creation. OTLP gRPC doesn't fit Istio's HTTP gateway routing, and queries run intra-cluster via Grafana's Service URLs. Don't add a VS just for symmetry with Loki/Mimir/vmauth gateways.
+- **Storage backend differs by stack**: grafana-lgtm uses object storage (GCS by default; values carry `gcs.bucket_name: example-*` placeholders). VictoriaMetrics uses local PVCs (`premium-rwo` storageClass). Don't retrofit the other model — VM has no native object-store hot tier; LGTM scales much better against object storage than PVCs.
