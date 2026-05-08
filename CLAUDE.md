@@ -58,6 +58,7 @@ Cluster infrastructure reference configs:
 - **istio/** — Gateway and AuthorizationPolicy configs for external/internal traffic
 - **nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules
 - **observability/grafana-lgtm/** — Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail collectors
+- **observability/victoriametrics/** — VictoriaMetrics stack (VMCluster + VictoriaLogs + VictoriaTraces) with vmagent / vmalert / vlagent collectors and bundled vmauth gateway
 - **cert-manager/, database/, bigdata/, streaming/, mgmt/** — Various infrastructure component manifests
 
 ## Dual Deployment Model

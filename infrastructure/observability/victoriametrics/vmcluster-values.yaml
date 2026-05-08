@@ -1,0 +1,147 @@
+fullnameOverride: vmcluster
+
+common:
+  image:
+    tag: 1.142.0
+
+serviceAccount:
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/vmcluster-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: vmcluster@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+# vmstorage — stateful tier holding TSDB shards.
+vmstorage:
+  replicaCount: 2
+  retentionPeriod: "3"  # months
+  persistentVolume:
+    enabled: true
+    storageClassName: premium-rwo
+    accessModes:
+      - ReadWriteOnce
+    size: 100Gi
+    mountPath: /storage
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: vmstorage
+          topologyKey: kubernetes.io/hostname
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+
+# vmselect — query path. clusterIP=None so vmauth can resolve all replica IPs.
+vmselect:
+  replicaCount: 2
+  cacheMountPath: /cache
+  persistentVolume:
+    enabled: false  # cache is regenerable; emptyDir is fine
+  service:
+    type: ClusterIP
+    clusterIP: None
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: vmselect
+          topologyKey: kubernetes.io/hostname
+  extraArgs:
+    # Cap per-query memory and concurrency so a heavy user can't OOM the pod.
+    search.maxQueryDuration: "5m"
+    search.maxConcurrentRequests: "16"
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+
+# vminsert — write path. replicationFactor=2 means each sample goes to 2 storage replicas.
+vminsert:
+  replicaCount: 2
+  service:
+    type: ClusterIP
+    clusterIP: None
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: vminsert
+          topologyKey: kubernetes.io/hostname
+  extraArgs:
+    replicationFactor: "2"
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+
+# vmauth — unified front gateway (mirrors Mimir's nginx gateway role).
+# Routes /insert/* → vminsert and /select|/api|/vmui → vmselect via the chart's
+# built-in `.vm.read` / `.vm.write` template helpers.
+vmauth:
+  enabled: true
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: vmauth
+          topologyKey: kubernetes.io/hostname
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+  config:
+    unauthorized_user:
+      url_map:
+        - src_paths:
+            - '/insert/.*'
+          url_prefix:
+            - '{{ urlJoin (omit .vm.write "path") }}/'
+        - src_paths:
+            - '/select/.*'
+            - '/api/v1/.*'
+            - '/vmui.*'
+            - '/prometheus/.*'
+          url_prefix:
+            - '{{ urlJoin (omit .vm.read "path") }}/'
+
+# Disable the chart's bundled monitoring objects — scraping is handled by vmagent.
+serviceMonitor:
+  enabled: false

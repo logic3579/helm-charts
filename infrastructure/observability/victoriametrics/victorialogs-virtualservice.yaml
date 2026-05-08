@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: victorialogs
+  namespace: vm
+spec:
+  gateways:
+    - istio-ingress/internal-gateway
+  hosts:
+    - victorialogs.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: victorialogs-server.vm.svc.cluster.local
+            port:
+              number: 9428

@@ -1,0 +1,74 @@
+fullnameOverride: vmalert
+
+global:
+  image:
+    registry: docker.io
+
+serviceAccount:
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/vmalert-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: vmalert@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+server:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: victoriametrics/vmalert
+    tag: v1.141.0
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  # Eval rules against vmselect (read path).
+  datasource:
+    url: http://vmcluster-vmauth.vm.svc.cluster.local:8427/select/0/prometheus
+  # Push recording-rule output back through vmauth (write path).
+  remoteWrite:
+    url: http://vmcluster-vmauth.vm.svc.cluster.local:8427/insert/0/prometheus
+  # Read existing rule state on restart so alerts don't re-fire after pod restart.
+  remoteRead:
+    url: http://vmcluster-vmauth.vm.svc.cluster.local:8427/select/0/prometheus
+  # Bring your own Alertmanager — leave URL empty if you don't have one yet.
+  notifier:
+    url: ""
+  extraArgs:
+    envflag.enable: "true"
+    envflag.prefix: VM_
+    loggerFormat: json
+    httpListenAddr: :8880
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  nodeSelector:
+    tier: mgmt
+  affinity: {}
+  podSecurityContext:
+    enabled: true
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  securityContext:
+    enabled: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+  # Inline rule groups — leave empty here, drop rules into a sibling ConfigMap
+  # and reference it via additional `rule:` paths in extraArgs above.
+  config:
+    alerts:
+      groups: []
+
+# Disable the bundled Alertmanager — bring your own (Slack/PagerDuty/etc).
+alertmanager:
+  enabled: false
+
+serviceMonitor:
+  enabled: false

@@ -1,0 +1,86 @@
+fullnameOverride: vmagent
+
+global:
+  image:
+    registry: docker.io
+
+image:
+  registry: docker.io
+  repository: victoriametrics/vmagent
+  tag: v1.141.0
+  pullPolicy: IfNotPresent
+
+# 2-replica Deployment — both replicas scrape every target; vmstorage dedupes the
+# duplicates by `dedup.minScrapeInterval`. For sharded scraping, switch to
+# mode=statefulSet with statefulSet.clusterMode=true and tune replicationFactor.
+mode: deployment
+replicaCount: 2
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/vmagent-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: vmagent@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+# Push scraped samples through vmauth — gives us a single ingestion endpoint
+# and inherits vmauth's auth/limits when those get added later.
+remoteWrite:
+  - url: http://vmcluster-vmauth.vm.svc.cluster.local:8427/insert/0/prometheus/api/v1/write
+
+extraArgs:
+  envflag.enable: "true"
+  envflag.prefix: VM_
+  loggerFormat: json
+  promscrape.streamParse: "true"
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+nodeSelector:
+  tier: mgmt
+
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app: vmagent
+        topologyKey: kubernetes.io/hostname
+
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+securityContext:
+  enabled: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+podSecurityContext:
+  enabled: true
+  fsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# The chart's default `config.scrape_configs` already covers apiserver, kubelet,
+# cAdvisor, k8s nodes, and service-discovered pods. Override here only for
+# extra scrape jobs or to inject relabel rules.
+config:
+  global:
+    scrape_interval: 30s
+    external_labels:
+      cluster: example-cluster
+
+serviceMonitor:
+  enabled: false

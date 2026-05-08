@@ -1,0 +1,72 @@
+fullnameOverride: victoriatraces
+
+global:
+  image:
+    registry: docker.io
+
+serviceAccount:
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/victoriatraces-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: victoriatraces@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+server:
+  enabled: true
+  image:
+    repository: victoriametrics/victoria-traces
+    tag: v0.7.0
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  retentionPeriod: 30d
+  retentionDiskSpaceUsage: ""
+  extraArgs:
+    envflag.enable: true
+    envflag.prefix: VM_
+    loggerFormat: json
+    httpListenAddr: :10428
+    http.shutdownDelay: 15s
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+  persistentVolume:
+    enabled: true
+    storageClassName: premium-rwo
+    accessModes:
+      - ReadWriteOnce
+    size: 50Gi
+    mountPath: /victoria-traces-data
+  securityContext:
+    enabled: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+  podSecurityContext:
+    enabled: true
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  nodeSelector:
+    tier: mgmt
+  affinity: {}
+  ingress:
+    enabled: false
+  # OTLP push uses HTTP at /api/v1/otlp/v1/traces on port 10428.
+  # gRPC OTLP is not natively supported — an Alloy/otel-collector sidecar can bridge.
+  service:
+    type: ClusterIP
+    clusterIP: None
+    servicePort: 10428
+  mode: statefulSet
+
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+serviceMonitor:
+  enabled: false

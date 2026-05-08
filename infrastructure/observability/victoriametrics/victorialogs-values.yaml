@@ -1,0 +1,69 @@
+fullnameOverride: victorialogs
+
+global:
+  image:
+    registry: docker.io
+
+serviceAccount:
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/victorialogs-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: victorialogs@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+server:
+  enabled: true
+  image:
+    repository: victoriametrics/victoria-logs
+    tag: v1.50.0
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  retentionPeriod: 30d
+  retentionDiskSpaceUsage: ""
+  extraArgs:
+    envflag.enable: true
+    envflag.prefix: VM_
+    loggerFormat: json
+    httpListenAddr: :9428
+    http.shutdownDelay: 15s
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+  persistentVolume:
+    enabled: true
+    storageClassName: premium-rwo
+    accessModes:
+      - ReadWriteOnce
+    size: 50Gi
+    mountPath: /storage
+  securityContext:
+    enabled: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+  podSecurityContext:
+    enabled: true
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  nodeSelector:
+    tier: mgmt
+  affinity: {}
+  ingress:
+    enabled: false
+
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+# Disable bundled monitoring — scraped by vmagent.
+serviceMonitor:
+  enabled: false
+
+dashboards:
+  enabled: false

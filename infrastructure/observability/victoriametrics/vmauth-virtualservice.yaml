@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: vmauth
+  namespace: vm
+spec:
+  gateways:
+    - istio-ingress/internal-gateway
+  hosts:
+    - vm-gateway.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: vmcluster-vmauth.vm.svc.cluster.local
+            port:
+              number: 8427

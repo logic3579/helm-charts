@@ -1,0 +1,69 @@
+fullnameOverride: vlagent
+
+image:
+  registry: docker.io
+  repository: victoriametrics/vlagent
+  tag: v1.50.0
+  pullPolicy: IfNotPresent
+
+global:
+  image:
+    registry: docker.io
+
+# Forward every node's container logs into VictoriaLogs over the native protocol.
+# vlagent runs as DaemonSet (chart default) with `-kubernetesCollector` enabled,
+# so /var/log/pods/*.log is auto-discovered by pod metadata.
+remoteWrite:
+  - url: http://victorialogs-server.vm.svc.cluster.local:9428
+
+collector:
+  includePodLabels: true
+  includePodAnnotations: false
+  includeNodeLabels: false
+  includeNodeAnnotations: false
+
+serviceAccount:
+  create: true
+  automount: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/vlagent-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: vlagent@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Run on every node, including tainted control-plane / system nodes.
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
+
+priorityClassName: system-node-critical
+
+podSecurityContext:
+  enabled: true
+  fsGroup: 2000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  enabled: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+# Buffer/checkpoint volume — emptyDir is fine on DaemonSet pods. Override
+# `persistence.volume` if you want a hostPath or per-node PV instead.
+persistence:
+  volume: {}
+
+podMonitor:
+  enabled: false
