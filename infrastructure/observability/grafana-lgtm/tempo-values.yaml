@@ -1,0 +1,242 @@
+tempo:
+  image:
+    registry: docker.io
+    repository: grafana/tempo
+    tag: 2.9.0
+    pullPolicy: IfNotPresent
+  podSecurityContext:
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+  structuredConfig:
+    server:
+      http_listen_port: 3100
+      grpc_server_max_recv_msg_size: 41943040
+      grpc_server_max_send_msg_size: 41943040
+    overrides:
+      defaults:
+        global:
+          max_bytes_per_trace: 5000000
+        ingestion:
+          rate_limit_bytes: 20000000
+          burst_size_bytes: 30000000
+        metrics_generator:
+          processors:
+            - service-graphs
+            - span-metrics
+    metrics_generator:
+      registry:
+        external_labels:
+          source: tempo
+      storage:
+        path: /var/tempo/wal
+        remote_write:
+          - url: http://mimir-gateway.lgtm.svc.cluster.local/api/v1/push
+            send_exemplars: true
+
+# Storage backend — GCS (consistent with loki/mimir).
+storage:
+  trace:
+    backend: gcs
+    gcs:
+      bucket_name: example-tempo-traces
+      chunk_buffer_size: 1048576
+    wal:
+      path: /var/tempo/wal
+    block:
+      version: vParquet4
+
+global_overrides:
+  per_tenant_override_config: /runtime-config/overrides.yaml
+
+distributor:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: distributor
+          topologyKey: kubernetes.io/hostname
+  config:
+    log_received_spans:
+      enabled: false
+  # Receivers — OTLP is the primary path; jaeger/zipkin kept for legacy SDKs.
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+    jaeger:
+      protocols:
+        thrift_http:
+          endpoint: 0.0.0.0:14268
+        grpc:
+          endpoint: 0.0.0.0:14250
+    zipkin:
+      endpoint: 0.0.0.0:9411
+
+ingester:
+  replicas: 3
+  persistence:
+    enabled: true
+    size: 50Gi
+    storageClass: premium-rwo
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: ingester
+          topologyKey: kubernetes.io/hostname
+  config:
+    replication_factor: 3
+
+querier:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: querier
+          topologyKey: kubernetes.io/hostname
+
+queryFrontend:
+  query:
+    enabled: false
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  nodeSelector:
+    tier: mgmt
+
+compactor:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  nodeSelector:
+    tier: mgmt
+  config:
+    compaction:
+      block_retention: 720h  # 30d
+
+metricsGenerator:
+  enabled: true
+  replicas: 2
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: premium-rwo
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  nodeSelector:
+    tier: mgmt
+
+memcached:
+  enabled: true
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  nodeSelector:
+    tier: mgmt
+
+memcachedExporter:
+  enabled: false
+
+# nginx gateway — entry point for distributor (push) + queryFrontend (read).
+gateway:
+  enabled: true
+  replicas: 2
+  image:
+    registry: docker.io
+    repository: nginxinc/nginx-unprivileged
+    tag: 1.29-alpine
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  nodeSelector:
+    tier: mgmt
+  service:
+    type: ClusterIP
+    port: 80
+  ingress:
+    enabled: false
+
+minio:
+  enabled: false
+
+serviceAccount:
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/tempo-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: tempo@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+# ServiceMonitor disabled — scrape via Alloy/categraf instead of bundled agent.
+serviceMonitor:
+  enabled: false
+prometheusRule:
+  enabled: false
+
+rollout_operator:
+  enabled: false

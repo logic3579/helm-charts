@@ -1,0 +1,181 @@
+image:
+  registry: docker.io
+  repository: grafana/alloy
+  tag: v1.16.1
+  pullPolicy: IfNotPresent
+
+# DaemonSet — one Alloy per node so it can tail pod logs from /var/log/pods
+# and expose an OTLP receiver on each host (no extra hop for sidecars).
+# For high-volume metrics scraping or traces aggregation, deploy a second release
+# with controller.type=statefulset.
+controller:
+  type: daemonset
+  replicas: 1
+  hostPID: false
+  hostNetwork: false
+  dnsPolicy: ClusterFirstWithHostNet
+  tolerations:
+    - effect: NoSchedule
+      operator: Exists
+    - effect: NoExecute
+      operator: Exists
+  priorityClassName: system-node-critical
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  podSecurityContext:
+    fsGroup: 473
+    runAsGroup: 473
+    runAsUser: 473
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+      add:
+        - DAC_READ_SEARCH
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+
+# Mount /var/log and /var/lib/docker/containers so the file targets discoverer
+# can find pod logs.
+alloy:
+  mounts:
+    varlog: true
+    dockercontainers: true
+  uiPathPrefix: /
+  enableReporting: false
+  clustering:
+    enabled: false
+  configMap:
+    create: true
+    content: |
+      // === Logs: discover k8s pods, tail container logs, ship to Loki ===
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      discovery.relabel "pod_logs" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label  = "app"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
+          separator     = "/"
+          action        = "replace"
+          replacement   = "/var/log/pods/*$1/*.log"
+          target_label  = "__path__"
+        }
+      }
+
+      loki.source.file "pods" {
+        targets    = discovery.relabel.pod_logs.output
+        forward_to = [loki.process.cri.receiver]
+      }
+
+      loki.process "cri" {
+        forward_to = [loki.write.lgtm.receiver]
+        stage.cri {}
+      }
+
+      loki.write "lgtm" {
+        endpoint {
+          url = "http://loki-gateway.lgtm.svc.cluster.local/loki/api/v1/push"
+        }
+      }
+
+      // === Metrics: scrape node + cAdvisor + service-discovered pods, push to Mimir ===
+      discovery.kubernetes "nodes" {
+        role = "node"
+      }
+
+      prometheus.scrape "kubelet" {
+        targets    = discovery.kubernetes.nodes.targets
+        forward_to = [prometheus.remote_write.lgtm.receiver]
+        scheme     = "https"
+        tls_config {
+          ca_file              = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          insecure_skip_verify = true
+        }
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        job_name          = "kubelet"
+      }
+
+      prometheus.remote_write "lgtm" {
+        endpoint {
+          url = "http://mimir-gateway.lgtm.svc.cluster.local/api/v1/push"
+        }
+      }
+
+      // === Traces: OTLP receiver on every node, batch + forward to Tempo ===
+      otelcol.receiver.otlp "default" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+        }
+        http {
+          endpoint = "0.0.0.0:4318"
+        }
+        output {
+          traces = [otelcol.processor.batch.default.input]
+        }
+      }
+
+      otelcol.processor.batch "default" {
+        output {
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo-distributor.lgtm.svc.cluster.local:4317"
+          tls {
+            insecure = true
+          }
+        }
+      }
+
+  extraPorts:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+
+service:
+  enabled: true
+  type: ClusterIP
+  clusterIP: ""
+
+# Disabled — Alloy itself is what ships metrics; if you want self-monitoring
+# either scrape this same Alloy via its /metrics endpoint or run a separate release.
+serviceMonitor:
+  enabled: false

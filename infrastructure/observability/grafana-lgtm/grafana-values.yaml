@@ -1,0 +1,178 @@
+image:
+  registry: docker.io
+  repository: grafana/grafana
+  tag: 12.3.1
+  pullPolicy: IfNotPresent
+
+useStatefulSet: true
+
+replicas: 1
+
+persistence:
+  type: pvc
+  enabled: true
+  storageClassName: standard-rwo
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  finalizers:
+    - kubernetes.io/pvc-protection
+
+service:
+  type: ClusterIP
+  port: 80
+
+serviceAccount:
+  create: true
+  autoMount: true
+
+rbac:
+  create: true
+  pspEnabled: false
+  namespaced: false
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 472
+  runAsGroup: 472
+  fsGroup: 472
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+nodeSelector:
+  tier: mgmt
+
+tolerations: []
+
+affinity: {}
+
+# Datasources for the LGTM stack — wired to in-cluster gateway services.
+# Loki gateway accepts /loki/api/v1/* (set X-Scope-OrgID for multi-tenant).
+# Mimir gateway exposes Prometheus-compatible API at /prometheus.
+# Tempo gateway exposes the query API at the root.
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        uid: loki
+        url: http://loki-gateway.lgtm.svc.cluster.local
+        jsonData:
+          timeout: 60
+          maxLines: 1000
+          derivedFields:
+            - name: TraceID
+              datasourceUid: tempo
+              matcherRegex: "trace_id=(\\w+)"
+              url: "$${__value.raw}"
+      - name: Mimir
+        type: prometheus
+        access: proxy
+        uid: mimir
+        url: http://mimir-gateway.lgtm.svc.cluster.local/prometheus
+        isDefault: true
+        jsonData:
+          httpMethod: POST
+          prometheusType: Mimir
+          timeInterval: 30s
+          exemplarTraceIdDestinations:
+            - name: trace_id
+              datasourceUid: tempo
+      - name: Tempo
+        type: tempo
+        access: proxy
+        uid: tempo
+        url: http://tempo-gateway.lgtm.svc.cluster.local
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: loki
+            spanStartTimeShift: -1h
+            spanEndTimeShift: 1h
+            tags:
+              - key: service.name
+                value: service_name
+          tracesToMetrics:
+            datasourceUid: mimir
+          serviceMap:
+            datasourceUid: mimir
+          nodeGraph:
+            enabled: true
+
+# Sidecar — auto-discovers Grafana dashboards/datasources from ConfigMaps with the
+# matching label, namespace-wide. Useful when ArgoCD or other tooling drops dashboards in.
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    labelValue: "1"
+    folder: /tmp/dashboards
+    searchNamespace: ALL
+    provider:
+      foldersFromFilesStructure: true
+  datasources:
+    enabled: true
+    label: grafana_datasource
+    labelValue: "1"
+    searchNamespace: ALL
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: default
+        orgId: 1
+        folder: ""
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/default
+
+# Drop curated dashboards in here — chart will render them as ConfigMaps and the provider
+# above will load them. Reserve for high-value LGTM stack dashboards (Loki, Mimir, Tempo).
+dashboards: {}
+
+grafana.ini:
+  server:
+    root_url: "https://grafana.example.com"
+  analytics:
+    check_for_updates: false
+    reporting_enabled: false
+  log:
+    mode: console
+    level: info
+  auth:
+    disable_login_form: false
+  auth.anonymous:
+    enabled: false
+  security:
+    cookie_secure: true
+    cookie_samesite: lax
+  feature_toggles:
+    enable: traceqlEditor traceToMetrics
+
+# admin password — override at install time via --set adminPassword=... or use existingSecret.
+# adminUser: admin
+# adminPassword: changeme
+admin:
+  existingSecret: ""
+  userKey: admin-user
+  passwordKey: admin-password
+
+testFramework:
+  enabled: false

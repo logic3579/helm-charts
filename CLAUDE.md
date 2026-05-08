@@ -56,8 +56,9 @@ Cluster infrastructure reference configs:
 
 - **argocd/** — Multi-cluster GitOps setup with ApplicationSets, cluster secrets, projects, notifications (GKE Workload Identity)
 - **istio/** — Gateway and AuthorizationPolicy configs for external/internal traffic
-- **monitoring/** — Nightingale (n9e) + Categraf + Grafana dashboards and alert rules
-- **cert-manager/, database/, bigdata/, logging/, streaming/, mgmt/** — Various infrastructure component manifests
+- **nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules
+- **observability/grafana-lgtm/** — Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail collectors
+- **cert-manager/, database/, bigdata/, streaming/, mgmt/** — Various infrastructure component manifests
 
 ## Dual Deployment Model
 

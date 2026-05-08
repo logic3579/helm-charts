@@ -564,6 +564,8 @@ serviceAccount:
   create: true
   name: null
   imagePullSecrets: []
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/loki-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: loki@PROJECT_ID.iam.gserviceaccount.com
   annotations: {}
   labels: {}
   automountServiceAccountToken: true

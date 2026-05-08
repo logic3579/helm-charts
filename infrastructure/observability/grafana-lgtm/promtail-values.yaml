@@ -1,0 +1,73 @@
+image:
+  registry: docker.io
+  repository: grafana/promtail
+  tag: 3.5.1
+  pullPolicy: IfNotPresent
+
+deploymentStrategy:
+  type: RollingUpdate
+
+# DaemonSet — one promtail per node, scraping /var/log on the host.
+# Promtail is in maintenance mode upstream; new deployments should prefer Alloy.
+# Kept here for parity with existing rollouts and as a fallback shipper.
+daemonset:
+  enabled: true
+
+serviceAccount:
+  create: true
+
+rbac:
+  create: true
+  pspEnabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Run on every node, including tainted control-plane / system nodes.
+tolerations:
+  - effect: NoSchedule
+    operator: Exists
+  - effect: NoExecute
+    operator: Exists
+
+priorityClassName: system-node-critical
+
+containerSecurityContext:
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+  allowPrivilegeEscalation: false
+  privileged: false
+
+config:
+  enabled: true
+  logLevel: info
+  serverPort: 3101
+  clients:
+    - url: http://loki-gateway.lgtm.svc.cluster.local/loki/api/v1/push
+  snippets:
+    pipelineStages:
+      - cri: {}
+    # The chart ships a sensible default `scrapeConfigs` snippet that covers k8s pods,
+    # journal logs, and host /var/log. Override here only if you need extra label rewrites.
+    extraRelabelConfigs: []
+    addScrapeJobLabel: false
+
+extraVolumes:
+  - name: docker-containers
+    hostPath:
+      path: /var/lib/docker/containers
+extraVolumeMounts:
+  - name: docker-containers
+    mountPath: /var/lib/docker/containers
+    readOnly: true
+
+# Disabled — scrape promtail metrics via Alloy/categraf or external ServiceMonitor.
+serviceMonitor:
+  enabled: false

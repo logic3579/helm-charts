@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: n9e-categraf
-  namespace: monitoring
+  namespace: nightingale
 data:
   config.toml: |-
     [global]
@@ -32,8 +32,8 @@ data:
     chan_size = 1000000
 
     [[writers]]
-    #url = "http://nightingale-center.monitoring.svc/prometheus/v1/write"
-    url = "http://nightingale-center.monitoring.svc/prometheus/v1/write?ignore_ident=true"
+    #url = "http://nightingale-center.nightingale.svc/prometheus/v1/write"
+    url = "http://nightingale-center.nightingale.svc/prometheus/v1/write?ignore_ident=true"
     basic_auth_user = ""
     basic_auth_pass = ""
     timeout = 5000
@@ -129,7 +129,7 @@ metadata:
   labels:
     app: n9e-categraf
   name: n9e-categraf
-  namespace: monitoring
+  namespace: nightingale
 spec:
   revisionHistoryLimit: 10
   selector:

@@ -28,7 +28,7 @@ metadata:
     component: categraf
     release: nightingale
   name: n9e-categraf
-  namespace: monitoring
+  namespace: nightingale
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -46,13 +46,13 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: n9e-categraf
-    namespace: monitoring
+    namespace: nightingale
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: n9e-categraf-prometheus-agent
-  namespace: monitoring
+  namespace: nightingale
 data:
   config.toml: |-
     [global]
@@ -81,8 +81,8 @@ data:
     chan_size = 1000000
 
     [[writers]]
-    #url = "http://nightingale-center.monitoring.svc/prometheus/v1/write"
-    url = "http://nightingale-center.monitoring.svc/prometheus/v1/write?ignore_ident=true"
+    #url = "http://nightingale-center.nightingale.svc/prometheus/v1/write"
+    url = "http://nightingale-center.nightingale.svc/prometheus/v1/write?ignore_ident=true"
     basic_auth_user = ""
     basic_auth_pass = ""
     timeout = 5000
@@ -104,7 +104,7 @@ data:
     [heartbeat]
     #enable = true
     enable = false
-    url = "http://nightingale-center.monitoring.svc/v1/n9e/heartbeat"
+    url = "http://nightingale-center.nightingale.svc/v1/n9e/heartbeat"
     interval = 10
     basic_auth_user = ""
     basic_auth_pass = ""
@@ -129,7 +129,7 @@ data:
         region: europe-west2
 
     remote_write:
-      - url: http://nightingale-center.monitoring.svc/prometheus/v1/write?ignore_ident=true
+      - url: http://nightingale-center.nightingale.svc/prometheus/v1/write?ignore_ident=true
 
     scrape_configs:
       # python-app — all pods via kubernetes endpoints SD
@@ -159,7 +159,7 @@ metadata:
   labels:
     app: n9e-categraf-prometheus-agent
   name: n9e-categraf-prometheus-agent
-  namespace: monitoring
+  namespace: nightingale
 spec:
   revisionHistoryLimit: 10
   selector:

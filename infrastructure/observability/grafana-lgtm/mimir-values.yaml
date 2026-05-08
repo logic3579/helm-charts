@@ -1,0 +1,272 @@
+image:
+  registry: docker.io
+  repository: grafana/mimir
+  tag: 3.0.4
+  pullPolicy: IfNotPresent
+
+# Mimir runtime config — overrides applied on top of chart defaults.
+# Keep it focused: storage backend + retention + a few limits the cluster cares about.
+mimir:
+  structuredConfig:
+    limits:
+      max_label_names_per_series: 30
+      max_global_series_per_user: 1000000
+      ingestion_rate: 50000
+      ingestion_burst_size: 200000
+      max_global_exemplars_per_user: 100000
+      compactor_blocks_retention_period: 30d
+    common:
+      storage:
+        backend: gcs
+        gcs:
+          bucket_name: example-mimir
+    blocks_storage:
+      backend: gcs
+      gcs:
+        bucket_name: example-mimir-blocks
+    ruler_storage:
+      backend: gcs
+      gcs:
+        bucket_name: example-mimir-ruler
+    alertmanager_storage:
+      backend: gcs
+      gcs:
+        bucket_name: example-mimir-alertmanager
+    server:
+      grpc_server_max_recv_msg_size: 104857600
+      grpc_server_max_send_msg_size: 104857600
+
+# Local disk storage for ingester/store-gateway WAL/cache.
+# Values mirror what loki-values.yaml does for its tier:mgmt placement.
+distributor:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: distributor
+          topologyKey: kubernetes.io/hostname
+
+ingester:
+  replicas: 3
+  zoneAwareReplication:
+    enabled: false
+  persistentVolume:
+    enabled: true
+    size: 50Gi
+    storageClass: premium-rwo
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: ingester
+          topologyKey: kubernetes.io/hostname
+
+querier:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: querier
+          topologyKey: kubernetes.io/hostname
+
+query_frontend:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  nodeSelector:
+    tier: mgmt
+
+query_scheduler:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  nodeSelector:
+    tier: mgmt
+
+store_gateway:
+  replicas: 2
+  zoneAwareReplication:
+    enabled: false
+  persistentVolume:
+    enabled: true
+    size: 50Gi
+    storageClass: premium-rwo
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  nodeSelector:
+    tier: mgmt
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: store-gateway
+          topologyKey: kubernetes.io/hostname
+
+compactor:
+  replicas: 1
+  persistentVolume:
+    enabled: true
+    size: 50Gi
+    storageClass: premium-rwo
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  nodeSelector:
+    tier: mgmt
+
+ruler:
+  enabled: true
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  nodeSelector:
+    tier: mgmt
+
+alertmanager:
+  enabled: false
+
+overrides_exporter:
+  enabled: true
+  replicas: 1
+  nodeSelector:
+    tier: mgmt
+
+# nginx gateway — entry point for distributor/query/ruler APIs (mirrors loki gateway).
+gateway:
+  enabled: true
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  nodeSelector:
+    tier: mgmt
+  service:
+    type: ClusterIP
+    port: 80
+  nginx:
+    image:
+      registry: docker.io
+      repository: nginxinc/nginx-unprivileged
+      tag: 1.29-alpine
+  ingress:
+    enabled: false
+
+# Caches — all backed by memcached.
+chunks-cache:
+  enabled: true
+  replicas: 2
+  allocatedMemory: 8192
+  nodeSelector:
+    tier: mgmt
+
+index-cache:
+  enabled: true
+  replicas: 2
+  allocatedMemory: 1024
+  nodeSelector:
+    tier: mgmt
+
+metadata-cache:
+  enabled: true
+  replicas: 1
+  allocatedMemory: 512
+  nodeSelector:
+    tier: mgmt
+
+results-cache:
+  enabled: true
+  replicas: 2
+  allocatedMemory: 1024
+  nodeSelector:
+    tier: mgmt
+
+memcachedExporter:
+  enabled: false
+
+minio:
+  enabled: false
+
+# Required when zoneAwareReplication is enabled — left disabled here since we run
+# single-zone above; flip both if you migrate to multi-AZ.
+rollout_operator:
+  enabled: false
+
+serviceAccount:
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/mimir-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: mimir@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+# Disable the chart's internal monitoring stack — we use Grafana/Mimir-via-Alloy or
+# external scraping instead of bundled agent.
+metaMonitoring:
+  serviceMonitor:
+    enabled: false
+  grafanaAgent:
+    enabled: false
+
+mimirContinuousTest:
+  enabled: false
+smoke_test:
+  enabled: false
