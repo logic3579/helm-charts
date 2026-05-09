@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: rocketmq-exporter
+  namespace: mgmt
+spec:
+  gateways:
+    - istio-ingress/external-gateway
+  hosts:
+    - rocketmq-ui.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: rocketmq-exporter.mgmt.svc.cluster.local
+            port:
+              number: 5557

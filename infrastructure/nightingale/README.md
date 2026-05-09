@@ -10,7 +10,6 @@ kubectl create namespace nightingale
 ## kube-state-metrics
 
 ```bash
-# Install
 helm upgrade --install \
   --namespace nightingale \
   kube-state-metrics prometheus-community/kube-state-metrics
@@ -19,7 +18,6 @@ helm upgrade --install \
 ## prometheus-mysql-exporter
 
 ```bash
-# Install
 helm upgrade --install \
   --namespace nightingale \
   prometheus-mysql-exporter prometheus-community/prometheus-mysql-exporter \
@@ -31,7 +29,6 @@ helm upgrade --install \
 ## prometheus-redis-exporter
 
 ```bash
-# Install
 helm upgrade --install \
   --namespace nightingale \
   prometheus-redis-exporter prometheus-community/prometheus-redis-exporter \

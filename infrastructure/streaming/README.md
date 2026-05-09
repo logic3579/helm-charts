@@ -3,16 +3,18 @@
 ## Prerequisites
 
 ```bash
-kubectl create namespace streaming
 helm repo add bitnami https://charts.bitnami.com/bitnami --force-update
+kubectl create namespace streaming
 ```
 
 ## Kafka
 
 ```bash
+helm show values bitnami/kafka > kafka-values.yaml
 helm upgrade --install \
   --namespace streaming \
   kafka bitnami/kafka \
+  -f kafka-values.yaml \
   --set image.repository="bitnamilegacy/kafka"
 ```
 
@@ -34,5 +36,6 @@ helm show values oci://registry-1.docker.io/bitnamicharts/kafka --version=32.4.3
 helm upgrade --install \
   --namespace mgmt \
   zookeeper oci://registry-1.docker.io/cloudpirates/zookeeper \
-  -f zookeeper-values.yaml
+  -f zookeeper-values.yaml \
+  --set image.repository="bitnamilegacy/zookeeper"
 ```

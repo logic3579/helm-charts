@@ -11,11 +11,12 @@ kubectl create ns istio-ingress
 ## Istio
 
 ```bash
-# install istio crd
+# Install istio crd and istiod
 helm install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
 helm install istiod istio/istiod -n istio-system --wait --set _internal_defaults_do_not_set.nodeSelector.tier=mgmt
 
-# install external gateway
+# Install external istio ingress gateway
+helm show values istio/gateway > external-values.yaml
 helm upgrade --install \
   --create-namespace \
   --namespace istio-ingress \
@@ -23,7 +24,8 @@ helm upgrade --install \
   -f external-values.yaml \
   --version=1.27.1
 
-# install internal gateway
+# Install internal istio ingress gateway
+helm show values istio/gateway > internal-values.yaml
 helm upgrade --install \
   --create-namespace \
   --namespace istio-ingress \
@@ -31,15 +33,15 @@ helm upgrade --install \
   -f internal-values.yaml \
   --version=1.27.1
 
-# create gateway resources
+# Create gateway resources
 kubectl apply -n istio-ingress -f external-gateway.yaml
 kubectl apply -n istio-ingress -f internal-gateway.yaml
 
-# create authorizationpolicy(optional)
+# Create authorizationpolicy(optional)
 kubectl apply -n istio-ingress -f allow-external-authorizationpolicy.yaml
 kubectl apply -n istio-ingress -f deny-external-authorizationpolicy.yaml
 
-# create envoyfilter(optional)
+# Create envoyfilter(optional)
 kubectl apply -n istio-ingress -f external-envoyfilter.yaml
 kubectl apply -n istio-ingress -f internal-envoyfilter.yaml
 ```

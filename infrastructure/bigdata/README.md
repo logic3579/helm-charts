@@ -3,18 +3,21 @@
 ## Prerequisites
 
 ```bash
-helm repo add bitnami https://charts.bitnami.com/bitnami --force-update
-helm repo add gradiant-bigdata https://gradiant.github.io/bigdata-charts --force-update
-helm repo add community-charts https://community-charts.github.io/helm-charts --force-update
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add gradiant-bigdata https://gradiant.github.io/bigdata-charts
+helm repo add community-charts https://community-charts.github.io/helm-charts
+helm repo update
 kubectl create namespace bigdata
 ```
 
 ## Flink
 
 ```bash
+helm show values bitnami/flink > flink-values.yaml
 helm upgrade --install \
   --namespace bigdata \
   flink bitnami/flink \
+  -f flink-values.yaml \
   --set image.repository="bitnamilegacy/flink"
 
 kubectl apply -n bigdata -f flink-virtualservice.yaml
@@ -23,9 +26,11 @@ kubectl apply -n bigdata -f flink-virtualservice.yaml
 ## HBase
 
 ```bash
+helm show values gradiant-bigdata/hbase > hbase-values.yaml
 helm upgrade --install \
   --namespace bigdata \
-  hbase gradiant-bigdata/hbase
+  hbase gradiant-bigdata/hbase \
+  -f hbase-values.yaml
 
 kubectl apply -n bigdata -f hbase-virtualservice.yaml
 ```
@@ -33,9 +38,11 @@ kubectl apply -n bigdata -f hbase-virtualservice.yaml
 ## MLflow
 
 ```bash
+helm show values community-charts/mlflow > mlflow-values.yaml
 helm upgrade --install \
   --namespace bigdata \
   mlflow community-charts/mlflow \
+  -f mlflow-values.yaml \
   --set strategy.type="Recreate" \
   --set artifactRoot.gcs.enabled="true" \
   --set artifactRoot.gcs.bucket="my-bucket" \
