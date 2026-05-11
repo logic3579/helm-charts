@@ -24,6 +24,7 @@ All releases install into the `vm` namespace; VirtualServices reference `vm.svc.
 ## VMCluster (with bundled vmauth)
 
 ```bash
+helm show values vm/victoria-metrics-cluster --version=0.41.2 > vmcluster-values.yaml
 helm upgrade --install \
   --namespace vm \
   vmcluster vm/victoria-metrics-cluster \
@@ -38,6 +39,7 @@ Renders four workloads: vmstorage StatefulSet (2 × 100Gi premium-rwo), vmselect
 ## vmagent
 
 ```bash
+helm show values vm/victoria-metrics-agent --version=0.38.0 > vmagent-values.yaml
 helm upgrade --install \
   --namespace vm \
   vmagent vm/victoria-metrics-agent \
@@ -50,6 +52,7 @@ Two-replica Deployment, scrapes the chart's default targets (apiserver, kubelet,
 ## vmalert
 
 ```bash
+helm show values vm/victoria-metrics-alert --version=0.39.0 > vmalert-values.yaml
 helm upgrade --install \
   --namespace vm \
   vmalert vm/victoria-metrics-alert \
@@ -62,6 +65,7 @@ Evaluates rules against vmselect (read path) and pushes recording-rule output ba
 ## VictoriaLogs
 
 ```bash
+helm show values vm/victoria-logs-single --version=0.12.4 > victorialogs-values.yaml
 helm upgrade --install \
   --namespace vm \
   victorialogs vm/victoria-logs-single \
@@ -76,6 +80,7 @@ Single-node StatefulSet (50Gi premium-rwo, 30d retention). The VS exposes the fu
 ## vlagent (logs collector)
 
 ```bash
+helm show values vm/victoria-logs-collector --version=0.3.3 > vlagent-values.yaml
 helm upgrade --install \
   --namespace vm \
   vlagent vm/victoria-logs-collector \
@@ -90,6 +95,7 @@ For HTTP relay / cross-cluster forwarding instead of file tailing, use `vm/victo
 ## VictoriaTraces
 
 ```bash
+helm show values vm/victoria-traces-single --version=0.0.7 > victoriatraces-values.yaml
 helm upgrade --install \
   --namespace vm \
   victoriatraces vm/victoria-traces-single \

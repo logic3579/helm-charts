@@ -23,6 +23,7 @@ All Helm releases below install into the `lgtm` namespace, and VirtualServices r
 ## Loki
 
 ```bash
+helm show values grafana/loki --version=6.34.0 > loki-values.yaml
 helm upgrade --install \
   --namespace lgtm \
   loki grafana/loki \
@@ -35,6 +36,7 @@ kubectl apply -n lgtm -f loki-virtualservice.yaml
 ## Mimir
 
 ```bash
+helm show values grafana/mimir-distributed --version=6.0.6 > mimir-values.yaml
 helm upgrade --install \
   --namespace lgtm \
   mimir grafana/mimir-distributed \
@@ -47,6 +49,7 @@ kubectl apply -n lgtm -f mimir-virtualservice.yaml
 ## Tempo
 
 ```bash
+helm show values grafana/tempo-distributed --version=1.61.2 > tempo-values.yaml
 helm upgrade --install \
   --namespace lgtm \
   tempo grafana/tempo-distributed \
@@ -59,6 +62,7 @@ helm upgrade --install \
 ## Grafana
 
 ```bash
+helm show values grafana/grafana --version=10.5.14 > grafana-values.yaml
 helm upgrade --install \
   --namespace lgtm \
   grafana grafana/grafana \
@@ -77,6 +81,7 @@ The values file pre-wires Loki, Mimir, and Tempo as datasources via in-cluster s
 Modern unified collector for logs, metrics, and traces. Replaces Promtail + Grafana Agent.
 
 ```bash
+helm show values grafana/alloy --version=1.8.1 > alloy-values.yaml
 helm upgrade --install \
   --namespace lgtm \
   alloy grafana/alloy \
@@ -91,6 +96,7 @@ Runs as a DaemonSet, tails pod logs to Loki, scrapes kubelet metrics to Mimir, a
 Promtail is in maintenance mode upstream — prefer Alloy for new deployments.
 
 ```bash
+helm show values grafana/promtail --version=6.17.0 > promtail-values.yaml
 helm upgrade --install \
   --namespace lgtm \
   promtail grafana/promtail \

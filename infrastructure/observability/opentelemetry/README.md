@@ -31,6 +31,7 @@ The operator's mutating admission webhook needs TLS — `operator-values.yaml` e
 ## Operator
 
 ```bash
+helm show values open-telemetry/opentelemetry-operator --version=0.112.1 > operator-values.yaml
 helm upgrade --install \
   --namespace otel \
   opentelemetry-operator open-telemetry/opentelemetry-operator \
