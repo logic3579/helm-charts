@@ -42,11 +42,11 @@ helm install my-go-app logic-charts/go-app -f my-values.yaml
 - **frontend-app** — Compiled SPA served by nginx (port 80, `readOnlyRootFilesystem: true` with `emptyDir` mounts to `/var/cache/nginx`, `/var/run`, `/tmp`, optional custom nginx config). Has a chart-specific `nginx-configmap.yaml` and intentionally no `secret.yaml`.
 - **kafka-ui** — Kafka UI (port 8080, Spring Boot actuator probes, `startupProbe` enabled). Deployment template injects kafka-specific env: `auth` (LOGIN_FORM/DISABLED/LDAP/OAUTH2 via `secretKeyRef`) and `kafkaClusters` rendered as `KAFKA_CLUSTERS_N_*` (bootstrapServers, readonly, schemaRegistry, ksqldbServer, arbitrary properties). On every version bump, append a `kind/description` entry to `Chart.yaml`'s `annotations.artifacthub.io/changes` block.
 
-App charts delegate most templates to `common` via one-line `{{- include "common.xxx" . }}`. Only `deployment.yaml` and `NOTES.txt` carry chart-specific logic. All four support `startupProbe`, `volumes`/`volumeMounts`, HPA (CPU+memory), and Istio VirtualService CORS (`exact`/`prefix`/`regex`). Each chart's `values.yaml` doubles as the configuration reference — deployment-specific overrides go in ArgoCD `values` or `helm install -f`.
+App charts delegate most templates to `common` via one-line `{{- include "common.xxx" . }}`. Only `deployment.yaml` and `NOTES.txt` carry chart-specific logic. All four support `startupProbe`, `volumes`/`volumeMounts`, HPA (CPU+memory), and Istio VirtualService CORS (`exact`/`prefix`/`regex`). Each chart's `values.yaml` doubles as the configuration reference — deployment-specific overrides live OUTSIDE the chart directory: ArgoCD users put them under `infrastructure/argocd/values/<env>/<chart>.yaml`; standalone Helm users pass `-f my-values.yaml`.
 
 ### infrastructure/
 
-- **argocd/** — Multi-cluster GitOps (ApplicationSets, GKE Workload Identity, Slack notifications).
+- **argocd/** — Multi-cluster GitOps: install values (`argocd-values.yaml`), UI VirtualService (`argocd-virtualservice.yaml`), multi-source ApplicationSets (`applicationsets/{uat,prod}-apps.yaml`), per-env chart overrides (`values/{uat,prod}/<chart>.yaml`), cluster/project/notification templates. UAT auto-syncs; Prod is manual-sync.
 - **istio/** — Gateway and AuthorizationPolicy configs.
 - **nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules.
 - **observability/grafana-lgtm/** — Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail collectors.
@@ -82,7 +82,7 @@ Branches: **main** (chart source, workflow, docs) — **gh-pages** (chart-releas
 
 ## Chart Conventions
 
-- **`.example` suffix** for configs needing secret/environment-specific values; **`.template` suffix** for ArgoCD notification secret templates.
+- **`.template` suffix** for files that must be copied to a `.yaml` sibling before applying (currently only `infrastructure/argocd/notifications/secret.yaml.template`, which receives the Slack webhook URL). Files with `<PLACEHOLDER>` tokens are committed as plain `.yaml` and edited in place — no `.example` shadow files.
 - **Secrets**: use Kubernetes Secrets with `secretKeyRef` or env var placeholders (`${VAR_NAME}`). The built-in `secret:` chart template base64-encodes plaintext at render time — for production prefer External Secrets Operator (ESO) or Sealed Secrets.
 - **Image tags**: pin to specific versions, never `:latest`.
 - **Istio gateways**: internal services use `istio-ingress/internal-gateway`; external services use `istio-ingress/external-gateway`.
@@ -113,3 +113,4 @@ These fix recurring decisions across `infrastructure/` so they don't get re-deba
   ```
 - **VirtualService skip rule for OTLP-receiving components**: Tempo, VictoriaTraces, and the OpenTelemetry collector skip VS creation. OTLP gRPC doesn't fit Istio's HTTP gateway routing, and queries run intra-cluster via Grafana's Service URLs. Don't add a VS just for symmetry with Loki/Mimir/vmauth gateways.
 - **Storage backend differs by stack**: grafana-lgtm uses object storage (GCS by default; values carry `gcs.bucket_name: example-*` placeholders). VictoriaMetrics uses local PVCs (`premium-rwo` storageClass). Don't retrofit the other model — VM has no native object-store hot tier; LGTM scales much better against object storage than PVCs.
+- **ArgoCD ApplicationSet pattern**: `infrastructure/argocd/applicationsets/{uat,prod}-apps.yaml` use a Git directory generator on `charts/*` with `charts/common` excluded (library chart, not deployable). Each generated Application is **multi-source**: source 1 renders the chart with `valueFiles: [values.yaml, $values/infrastructure/argocd/values/<env>/<chart>.yaml]`; source 2 is a `ref: values` pointer that resolves the `$values` prefix. `ignoreMissingValueFiles: true` lets a chart sync before its env override file exists. Env values live under `infrastructure/argocd/values/<env>/<chart>.yaml` — never inside the chart directory, so publishable charts stay deployment-agnostic.

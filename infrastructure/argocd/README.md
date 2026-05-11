@@ -18,7 +18,7 @@ This guide covers the installation and configuration of ArgoCD for multi-cluster
 │  │  │                                                              │  │  │
 │  │  │   KSA: argocd-application-controller                        │  │  │
 │  │  │   ↓ Workload Identity                                       │  │  │
-│  │  │   GSA: argocd-cluster-access@example-mgmt.iam...            │  │  │
+│  │  │   GSA: argocd-sa@example-mgmt.iam...            │  │  │
 │  │  └─────────────────────────────────────────────────────────────┘  │  │
 │  └───────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -42,6 +42,38 @@ This guide covers the installation and configuration of ArgoCD for multi-cluster
 - Istio service mesh deployed on Mgmt cluster (optional, for ingress)
 - GitHub Personal Access Token (PAT) with repo access
 - Slack Incoming Webhook URL (optional, for notifications)
+
+---
+
+## Directory Layout
+
+```
+infrastructure/argocd/
+├── argocd-values.yaml              # Helm values for `helm install argocd`
+├── argocd-virtualservice.yaml      # Istio VS exposing the ArgoCD UI
+├── applicationsets/
+│   ├── uat-apps.yaml               # UAT ApplicationSet (auto-sync)
+│   └── prod-apps.yaml              # Prod ApplicationSet (manual sync)
+├── values/                         # Per-env chart overrides (multi-source $values)
+│   ├── uat/{go-app,python-app,frontend-app,kafka-ui}.yaml
+│   └── prod/{go-app,python-app,frontend-app,kafka-ui}.yaml
+├── clusters/                       # Remote cluster registration secrets (edit placeholders in place)
+├── projects/                       # AppProjects per env (edit placeholders in place)
+└── notifications/                  # Slack notification ConfigMap + Secret template
+```
+
+Both ApplicationSets use a **multi-source** layout:
+
+- Source 1 renders `charts/<app>` with two `valueFiles`: the chart's own
+  `values.yaml` (defaults) followed by `$values/infrastructure/argocd/values/<env>/<app>.yaml`
+  (env override). `ignoreMissingValueFiles: true` keeps charts without an
+  override file syncable.
+- Source 2 is a `ref: values` pointer to the same repo — it is *not* rendered,
+  it only provides the `$values` prefix used by source 1.
+
+The `charts/common` directory is excluded from the directory generator because
+it's a Helm *library chart* (`type: library`) — it has no installable resources
+and would fail to sync as a standalone Application.
 
 ---
 
@@ -72,25 +104,25 @@ Create a central GSA in the Mgmt project that has access to all target clusters.
 
 ```bash
 # 1. Create GSA for ArgoCD cluster access (in Mgmt project)
-gcloud iam service-accounts create argocd-cluster-access \
+gcloud iam service-accounts create argocd-sa \
   --display-name="ArgoCD Multi-Cluster Access" \
   --project=example-mgmt
 
 # 2. Grant GKE access to each target project
 # UAT cluster
 gcloud projects add-iam-policy-binding example-uat \
-  --member="serviceAccount:argocd-cluster-access@example-mgmt.iam.gserviceaccount.com" \
+  --member="serviceAccount:argocd-sa@example-mgmt.iam.gserviceaccount.com" \
   --role="roles/container.developer"
 
 # Prod cluster
 gcloud projects add-iam-policy-binding example-prod \
-  --member="serviceAccount:argocd-cluster-access@example-mgmt.iam.gserviceaccount.com" \
+  --member="serviceAccount:argocd-sa@example-mgmt.iam.gserviceaccount.com" \
   --role="roles/container.developer"
 
 # 3. Bind ArgoCD KSA to GSA via Workload Identity
 # IMPORTANT: Use the Mgmt cluster's WI pool (example-mgmt.svc.id.goog)
 gcloud iam service-accounts add-iam-policy-binding \
-  argocd-cluster-access@example-mgmt.iam.gserviceaccount.com \
+  argocd-sa@example-mgmt.iam.gserviceaccount.com \
   --role="roles/iam.workloadIdentityUser" \
   --member="serviceAccount:example-mgmt.svc.id.goog[argocd/argocd-application-controller]" \
   --project=example-mgmt
@@ -178,57 +210,72 @@ gcloud container clusters describe <PROD_CLUSTER_NAME> \
   --format='value(masterAuth.clusterCaCertificate)'
 ```
 
-Copy the example files and fill in the values:
+Fill in the placeholders in the cluster secrets and apply:
 
 ```bash
-cp ../clusters/uat-cluster-secret.yaml.example ../clusters/uat-cluster-secret.yaml
-cp ../clusters/prod-cluster-secret.yaml.example ../clusters/prod-cluster-secret.yaml
-
 # Edit the files to replace placeholders:
-#   <UAT_CLUSTER_ENDPOINT>     - UAT cluster API endpoint
-#   <UAT_CLUSTER_CA_CERT_BASE64> - UAT cluster CA certificate (base64)
-#   <PROD_CLUSTER_ENDPOINT>    - Prod cluster API endpoint
+#   <UAT_CLUSTER_ENDPOINT>        - UAT cluster API endpoint
+#   <UAT_CLUSTER_CA_CERT_BASE64>  - UAT cluster CA certificate (base64)
+#   <PROD_CLUSTER_ENDPOINT>       - Prod cluster API endpoint
 #   <PROD_CLUSTER_CA_CERT_BASE64> - Prod cluster CA certificate (base64)
+$EDITOR clusters/uat-cluster-secret.yaml clusters/prod-cluster-secret.yaml
 
-kubectl apply -f ../clusters/
+kubectl apply -f clusters/
 ```
 
 ### Step 10: Create Projects
 
-Copy the example files and configure for your environment:
+Fill in the placeholders in the AppProject definitions and apply:
 
 ```bash
-cp ../projects/uat-project.yaml.example ../projects/uat-project.yaml
-cp ../projects/prod-project.yaml.example ../projects/prod-project.yaml
-
 # Edit the files to replace placeholders:
 #   <YOUR_ORG>  - Your GitHub organization
 #   <YOUR_REPO> - Your repository name
+$EDITOR projects/uat-project.yaml projects/prod-project.yaml
 
-kubectl apply -f ../projects/
+kubectl apply -f projects/
 ```
 
 ### Step 11: Create ApplicationSets
 
-Copy the example files and configure for your environment:
+The ApplicationSets auto-discover every chart under `charts/` (excluding the
+`common` library chart) and use a multi-source layout:
+
+- **Chart source**: `charts/<app>/values.yaml` — chart defaults baked into the
+  publishable chart, kept clean of any deployment-specific values.
+- **Env overrides**: `infrastructure/argocd/values/<env>/<app>.yaml` — UAT/Prod
+  deployment-specific values (replicas, image tag, resources, hosts, etc.).
+  Missing files are tolerated (`ignoreMissingValueFiles: true`), so adding a
+  new chart doesn't immediately require a matching override file.
 
 ```bash
-cp ../applicationsets/uat-apps.yaml.example ../applicationsets/uat-apps.yaml
-cp ../applicationsets/prod-apps.yaml.example ../applicationsets/prod-apps.yaml
-
 # Edit the files to replace placeholders:
 #   <YOUR_ORG>         - Your GitHub organization
 #   <YOUR_REPO>        - Your repository name
-#   <HELM_CHARTS_PATH> - Path to helm charts in repo (e.g., helm-charts)
 #   <TARGET_NAMESPACE> - Kubernetes namespace for apps (e.g., default)
+$EDITOR applicationsets/uat-apps.yaml applicationsets/prod-apps.yaml
 
-kubectl apply -f ../applicationsets/
+# Edit env-specific overrides (image tag, replicas, hosts, …)
+$EDITOR values/uat/*.yaml values/prod/*.yaml
+
+kubectl apply -f applicationsets/
 ```
+
+> **Why `charts/common` is excluded:** `common` is a Helm *library chart*
+> (`type: library`) consumed by the other charts via `file://../common`. It has
+> no installable resources of its own, so ArgoCD would fail to sync it as a
+> standalone Application. The `exclude: true` rule keeps the directory
+> generator from picking it up.
 
 ### Step 12: Apply Notifications (Optional)
 
 ```bash
-kubectl apply -f ../notifications/
+# Fill in the Slack webhook URL in the secret template, then apply:
+cp notifications/secret.yaml.template notifications/secret.yaml
+$EDITOR notifications/secret.yaml          # paste the Slack webhook URL
+
+kubectl apply -f notifications/configmap.yaml
+kubectl apply -f notifications/secret.yaml
 ```
 
 ---
@@ -237,10 +284,10 @@ kubectl apply -f ../notifications/
 
 ### Default Accounts
 
-| Account  | Capabilities | Role          | Description                       |
-| -------- | ------------ | ------------- | --------------------------------- |
-| `admin`  | login        | `role:admin`  | Full access to all resources      |
-| `viewer` | login        | `role:viewer` | Read-only access (no sync/delete) |
+| Account  | Capabilities | Role            | Description                       |
+| -------- | ------------ | --------------- | --------------------------------- |
+| `admin`  | login        | `role:admin`    | Full access to all resources      |
+| `viewer` | login        | `role:readonly` | Read-only access (no sync/delete) |
 
 ### Creating the Viewer Account Password
 
@@ -266,7 +313,7 @@ configs:
   rbac:
     policy.csv: |
       # ... existing policies ...
-      g, newuser, role:viewer
+      g, newuser, role:readonly
 ```
 
 Then upgrade and set password:
@@ -278,31 +325,35 @@ argocd account update-password --account newuser --grpc-web
 
 ### RBAC Roles
 
-| Role            | Permissions                                        |
-| --------------- | -------------------------------------------------- |
-| `role:admin`    | Full access to all resources                       |
-| `role:viewer`   | View applications, logs, projects (no sync/delete) |
-| `role:readonly` | View applications only (default role)              |
+Two layers of bindings are OR-merged at evaluation time:
+
+**Global RBAC** (`argocd-values.yaml` → `configs.rbac`):
+
+| Role / Binding                  | Source           | Effect                                          |
+| ------------------------------- | ---------------- | ----------------------------------------------- |
+| `policy.default: role:readonly` | global           | Authenticated users get universal `get`         |
+| `g, devops-team, role:admin`    | global           | DevOps team is superuser across all projects    |
+| `g, viewer, role:readonly`      | global           | Local `viewer` account → built-in `role:readonly` |
+
+Built-in roles (`role:admin`, `role:readonly`) come from the chart and must
+**not** be redefined.
+
+**Project-scoped RBAC** (`AppProject.spec.roles`) — only adds *extra* grants on
+top of the global layer:
+
+| Project        | Role        | Group              | Adds                                           |
+| -------------- | ----------- | ------------------ | ---------------------------------------------- |
+| `example-uat`  | `developer` | `developer-team`   | `applications, sync` on `example-uat/*` apps   |
+| `example-prod` | —           | —                  | No project-scoped roles (see below)            |
+
+> `example-prod` deliberately has no project-scoped roles: devops-team is
+> already global admin, developer-team is already global readonly, and Prod
+> sync is intentionally not delegated to developers — it stays a devops-team
+> action, matching the ApplicationSet's auto-sync=disabled posture.
 
 ---
 
 ## Project Configuration
-
-### Project Roles
-
-#### example-uat
-
-| Role    | Group            | Permissions                      |
-| ------- | ---------------- | -------------------------------- |
-| `admin` | `devops-team`    | Full access (sync, delete, etc.) |
-| `dev`   | `developer-team` | View, Sync, Logs                 |
-
-#### example-prod
-
-| Role    | Group            | Permissions                      |
-| ------- | ---------------- | -------------------------------- |
-| `admin` | `devops-team`    | Full access (sync, delete, etc.) |
-| `dev`   | `developer-team` | View, Logs only (no sync)        |
 
 ### Orphaned Resources
 
@@ -312,7 +363,6 @@ Projects are configured to warn about orphaned resources while ignoring known sh
 
 | Resource Type  | Name Pattern             | Reason                            |
 | -------------- | ------------------------ | --------------------------------- |
-| ConfigMap      | `global-*`               | Global Helm chart shared configs  |
 | ConfigMap      | `istio-ca-*`             | Istio auto-generated certificates |
 | Secret         | `github-registry-secret` | Manually managed pull secret      |
 | ServiceAccount | `app`                    | Manually managed SA               |
@@ -429,7 +479,7 @@ kubectl exec -it deployment/argocd-application-controller -n argocd -- \
 
 # Check IAM bindings
 gcloud iam service-accounts get-iam-policy \
-  argocd-cluster-access@example-mgmt.iam.gserviceaccount.com \
+  argocd-sa@example-mgmt.iam.gserviceaccount.com \
   --project=example-mgmt
 ```
 
@@ -449,7 +499,7 @@ helm upgrade argocd argo/argo-cd \
 
 ```bash
 # Delete ApplicationSets first
-kubectl delete -f ../applicationsets/
+kubectl delete -f applicationsets/
 
 # Uninstall ArgoCD
 helm uninstall argocd -n argocd
@@ -462,17 +512,20 @@ kubectl delete namespace argocd
 
 ## Related Files
 
-| Path                                           | Description                         |
-| ---------------------------------------------- | ----------------------------------- |
-| `argocd-values.yaml`                           | Helm values for ArgoCD installation |
-| `../clusters/uat-cluster-secret.yaml.example`  | UAT cluster connection template     |
-| `../clusters/prod-cluster-secret.yaml.example` | Prod cluster connection template    |
-| `../projects/uat-project.yaml.example`         | UAT project definition template     |
-| `../projects/prod-project.yaml.example`        | Prod project definition template    |
-| `../applicationsets/uat-apps.yaml.example`     | UAT ApplicationSet template         |
-| `../applicationsets/prod-apps.yaml.example`    | Prod ApplicationSet template        |
-| `../notifications/`                            | Slack notification configuration    |
-| `../istio/`                                    | Istio VirtualService for UI access  |
+| Path                                        | Description                                          |
+| ------------------------------------------- | ---------------------------------------------------- |
+| `argocd-values.yaml`                        | Helm values for ArgoCD installation                  |
+| `argocd-virtualservice.yaml`                | Istio VirtualService exposing the ArgoCD UI          |
+| `clusters/uat-cluster-secret.yaml`          | UAT cluster connection secret (fill in placeholders) |
+| `clusters/prod-cluster-secret.yaml`         | Prod cluster connection secret (fill in placeholders)|
+| `projects/uat-project.yaml`                 | UAT AppProject definition (fill in placeholders)     |
+| `projects/prod-project.yaml`                | Prod AppProject definition (fill in placeholders)    |
+| `applicationsets/uat-apps.yaml`             | UAT ApplicationSet (auto-sync, multi-source)         |
+| `applicationsets/prod-apps.yaml`            | Prod ApplicationSet (manual sync, multi-source)      |
+| `values/uat/*.yaml`                         | Per-chart UAT overrides (loaded via `$values` ref)   |
+| `values/prod/*.yaml`                        | Per-chart Prod overrides (loaded via `$values` ref)  |
+| `notifications/configmap.yaml`              | Slack notification triggers / templates              |
+| `notifications/secret.yaml.template`        | Slack webhook secret template                        |
 
 ### Placeholders Reference
 
@@ -487,7 +540,6 @@ kubectl delete namespace argocd
 | `<PROD_CLUSTER_ENDPOINT>`       | Prod cluster API server IP            | `gcloud container clusters describe <name> --format='value(endpoint)'`                        |
 | `<UAT_CLUSTER_CA_CERT_BASE64>`  | UAT cluster CA certificate (base64)   | `gcloud container clusters describe <name> --format='value(masterAuth.clusterCaCertificate)'` |
 | `<PROD_CLUSTER_CA_CERT_BASE64>` | Prod cluster CA certificate (base64)  | `gcloud container clusters describe <name> --format='value(masterAuth.clusterCaCertificate)'` |
-| `<HELM_CHARTS_PATH>`            | Path to helm charts in repo           | e.g., `helm-charts` or `charts`                                                               |
 | `<TARGET_NAMESPACE>`            | Kubernetes namespace for applications | e.g., `default`, `apps`, `example`                                                            |
 | `<GITHUB_PAT>`                  | GitHub Personal Access Token          | Create at GitHub Settings > Developer settings > Personal access tokens                       |
 | `<ARGOCD_DOMAIN>`               | ArgoCD UI domain                      | e.g., `argocd.example.com`                                                                    |

@@ -1,0 +1,23 @@
+# UAT overrides for charts/frontend-app
+# Layered on top of charts/frontend-app/values.yaml by the ApplicationSet.
+
+replicaCount: 1
+
+image:
+  # repository: <REGISTRY>/<NAMESPACE>/frontend-app
+  tag: "uat"
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# virtualservice:
+#   enabled: true
+#   gateways:
+#     - istio-ingress/external-gateway
+#   hosts:
+#     - app.uat.example.com

@@ -2,7 +2,6 @@
 # This project manages all applications deployed to the Prod GKE cluster
 #
 # Usage:
-#   cp prod-project.yaml.example prod-project.yaml
 #   # Edit the file to replace placeholders with actual values
 #   kubectl apply -f prod-project.yaml
 
@@ -14,7 +13,7 @@ metadata:
   finalizers:
     - argocd.argoproj.io/resources-finalizer
 spec:
-  description: "Example Production Environment - Manual sync only (PR approval required)"
+  description: "Production Environment - Manual sync only (PR approval required)"
 
   # Source repositories - replace with your repo URL
   sourceRepos:
@@ -35,35 +34,18 @@ spec:
     - group: "*"
       kind: "*"
 
-  # Roles for this project
-  roles:
-    # Admin role - full access (only DevOps team)
-    - name: admin
-      description: "Full access to production project"
-      policies:
-        - p, proj:example-prod:admin, applications, *, example-prod/*, allow
-        - p, proj:example-prod:admin, clusters, get, example-prod/*, allow
-        - p, proj:example-prod:admin, repositories, get, example-prod/*, allow
-        - p, proj:example-prod:admin, logs, get, example-prod/*, allow
-      groups:
-        - devops-team
-
-    # Developer role - read-only (no sync for production)
-    - name: dev
-      description: "Read-only access to production applications"
-      policies:
-        - p, proj:example-prod:dev, applications, get, example-prod/*, allow
-        - p, proj:example-prod:dev, logs, get, example-prod/*, allow
-      groups:
-        - developer-team
+  # No project-scoped roles — all access for this project is covered by the
+  # GLOBAL RBAC in argocd-values.yaml:
+  #   - devops-team gets superuser via `g, devops-team, role:admin`.
+  #   - developer-team gets read-only via `policy.default: role:readonly`.
+  # Production sync is intentionally NOT granted to developer-team — Prod
+  # changes must be triggered manually by devops-team (or through PR-driven
+  # automation), matching the ApplicationSet's auto-sync=disabled posture.
 
   # Orphaned resources monitoring
   orphanedResources:
     warn: true
     ignore:
-      # Global helm chart ConfigMaps
-      - kind: ConfigMap
-        name: "global-*"
       # Istio auto-generated certificates
       - kind: ConfigMap
         name: "istio-ca-*"

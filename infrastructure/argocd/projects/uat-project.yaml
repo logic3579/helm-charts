@@ -2,7 +2,6 @@
 # This project manages all applications deployed to the UAT GKE cluster
 #
 # Usage:
-#   cp uat-project.yaml.example uat-project.yaml
 #   # Edit the file to replace placeholders with actual values
 #   kubectl apply -f uat-project.yaml
 
@@ -14,7 +13,7 @@ metadata:
   finalizers:
     - argocd.argoproj.io/resources-finalizer
 spec:
-  description: "Example UAT Environment - Auto-sync enabled"
+  description: "UAT Environment - Auto-sync enabled"
 
   # Source repositories - replace with your repo URL
   sourceRepos:
@@ -36,25 +35,20 @@ spec:
       kind: "*"
 
   # Roles for this project
+  #
+  # NOTE: No project-scoped `admin` role — devops-team is bound to the global
+  # role:admin in argocd-values.yaml, which already grants superuser on
+  # everything (including this project). Project-scoped admin would be dead
+  # code.
   roles:
-    # Admin role - full access
-    - name: admin
-      description: "Full access to UAT project"
-      policies:
-        - p, proj:example-uat:admin, applications, *, example-uat/*, allow
-        - p, proj:example-uat:admin, clusters, get, example-uat/*, allow
-        - p, proj:example-uat:admin, repositories, get, example-uat/*, allow
-        - p, proj:example-uat:admin, logs, get, example-uat/*, allow
-      groups:
-        - devops-team
-
-    # Developer role - view and sync
-    - name: dev
+    # Developer role — adds sync rights for UAT apps on top of the global
+    # role:readonly that all authenticated users already have.
+    - name: developer
       description: "View and sync UAT applications"
       policies:
-        - p, proj:example-uat:dev, applications, get, example-uat/*, allow
-        - p, proj:example-uat:dev, applications, sync, example-uat/*, allow
-        - p, proj:example-uat:dev, logs, get, example-uat/*, allow
+        - p, proj:example-uat:developer, applications, get, example-uat/*, allow
+        - p, proj:example-uat:developer, applications, sync, example-uat/*, allow
+        - p, proj:example-uat:developer, logs, get, example-uat/*, allow
       groups:
         - developer-team
 
@@ -62,9 +56,6 @@ spec:
   orphanedResources:
     warn: true
     ignore:
-      # Global helm chart ConfigMaps
-      - kind: ConfigMap
-        name: "global-*"
       # Istio auto-generated certificates
       - kind: ConfigMap
         name: "istio-ca-*"

@@ -11,7 +11,7 @@ global:
     tier: mgmt
 
 ## GKE Workload Identity - Service Account Annotations
-## GSA: argocd-cluster-access@example-uat.iam.gserviceaccount.com
+## GSA: argocd-sa@example-mgmt.iam.gserviceaccount.com   # GSA lives in the Mgmt project
 ## Bound to KSA via: example-mgmt.svc.id.goog[argocd/argocd-application-controller]
 
 ## ArgoCD Server
@@ -64,7 +64,7 @@ controller:
   # Workload Identity: bind KSA to GSA for accessing remote GKE clusters
   serviceAccount:
     annotations:
-      iam.gke.io/gcp-service-account: argocd-cluster-access@example-mgmt.iam.gserviceaccount.com
+      iam.gke.io/gcp-service-account: argocd-sa@example-mgmt.iam.gserviceaccount.com
 
   resources:
     requests:
@@ -157,28 +157,33 @@ configs:
     server.enable.gzip: "true"
 
   # RBAC Configuration
+  #
+  # Layered model:
+  #   - This block holds GLOBAL bindings that apply across all projects.
+  #   - Per-project sync/admin grants live in AppProject.spec.roles instead
+  #     (see projects/uat-project.yaml). ArgoCD OR-merges both layers.
+  #
+  # Built-in roles (don't redefine):
+  #   - role:admin     → full access to everything
+  #   - role:readonly  → universal `get`
   rbac:
-    # Policy for default role
+    # Default role for any authenticated user (SSO or local). role:readonly
+    # gives them read-only browsing across the UI.
     policy.default: role:readonly
 
-    # Custom policies
     policy.csv: |
-      # === Groups ===
-      # Admin group - full access (for SSO users in devops-team)
+      # === Group → role bindings ===
+      # devops-team: superuser across all projects.
       g, devops-team, role:admin
 
-      # === Roles ===
-      # Viewer role - read-only access (no sync, no delete)
-      p, role:viewer, applications, get, */*, allow
-      p, role:viewer, logs, get, */*, allow
-      p, role:viewer, projects, get, *, allow
+      # developer-team: no global binding here. They get read-only via
+      # policy.default; UAT sync rights come from projects/uat-project.yaml
+      # (role: developer). Prod stays read-only (no project-level grant added).
 
-      # Read-only role (default) - minimal access
-      p, role:readonly, applications, get, *, allow
-
-      # === Local accounts to roles binding ===
-      # Bind local 'viewer' account to role:viewer
-      g, viewer, role:viewer
+      # === Local account bindings ===
+      # The 'viewer' local account exists for break-glass / smoke-test logins;
+      # role:readonly is plenty — no separate custom role needed.
+      g, viewer, role:readonly
 
   # Credential template for GitHub repositories
   # Helm creates the secret with url and username only.

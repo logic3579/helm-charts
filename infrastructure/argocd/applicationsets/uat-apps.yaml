@@ -1,8 +1,16 @@
 # ApplicationSet for UAT Environment
-# Automatically discovers and deploys all applications in helm-chart-uat/
+#
+# Auto-discovers every chart under `charts/` (excluding the `common` library
+# chart) and deploys it to the UAT cluster.
+#
+# Layout (multi-source):
+#   - Chart source:   charts/<app>/values.yaml                                 (defaults baked into the chart)
+#   - Env overrides:  infrastructure/argocd/values/uat/<app>.yaml              (deployment-specific values)
+#
+# Missing override files are tolerated (`ignoreMissingValueFiles: true`) so a
+# new chart can be added without immediately requiring a UAT override file.
 #
 # Usage:
-#   cp uat-apps.yaml.example uat-apps.yaml
 #   # Edit the file to replace placeholders with actual values
 #   kubectl apply -f uat-apps.yaml
 
@@ -22,10 +30,12 @@ spec:
         repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
         revision: main
         directories:
-          # Include all directories under helm-chart-uat
-          - path: <HELM_CHARTS_PATH>/helm-chart-uat/*
-          # Exclude the global directory (shared config, not an app)
-          - path: <HELM_CHARTS_PATH>/helm-chart-uat/global
+          # Include every chart directly under charts/
+          - path: charts/*
+          # Exclude the `common` library chart — it has `type: library` and is
+          # consumed by the other charts via file://../common; ArgoCD cannot
+          # deploy it as a standalone Application.
+          - path: charts/common
             exclude: true
 
   # Application template
@@ -50,14 +60,25 @@ spec:
       # Project reference
       project: example-uat
 
-      # Source configuration
-      source:
-        repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
-        targetRevision: main
-        path: "{{ .path.path }}"
-        helm:
-          valueFiles:
-            - values.yaml
+      # Multi-source: chart source + values-only ref
+      sources:
+        # 1) Chart source — ArgoCD renders this with Helm
+        - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+          targetRevision: main
+          path: "{{ .path.path }}"
+          helm:
+            valueFiles:
+              # Chart defaults (relative to the chart path)
+              - values.yaml
+              # Env-specific override (resolved via the $values ref source below)
+              - $values/infrastructure/argocd/values/uat/{{ .path.basename }}.yaml
+            # Tolerate charts that don't yet have a UAT override file
+            ignoreMissingValueFiles: true
+        # 2) Values ref — provides the `$values` prefix used above. This source
+        #    is NOT rendered; it only resolves paths for valueFiles lookups.
+        - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+          targetRevision: main
+          ref: values
 
       # Destination: UAT cluster (use cluster name from cluster secret)
       destination:

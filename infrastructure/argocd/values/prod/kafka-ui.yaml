@@ -1,0 +1,37 @@
+# Prod overrides for charts/kafka-ui
+# Layered on top of charts/kafka-ui/values.yaml by the ApplicationSet.
+
+replicaCount: 2
+
+image:
+  tag: "v0.7.2"
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Production: prefer an existing secret managed via ESO / Sealed Secrets
+# auth:
+#   type: "LOGIN_FORM"
+#   existingSecret: "kafka-ui-auth"
+
+kafkaClusters:
+  - name: "prod"
+    bootstrapServers: "kafka.prod.svc.cluster.local:9092"
+    readonly: true
+    # schemaRegistry: "http://schema-registry.prod.svc.cluster.local:8081"
+
+# virtualservice:
+#   enabled: true
+#   gateways:
+#     - istio-ingress/internal-gateway
+#   hosts:
+#     - kafka-ui.example.com

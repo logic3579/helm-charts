@@ -1,0 +1,32 @@
+# UAT overrides for charts/kafka-ui
+# Layered on top of charts/kafka-ui/values.yaml by the ApplicationSet.
+
+replicaCount: 1
+
+image:
+  tag: "v0.7.2"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# auth:
+#   type: "LOGIN_FORM"
+#   existingSecret: "kafka-ui-auth"
+
+kafkaClusters:
+  - name: "uat"
+    bootstrapServers: "kafka.uat.svc.cluster.local:9092"
+    readonly: false
+    # schemaRegistry: "http://schema-registry.uat.svc.cluster.local:8081"
+
+# virtualservice:
+#   enabled: true
+#   gateways:
+#     - istio-ingress/internal-gateway
+#   hosts:
+#     - kafka-ui.uat.example.com
