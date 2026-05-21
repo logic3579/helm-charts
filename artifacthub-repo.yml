@@ -1,0 +1,9 @@
+# Artifact Hub repository metadata
+# https://artifacthub.io/docs/topics/repositories/helm-charts/
+#
+# After adding your repository on Artifact Hub, replace the repositoryID
+# below with the value provided by Artifact Hub.
+repositoryID: 7a54c1db-f7d4-4a1e-8e3a-a4df3cb164b8
+owners:
+  - name: logic3579
+    email: logic3579@duck.com

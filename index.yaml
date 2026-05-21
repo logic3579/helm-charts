@@ -3,13 +3,13 @@ entries:
   frontend-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-04-23T08:21:27.081849834Z"
+    created: "2026-05-21T14:34:55.529940664Z"
     dependencies:
     - name: common
       repository: file://../common
       version: 0.2.0
     description: A generic Helm chart for frontend application deployment (nginx-based)
-    digest: 971149ae33229734498461d8effb4abe4c596b06cde80c809740b105cc8c5fa0
+    digest: d421729679139baad2578c3dc7622a05d4415eb172568eabc48f77fdb2e16b37
     home: https://github.com/logic3579/helm-charts
     keywords:
     - frontend
@@ -24,18 +24,18 @@ entries:
     name: frontend-app
     type: application
     urls:
-    - https://github.com/logic3579/helm-charts/releases/download/frontend-app-0.3.1/frontend-app-0.3.1.tgz
+    - https://logic3579.github.io/helm-charts/frontend-app-0.3.1.tgz
     version: 0.3.1
   go-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-04-23T08:21:27.209378881Z"
+    created: "2026-05-21T14:34:55.530626794Z"
     dependencies:
     - name: common
       repository: file://../common
       version: 0.2.0
     description: A generic Helm chart for Go application deployment
-    digest: 01cd1905d78d0db9ae058a2cc4d7030a62aa5ef761f929c6f0aaa1cdbed6a005
+    digest: 7b750b358c577e0ca85346c5d33b5fec6aeea26a995a9d2d7d859e9020f57e0f
     home: https://github.com/logic3579/helm-charts
     keywords:
     - go
@@ -48,7 +48,7 @@ entries:
     name: go-app
     type: application
     urls:
-    - https://github.com/logic3579/helm-charts/releases/download/go-app-0.3.1/go-app-0.3.1.tgz
+    - https://logic3579.github.io/helm-charts/go-app-0.3.1.tgz
     version: 0.3.1
   kafka-ui:
   - annotations:
@@ -61,14 +61,14 @@ entries:
           url: https://github.com/kafbat/kafka-ui
     apiVersion: v2
     appVersion: v0.7.2
-    created: "2026-04-23T08:11:01.355654401Z"
+    created: "2026-05-21T14:34:55.531369601Z"
     dependencies:
     - name: common
       repository: file://../common
       version: 0.2.0
     description: A Helm chart for UI for Apache Kafka (kafka-ui) — a web UI for monitoring
       and managing Apache Kafka clusters
-    digest: d1aa2c3b20d0c365d288de5e06ee6a9492e5082c322e8e709485ffbd702314cf
+    digest: 2a1131681c608d0486ce96ad049ec9e82435f3dcccae6cffe5e196ba798b15df
     home: https://github.com/logic3579/helm-charts
     icon: https://raw.githubusercontent.com/kafbat/kafka-ui/main/documentation/images/logo.png
     keywords:
@@ -83,18 +83,18 @@ entries:
     name: kafka-ui
     type: application
     urls:
-    - https://github.com/logic3579/helm-charts/releases/download/kafka-ui-0.1.1/kafka-ui-0.1.1.tgz
+    - https://logic3579.github.io/helm-charts/kafka-ui-0.1.1.tgz
     version: 0.1.1
   python-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-04-23T08:21:27.498156269Z"
+    created: "2026-05-21T14:34:55.531995798Z"
     dependencies:
     - name: common
       repository: file://../common
       version: 0.2.0
     description: A generic Helm chart for Python application deployment
-    digest: 627b4d4558b23fecdf9540f4f9b5314e096e6b09efab002a0bb96f69dbddcdc7
+    digest: c21fe1b899cedf23bdb5fdc8580bda36f7868b99b7439375825a65bdaca95a77
     home: https://github.com/logic3579/helm-charts
     keywords:
     - python
@@ -108,6 +108,6 @@ entries:
     name: python-app
     type: application
     urls:
-    - https://github.com/logic3579/helm-charts/releases/download/python-app-0.3.1/python-app-0.3.1.tgz
+    - https://logic3579.github.io/helm-charts/python-app-0.3.1.tgz
     version: 0.3.1
-generated: "2026-04-23T08:21:27.498173635Z"
+generated: "2026-05-21T14:34:55.52903422Z"
