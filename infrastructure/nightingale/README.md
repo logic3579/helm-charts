@@ -42,32 +42,19 @@ helm upgrade --install \
 ## Nightingale
 
 ```bash
-# Get helm-charts
 git clone http://github.com/flashcatcloud/n9e-helm.git nightingale
 cd nightingale
 
-# Set timezone(optional)
-grep "name: TZ" ./ -r
-
-# Configure categraf plugins and n9e
-vim categraf/conf/input.cadvisor/cadvisor.toml
-vim categraf/conf/input.prometheus/prometheus.toml
-vim values.yaml
-
-# Install nightingale and categraf(daemonset)
 helm upgrade --install \
   --namespace nightingale \
   nightingale . \
-  -f values.yaml
+  -f nightingale-values.yaml
 
-# Explose nightingale ui
 kubectl apply -n nightingale -f nightingale-virtualservice.yaml
 
 # Install categraf(deployment) for collect metrics
-# kube-state-metrics, prometheus-mysql-exporter, clickhouse
-kubectl apply -n nightingale -f categraf-deployment.yaml
-# kubernetes services metrics with prometheus-agent scape
-kubectl apply -n nightingale -f categraf-prometheus-agent.yaml
+kubectl apply -n nightingale -f categraf-deployment.yaml # kube-state-metrics, prometheus-mysql-exporter, clickhouse
+kubectl apply -n nightingale -f categraf-prometheus-agent.yaml # kubernetes services metrics with prometheus-agent scape
 
 # Optional: other cluster install categraf(daemonset and deployment) for collect metrics
 kubectl apply -n nightingale -f categraf-daemonset.yaml

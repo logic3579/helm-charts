@@ -1,0 +1,271 @@
+# Values for flashcatcloud/n9e-helm. Reference upstream:
+#   https://github.com/flashcatcloud/n9e-helm/blob/main/values.yaml
+#
+# Routing is handled by Istio (see nightingale-virtualservice.yaml), so expose
+# stays at ClusterIP. All workloads pinned to the mgmt node pool.
+
+expose:
+  type: clusterIP
+  tls:
+    enabled: false
+    certSource: auto
+    auto:
+      commonName: ""
+    secret:
+      secretName: ""
+  ingress:
+    hosts:
+      web: hello.n9e.info
+    controller: default
+    kubeVersionOverride: ""
+    annotations: {}
+    nightingale:
+      annotations: {}
+  clusterIP:
+    name: nightingale
+    annotations: {}
+    ports:
+      httpPort: 80
+      httpsPort: 443
+  nodePort:
+    name: nightingale
+    ports:
+      http:
+        port: 80
+        nodePort: 30007
+      https:
+        port: 443
+        nodePort: 30009
+  loadBalancer:
+    name: nightingale
+    IP: ""
+    ports:
+      httpPort: 80
+      httpsPort: 443
+    annotations: {}
+    sourceRanges: []
+
+externalURL: https://nightingale.example.com
+
+ipFamily:
+  ipv6:
+    enabled: false
+  ipv4:
+    enabled: true
+
+persistence:
+  enabled: true
+  resourcePolicy: "keep"
+  persistentVolumeClaim:
+    database:
+      existingClaim: ""
+      storageClass: ""
+      subPath: ""
+      accessMode: ReadWriteOnce
+      size: 50Gi
+    redis:
+      existingClaim: ""
+      storageClass: ""
+      subPath: ""
+      accessMode: ReadWriteOnce
+      size: 2Gi
+    prometheus:
+      existingClaim: ""
+      storageClass: ""
+      subPath: ""
+      accessMode: ReadWriteOnce
+      size: 50Gi
+
+imagePullPolicy: IfNotPresent
+
+imagePullSecrets:
+
+updateStrategy:
+  type: RollingUpdate
+
+logLevel: info
+
+caSecretName: ""
+
+# JWT signing key. Replace with a 32+ char random string (e.g. `openssl rand -hex 32`).
+secretKey: "REPLACE_ME_8f3a1c9d4b6e2f5a7c0d9e1b3a4f6c8d"
+
+nginx:
+  image:
+    repository: docker.io/library/nginx
+    tag: stable-alpine
+  serviceAccountName: ""
+  automountServiceAccountToken: false
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+  nodeSelector:
+    tier: mgmt
+  tolerations: []
+  affinity: {}
+  podAnnotations: {}
+  priorityClassName:
+
+database:
+  type: internal
+  internal:
+    serviceAccountName: ""
+    automountServiceAccountToken: false
+    image:
+      repository: docker.io/library/mysql
+      tag: 5.7
+    username: "root"
+    # MySQL root password. Replace with a strong random string before deploying.
+    password: "REPLACE_ME_db_2c7e9a1f4d8b3e6c5a0d2f9b1e4c7a3d"
+    shmSizeLimit: 512Mi
+    nodeSelector:
+      tier: mgmt
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    tolerations: []
+    affinity: {}
+    priorityClassName:
+    initContainer:
+      migrator: {}
+      permissions: {}
+  external:
+    host: "192.168.0.1"
+    port: "3306"
+    name: "n9e_v6"
+    username: "user"
+    password: "password"
+    sslmode: "disable"
+  maxIdleConns: 100
+  maxOpenConns: 900
+  podAnnotations: {}
+
+redis:
+  type: internal
+  internal:
+    serviceAccountName: ""
+    automountServiceAccountToken: false
+    image:
+      repository: docker.io/library/redis
+      tag: 6.2
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    nodeSelector:
+      tier: mgmt
+    tolerations: []
+    affinity: {}
+    priorityClassName:
+  external:
+    addr: "192.168.0.2:6379"
+    sentinelMasterSet: ""
+    username: ""
+    password: ""
+    mode: "standalone"
+  podAnnotations: {}
+
+prometheus:
+  type: internal
+  internal:
+    username: ""
+    password: ""
+    serviceAccountName: ""
+    automountServiceAccountToken: false
+    image:
+      repository: docker.io/prom/prometheus
+      tag: v2.54.1
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    nodeSelector:
+      tier: mgmt
+    tolerations: []
+    affinity: {}
+    priorityClassName:
+  external:
+    host: "192.168.0.2"
+    port: "9090"
+    username: ""
+    password: ""
+  podAnnotations: {}
+
+categraf:
+  type: internal
+  internal:
+    serviceAccountName: ""
+    automountServiceAccountToken: false
+    image:
+      repository: flashcatcloud/categraf
+      tag: latest
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+    nodeSelector:
+      tier: mgmt
+    tolerations: []
+    affinity: {}
+    priorityClassName:
+    ## Parm: categraf.internal.docker_socket  Desc: the path of docker socket on kubelet node.
+    ## "unix:///var/run/docker.sock" is default, if your kubernetes runtime is containerd or others, leave empty.
+    docker_socket: ""
+  external:
+    host: "192.168.0.3"
+    port: "8094"
+    password: ""
+  podAnnotations: {}
+
+n9e:
+  type: internal
+  internal:
+    replicas: 1
+    serviceAccountName: ""
+    automountServiceAccountToken: false
+    image:
+      repository: flashcatcloud/nightingale
+      tag: 8.5.0
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+    nodeSelector:
+      tier: mgmt
+    tolerations: []
+    affinity: {}
+    priorityClassName:
+    ibexEnable: false
+    ibexPort: "20090"
+  external:
+    host: "192.168.0.4"
+    port: "17000"
+    ibexEnable: false
+    ibexPort: "20090"
+  victoriaMetrics:
+    enabled: false
+    url: "http://victoria-metrics:8428/api/v1/write"
+    basicAuthUser: ""
+    basicAuthPass: ""
+  podAnnotations: {}
