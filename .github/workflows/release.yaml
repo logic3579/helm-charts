@@ -12,23 +12,23 @@ concurrency:
   group: release-charts
   cancel-in-progress: false
 
+env:
+  PAGES_URL: https://logic3579.github.io/helm-charts
+  RETENTION: 3
+
 jobs:
-  release:
+  publish:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
-      pages: write
-      id-token: write
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Configure Git
         run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -36,82 +36,86 @@ jobs:
       - name: Update chart dependencies
         run: |
           for chart in charts/*/; do
-            if [ -f "$chart/Chart.yaml" ] && grep -q 'dependencies:' "$chart/Chart.yaml"; then
+            if [ -f "$chart/Chart.yaml" ] && grep -q '^dependencies:' "$chart/Chart.yaml"; then
               helm dependency update "$chart"
             fi
           done
 
-      - name: Lint charts
+      - name: Lint application charts
         run: |
           for chart in charts/*/; do
-            if [ -f "$chart/Chart.yaml" ] && ! grep -q 'type: library' "$chart/Chart.yaml"; then
+            if [ -f "$chart/Chart.yaml" ] && ! grep -q '^type: library' "$chart/Chart.yaml"; then
               helm lint "$chart"
             fi
           done
 
       - name: Package application charts
         run: |
-          mkdir -p .cr-release-packages
+          mkdir -p .packages
           for chart in charts/*/; do
-            if [ -f "$chart/Chart.yaml" ] && ! grep -q 'type: library' "$chart/Chart.yaml"; then
-              helm package "$chart" -d .cr-release-packages
+            if [ -f "$chart/Chart.yaml" ] && ! grep -q '^type: library' "$chart/Chart.yaml"; then
+              helm package "$chart" -d .packages
             fi
           done
 
-      - name: Check for new chart versions
-        id: check-new
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout gh-pages worktree
         run: |
-          has_new=false
-          for pkg in .cr-release-packages/*.tgz; do
+          git fetch origin gh-pages
+          git worktree add gh-pages origin/gh-pages
+
+      - name: Publish new .tgz (preserve already-published versions)
+        run: |
+          for pkg in .packages/*.tgz; do
             [ -f "$pkg" ] || continue
-            name=$(helm show chart "$pkg" | grep '^name:' | awk '{print $2}')
-            version=$(helm show chart "$pkg" | grep '^version:' | awk '{print $2}')
-            if ! gh release view "${name}-${version}" --repo "$GITHUB_REPOSITORY" &>/dev/null; then
-              has_new=true
-              break
+            target="gh-pages/$(basename "$pkg")"
+            if [ -e "$target" ]; then
+              echo "skip existing: $(basename "$pkg")"
+            else
+              cp "$pkg" "$target"
+              echo "added: $(basename "$pkg")"
             fi
           done
-          echo "has_new=$has_new" >> $GITHUB_OUTPUT
 
-      - name: Run chart-releaser
-        if: steps.check-new.outputs.has_new == 'true'
-        continue-on-error: true  # chart-releaser-action v1.7.0 has a known latest_tag bug that errors after successful release
-        uses: helm/chart-releaser-action@v1.7.0
-        with:
-          skip_packaging: true
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_SKIP_EXISTING: true
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Prepare Pages content
+      - name: Prune to latest ${RETENTION} versions per chart
         run: |
-          mkdir -p ./public
-          cp index.html ./public/
-          cp artifacthub-repo.yml ./public/
-          git fetch origin gh-pages 2>/dev/null || true
-          git show origin/gh-pages:index.yaml > ./public/index.yaml 2>/dev/null || true
+          for chart_dir in charts/*/; do
+            [ -f "$chart_dir/Chart.yaml" ] || continue
+            grep -q '^type: library' "$chart_dir/Chart.yaml" && continue
+            name=$(awk '/^name:/ {print $2; exit}' "$chart_dir/Chart.yaml")
+            matches=()
+            for tgz in gh-pages/${name}-*.tgz; do
+              [ -e "$tgz" ] || continue
+              bn=$(basename "$tgz" .tgz)
+              # Strict match: chart name followed by '-' then a digit (semver).
+              # Prevents prefix collisions (e.g. "kafka" vs "kafka-ui").
+              if [[ "$bn" =~ ^${name}-[0-9] ]]; then
+                matches+=("$tgz")
+              fi
+            done
+            if [ "${#matches[@]}" -gt "$RETENTION" ]; then
+              printf '%s\n' "${matches[@]}" | sort -V -r | tail -n +$((RETENTION + 1)) | while read -r f; do
+                rm -f "$f"
+                echo "pruned: $(basename "$f")"
+              done
+            fi
+          done
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./public
+      - name: Regenerate index.yaml
+        run: |
+          helm repo index gh-pages --url "${PAGES_URL}"
 
-  deploy:
-    name: Deploy
-    needs: release
-    runs-on: ubuntu-24.04
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Sync static assets to gh-pages
+        run: |
+          cp index.html gh-pages/
+          cp artifacthub-repo.yml gh-pages/
+
+      - name: Commit and push gh-pages
+        working-directory: gh-pages
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "nothing to publish"
+            exit 0
+          fi
+          git add -A
+          git commit -m "Publish chart updates"
+          git push origin HEAD:gh-pages

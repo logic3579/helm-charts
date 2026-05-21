@@ -4,7 +4,7 @@
 
 This repo provides two things:
 
-1. **Publishable Helm charts** in [`charts/`](./charts/) — released via GitHub Pages and GitHub Releases
+1. **Publishable Helm charts** in [`charts/`](./charts/) — released via GitHub Pages (chart `.tgz` hosted directly on the `gh-pages` branch)
 2. **Infrastructure examples** in [`infrastructure/`](./infrastructure/) — cluster infrastructure reference configs
 
 ## Available Charts
@@ -66,9 +66,9 @@ git push origin main
 
 The GitHub Actions workflow will automatically:
 - Lint and package the charts
-- Create GitHub Releases with `.tgz` assets
-- Update `index.yaml` on the `gh-pages` branch
-- Deploy to GitHub Pages
+- Push the `.tgz` artifacts and regenerated `index.yaml` to the `gh-pages` branch (no Git tags, no GitHub Releases)
+- Prune older versions, keeping only the latest **3 versions per chart** on `gh-pages`
+- GitHub Pages serves the `gh-pages` branch directly
 
 ## Chart Features
 

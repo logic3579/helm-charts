@@ -68,17 +68,20 @@ App charts delegate most templates to `common` via one-line `{{- include "common
 To publish a new chart version:
 
 1. Modify chart source under `charts/`.
-2. Bump `version` in `Chart.yaml` — chart-releaser skips versions that already have a Git tag.
+2. Bump `version` in `Chart.yaml`.
 3. `git commit && git push origin main`.
 
-Workflow (ubuntu-24.04): checkout (full history+tags) → `helm dependency update` → `helm lint` (app charts only) → `helm package` → check existing GH Releases → `chart-releaser-action` (`skip_packaging: true`, `continue-on-error: true`) uploads `.tgz` per new version + regenerates `index.yaml` on `gh-pages` → Prepare Pages (`index.html` + `artifacthub-repo.yml` from main + `index.yaml` from gh-pages) → Deploy Pages.
+Workflow (ubuntu-24.04): checkout main → `helm dependency update` → `helm lint` (app charts only) → `helm package` into `.packages/` → `git worktree add gh-pages` → copy new `.tgz` into the worktree (preserve already-published versions via existence check) → prune to the latest 3 versions per chart (strict `^<name>-[0-9]` regex match, `sort -V`) → `helm repo index gh-pages --url https://logic3579.github.io/helm-charts` → sync `index.html` + `artifacthub-repo.yml` from `main` → commit and push to `gh-pages`.
+
+**No Git tags, no GitHub Releases.** Pages source is the `gh-pages` branch root (Settings → Pages → Build and deployment → Source: *Deploy from a branch* → `gh-pages` / `/`); the workflow does NOT use `actions/deploy-pages`.
 
 **Important**:
-- `index.yaml` is exclusively managed by chart-releaser on `gh-pages`. Never run `helm repo index` manually.
-- `chart-releaser-action@v1.7.0` has a known `latest_tag` bug; `continue-on-error: true` keeps the pipeline green. Don't remove until the upstream bug is verified fixed.
-- `artifacthub-repo.yml` must remain reachable at `https://logic3579.github.io/helm-charts/artifacthub-repo.yml` for ownership verification.
+- `index.yaml` is regenerated from scratch by `helm repo index` on every run, based on the `.tgz` files currently in the `gh-pages` worktree. Do NOT hand-edit `index.yaml`.
+- Retention: 3 versions per chart. Older `.tgz` files are deleted from `gh-pages` automatically. To keep more, change `RETENTION` in the workflow `env` block.
+- `artifacthub-repo.yml` must remain reachable at `https://logic3579.github.io/helm-charts/artifacthub-repo.yml` for ownership verification — the workflow copies it onto `gh-pages` on every run.
+- The prune step uses a strict `^<chart-name>-[0-9]` regex (not a raw glob) so that, e.g., a future `kafka` chart wouldn't accidentally match `kafka-ui-*.tgz`.
 
-Branches: **main** (chart source, workflow, docs) — **gh-pages** (chart-releaser-managed, do not edit manually).
+Branches: **main** (chart source, workflow, docs) — **gh-pages** (auto-managed by the workflow: `.tgz` artifacts + `index.yaml` + `index.html` + `artifacthub-repo.yml`; do not edit manually).
 
 ## Chart Conventions
 
