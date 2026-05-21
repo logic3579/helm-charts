@@ -6,7 +6,7 @@ Guidance for Claude Code (claude.ai/code) when working in this repository.
 
 Two purposes:
 
-1. **Publishable Helm charts** in `charts/` — released via GitHub Pages using `helm/chart-releaser-action`.
+1. **Publishable Helm charts** in `charts/` — packaged on push and hosted on the `gh-pages` branch (served as a Helm repo at the Pages URL). No Git tags, no GitHub Releases.
 2. **Infrastructure references** in `infrastructure/` — cluster infrastructure example configs.
 
 Repo is hosted at `https://logic3579.github.io/helm-charts` and listed on Artifact Hub (verified via `artifacthub-repo.yml` at the repo root, deployed to Pages alongside `index.yaml`).
@@ -58,7 +58,7 @@ App charts delegate most templates to `common` via one-line `{{- include "common
 
 `charts/` supports two methods simultaneously:
 
-1. **Helm Registry** — packaged, released to GitHub Releases, indexed on GitHub Pages. Users install via `helm repo add` / `helm install`.
+1. **Helm Registry** — packaged on push and hosted on `gh-pages` (served via GitHub Pages). Users install via `helm repo add` / `helm install`.
 2. **ArgoCD Directory** — ArgoCD points at a chart path (e.g. `charts/go-app`) with `source.helm`. ArgoCD auto-runs `helm dependency build` to resolve `file://../common`.
 
 ## CI/CD — Release Workflow
