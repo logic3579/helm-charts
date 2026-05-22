@@ -3,7 +3,7 @@
 #
 # After adding your repository on Artifact Hub, replace the repositoryID
 # below with the value provided by Artifact Hub.
-repositoryID: 7a54c1db-f7d4-4a1e-8e3a-a4df3cb164b8
+repositoryID: 4b0e9c0b-adfe-432d-b2d9-cb0a0247ab9c
 owners:
   - name: logic3579
     email: logic3579@duck.com
