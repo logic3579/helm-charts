@@ -3,7 +3,7 @@ entries:
   frontend-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-05-21T14:34:55.529940664Z"
+    created: "2026-05-22T01:47:31.995292569Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -29,7 +29,7 @@ entries:
   go-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-05-21T14:34:55.530626794Z"
+    created: "2026-05-22T01:47:31.996016562Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -61,7 +61,7 @@ entries:
           url: https://github.com/kafbat/kafka-ui
     apiVersion: v2
     appVersion: v0.7.2
-    created: "2026-05-21T14:34:55.531369601Z"
+    created: "2026-05-22T01:47:31.996719595Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -88,7 +88,7 @@ entries:
   python-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-05-21T14:34:55.531995798Z"
+    created: "2026-05-22T01:47:31.997379774Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -110,4 +110,4 @@ entries:
     urls:
     - https://logic3579.github.io/helm-charts/python-app-0.3.1.tgz
     version: 0.3.1
-generated: "2026-05-21T14:34:55.52903422Z"
+generated: "2026-05-22T01:47:31.994398997Z"
