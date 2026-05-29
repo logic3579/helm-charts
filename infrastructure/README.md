@@ -12,8 +12,7 @@ Production-ready reference configurations for Kubernetes cluster infrastructure 
 | [database/](./database/)           | ClickHouse (with GCS backup), Elasticsearch, Neo4j                                   |
 | [istio/](./istio/)                 | Service mesh gateways, AuthorizationPolicy, EnvoyFilter access logging               |
 | [mgmt/](./mgmt/)                   | Management UIs (Kafka-UI, Cerebro, RedisInsight, RocketMQ Exporter)                  |
-| [nightingale/](./nightingale/)     | Nightingale (n9e) + Categraf with curated dashboards and alert rules                 |
-| [observability/](./observability/) | Two parallel observability stacks — Grafana LGTM and VictoriaMetrics                 |
+| [observability/](./observability/) | Observability stacks — Grafana LGTM, VictoriaMetrics, Prometheus, OpenTelemetry, Nightingale |
 | [streaming/](./streaming/)         | Kafka broker service aliases                                                         |
 
 ## Quick Start

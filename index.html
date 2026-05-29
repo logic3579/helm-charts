@@ -1125,6 +1125,9 @@ helm install my-frontend-app logic-charts/frontend-app -f my-values.yaml
 
 # Kafka UI
 helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
+
+# Nightingale (n9e) monitoring system
+helm install my-nightingale logic-charts/nightingale -f my-values.yaml
 </code></pre>
 
     <p>Uninstall a chart:</p>
@@ -1167,6 +1170,11 @@ helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
           <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/kafka-ui">kafka-ui</a></td>
           <td>Kafka UI dashboard with multi-cluster, schema-registry, and ksqlDB support</td>
           <td>8080</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/nightingale">nightingale</a></td>
+          <td>Nightingale (n9e) cloud-native monitoring system — repackaged from flashcatcloud/n9e-helm</td>
+          <td>80</td>
         </tr>
       </tbody>
     </table>
@@ -1218,7 +1226,8 @@ helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
           <td>OTel Operator + agent/gateway Collectors + auto-injecting Instrumentation CR</td>
         </tr>
         <tr>
-          <td><a href="https://github.com/logic3579/helm-charts/tree/main/infrastructure/nightingale">nightingale/</a>
+          <td><a
+              href="https://github.com/logic3579/helm-charts/tree/main/infrastructure/observability/nightingale">observability/nightingale/</a>
           </td>
           <td>Nightingale (n9e) + Categraf with curated dashboards and alert rules</td>
         </tr>

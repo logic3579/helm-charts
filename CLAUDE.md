@@ -41,18 +41,19 @@ helm install my-go-app logic-charts/go-app -f my-values.yaml
 - **python-app** — Python (port 8000, `/health`, `readOnlyRootFilesystem: false`, `startupProbe` enabled by default, 30×5s window, higher memory defaults).
 - **frontend-app** — Compiled SPA served by nginx (port 80, `readOnlyRootFilesystem: true` with `emptyDir` mounts to `/var/cache/nginx`, `/var/run`, `/tmp`, optional custom nginx config). Has a chart-specific `nginx-configmap.yaml` and intentionally no `secret.yaml`.
 - **kafka-ui** — Kafka UI (port 8080, Spring Boot actuator probes, `startupProbe` enabled). Deployment template injects kafka-specific env: `auth` (LOGIN_FORM/DISABLED/LDAP/OAUTH2 via `secretKeyRef`) and `kafkaClusters` rendered as `KAFKA_CLUSTERS_N_*` (bootstrapServers, readonly, schemaRegistry, ksqldbServer, arbitrary properties). On every version bump, append a `kind/description` entry to `Chart.yaml`'s `annotations.artifacthub.io/changes` block.
+- **nightingale** — Repackaged from upstream [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) so the chart is discoverable on Artifact Hub (upstream doesn't publish there). Self-contained — does NOT depend on `common`. Has its own `templates/{n9e,nginx,prometheus,redis,database,ingress,categraf}/` subtree and is *not* refactored to use `common`. Keep the chart structurally aligned with upstream; pull upstream changes wholesale rather than diverging. On every version bump, append a `kind/description` entry to `Chart.yaml`'s `annotations.artifacthub.io/changes` block. Companion infra reference manifests (categraf, VirtualService, dashboards) live under `infrastructure/observability/nightingale/`.
 
-App charts delegate most templates to `common` via one-line `{{- include "common.xxx" . }}`. Only `deployment.yaml` and `NOTES.txt` carry chart-specific logic. All four support `startupProbe`, `volumes`/`volumeMounts`, HPA (CPU+memory), and Istio VirtualService CORS (`exact`/`prefix`/`regex`). Each chart's `values.yaml` doubles as the configuration reference — deployment-specific overrides live OUTSIDE the chart directory: ArgoCD users put them under `infrastructure/argocd/values/<env>/<chart>.yaml`; standalone Helm users pass `-f my-values.yaml`.
+App charts (go-app, python-app, frontend-app, kafka-ui) delegate most templates to `common` via one-line `{{- include "common.xxx" . }}`. Only `deployment.yaml` and `NOTES.txt` carry chart-specific logic. All four support `startupProbe`, `volumes`/`volumeMounts`, HPA (CPU+memory), and Istio VirtualService CORS (`exact`/`prefix`/`regex`). Each chart's `values.yaml` doubles as the configuration reference — deployment-specific overrides live OUTSIDE the chart directory: ArgoCD users put them under `infrastructure/argocd/values/<env>/<chart>.yaml`; standalone Helm users pass `-f my-values.yaml`. The nightingale chart is an exception — it's a vendored upstream chart, not a `common`-based app chart.
 
 ### infrastructure/
 
 - **argocd/** — Multi-cluster GitOps: install values (`argocd-values.yaml`), UI VirtualService (`argocd-virtualservice.yaml`), multi-source ApplicationSets (`applicationsets/{uat,prod}-apps.yaml`), per-env chart overrides (`values/{uat,prod}/<chart>.yaml`), cluster/project/notification templates. UAT auto-syncs; Prod is manual-sync.
 - **istio/** — Gateway and AuthorizationPolicy configs.
-- **nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules.
 - **observability/grafana-lgtm/** — Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail collectors.
 - **observability/victoriametrics/** — VictoriaMetrics stack (VMCluster + VictoriaLogs + VictoriaTraces) with vmagent / vmalert / vlagent and bundled vmauth gateway.
 - **observability/prometheus-community/** — `prometheus-community/prometheus` chart, **server-only** (alertmanager/KSM/node-exporter/pushgateway subcharts disabled). Minimal single-node alternative to Mimir / VMCluster; namespace `prom`.
 - **observability/opentelemetry/** — OTel Operator + agent/gateway Collector CRs + Instrumentation CR (auto-injects Java/Python SDKs); collection layer that exports to either grafana-lgtm or victoriametrics (or remote_write to the plain prometheus stack for metrics only).
+- **observability/nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules. Pairs with `prometheus-community/` exporters; namespace `nightingale`.
 - **cert-manager/, database/, bigdata/, streaming/, mgmt/** — Various component manifests.
 
 ## Dual Deployment Model
@@ -105,7 +106,7 @@ Branches: **main** (chart source, workflow, docs) — **gh-pages** (auto-managed
 
 These fix recurring decisions across `infrastructure/` so they don't get re-debated.
 
-- **Flat layout under each observability stack**: `infrastructure/observability/<stack>/` keeps every values + VirtualService manifest at the top level — no per-component subdirectories. Filenames carry the component prefix (`loki-values.yaml`, `vmcluster-values.yaml`, `collector-agent.yaml`). All three stacks (`grafana-lgtm/`, `victoriametrics/`, `opentelemetry/`) follow this.
+- **Flat layout under each observability stack**: `infrastructure/observability/<stack>/` keeps every values + VirtualService manifest at the top level — no per-component subdirectories. Filenames carry the component prefix (`loki-values.yaml`, `vmcluster-values.yaml`, `collector-agent.yaml`). All stacks (`grafana-lgtm/`, `victoriametrics/`, `prometheus-community/`, `opentelemetry/`, `nightingale/`) follow this for K8s manifests. Exception: `nightingale/n9e-ui/` holds dashboard and alert-rule JSON definitions imported into the Nightingale UI — content, not manifests.
 - **Per-stack short namespace**: each stack lives in a namespace named after the stack — `lgtm`, `vm`, `otel`. Cross-stack service hostnames read as `<svc>.<ns>.svc.cluster.local`.
 - **IRSA + Workload Identity annotation block**: every component values file with a `serviceAccount.annotations` field carries a two-line comment showing both AWS IRSA and GCP Workload Identity formats above the (empty) annotations map. Mirror the existing shape:
   ```yaml

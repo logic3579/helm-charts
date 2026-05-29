@@ -1,0 +1,83 @@
+# Nightingale
+
+[Nightingale (n9e)](https://github.com/ccfos/nightingale) deployment reference: Helm chart for the server side, plus
+Categraf manifests, dashboards, and alert rules for the agent / content side.
+
+The Helm chart is published from this repo (`charts/nightingale/`) — upstream
+[`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) does not push to Artifact Hub, so
+`logic-charts/nightingale` is a repackaged mirror tracking upstream.
+
+## Layout
+
+| File / dir                        | Purpose                                                                             |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
+| `nightingale-values.yaml`         | Override values for `logic-charts/nightingale` (ingress, persistence, externalURL)  |
+| `nightingale-virtualservice.yaml` | Istio VirtualService (external gateway → `nightingale.<ns>.svc`)                    |
+| `categraf-daemonset.yaml`         | Categraf DaemonSet — per-node host metrics                                          |
+| `categraf-deployment.yaml`        | Categraf Deployment — scrapes kube-state-metrics, MySQL/Redis exporters, ClickHouse |
+| `categraf-prometheus-agent.yaml`  | Categraf Deployment in Prometheus-agent mode — Kubernetes service discovery         |
+| `n9e-ui/dashboards/`              | Curated dashboard JSON (MySQL, Redis, Kafka, ClickHouse, Istio, K8s, Loki)          |
+| `n9e-ui/alert-rules/`             | Curated alert rule JSON (common / k8s / istio / middleware)                         |
+| `n9e-ui/SlackBot*.json`           | Slack notification template payloads                                                |
+
+## Prerequisites
+
+Categraf scrapes the same exporters as the Prometheus stack. Install them once from the sibling stack:
+
+```bash
+# kube-state-metrics, prometheus-mysql-exporter, prometheus-redis-exporter
+# See ../prometheus-community/README.md
+```
+
+Add the chart repo and create the namespace:
+
+```bash
+helm repo add logic-charts https://logic3579.github.io/helm-charts
+helm repo update
+kubectl create namespace nightingale
+```
+
+## Install Nightingale server
+
+```bash
+helm upgrade --install nightingale logic-charts/nightingale \
+  --namespace nightingale \
+  -f nightingale-values.yaml
+
+kubectl apply -n nightingale -f nightingale-virtualservice.yaml
+```
+
+Pin to a specific chart version with `--version <x.y.z>`. See available versions:
+[Artifact Hub](https://artifacthub.io/packages/helm/logic-charts/nightingale) or
+`helm search repo logic-charts/nightingale --versions`.
+
+## Install Categraf (this cluster)
+
+```bash
+kubectl apply -n nightingale -f categraf-deployment.yaml         # kube-state-metrics + MySQL + ClickHouse
+kubectl apply -n nightingale -f categraf-prometheus-agent.yaml   # Kubernetes service-discovery scrape
+```
+
+## Install Categraf (remote clusters)
+
+For each additional cluster that should ship metrics into this Nightingale instance:
+
+```bash
+kubectl apply -n nightingale -f categraf-daemonset.yaml          # per-node host metrics
+kubectl apply -n nightingale -f categraf-deployment.yaml
+kubectl apply -n nightingale -f categraf-prometheus-agent.yaml
+```
+
+Point the categraf `nserver_url` / writer addresses at this Nightingale's gateway service before applying.
+
+## Import dashboards & alert rules
+
+After Nightingale comes up, import the curated JSON via the UI:
+**Explorer → Dashboards / Monitors → Rules**, then upload files from `n9e-ui/`.
+
+## Notes
+
+- Namespace is `nightingale` (chart default and where Categraf manifests target).
+- The chart is vendored from upstream and does NOT use the `common` library chart — `values.yaml` schema follows
+  upstream `flashcatcloud/n9e-helm`, not the conventions of go-app / python-app / kafka-ui.
+- For an external-only deployment (no in-cluster scrape), skip the Categraf manifests entirely.
