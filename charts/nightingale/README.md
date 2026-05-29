@@ -1,86 +1,94 @@
-# Helm Chart for Nightingale
+# Nightingale Helm Chart
 
-English | [中文](README-CN.md)
+[Nightingale (n9e)](https://github.com/ccfos/nightingale) — an enterprise-grade cloud-native monitoring system,
+packaged as a Helm chart.
 
-## Introduction
+This chart is repackaged from upstream [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm), which
+does not publish to Artifact Hub. It is published from `logic3579/helm-charts` so the chart is discoverable as
+`logic-charts/nightingale` on [Artifact Hub](https://artifacthub.io/packages/helm/logic-charts/nightingale).
 
-This [Helm](https://github.com/flashcatcloud/n9e-helm) chart installs [Nightingale](https://github.com/didi/nightingale) in a Kubernetes cluster. Welcome to contribute to Helm Chart for Nightingale.
-
-This repository, including the issues, focus on deploying Nightingale chart via helm. So for the functionality issues or questions of Nightingale, please open issues on [didi/nightingale](https://github.com/didi/nightingale)
-
+For application-level (n9e UI / agent / alerting) issues, file them on
+[`ccfos/nightingale`](https://github.com/ccfos/nightingale) instead of this chart.
 
 ## Prerequisites
 
-- Kubernetes cluster 1.20+
-- Helm v3.2.0+
+- Kubernetes 1.20+
+- Helm 3.2.0+
+- A default `StorageClass` (or override `persistence.persistentVolumeClaim.<comp>.storageClass` per component)
 
-## Installation
-
-### Get Helm repository
+## Install
 
 ```bash
-git clone https://github.com/flashcatcloud/n9e-helm.git
+helm repo add logic-charts https://logic3579.github.io/helm-charts
+helm repo update
+
+helm install nightingale logic-charts/nightingale \
+  --namespace nightingale --create-namespace
 ```
 
-### Configure the chart
-The following items can be set via `--set` flag during installation or configured by editing the `values.yaml` directly(need to download the chart first).
+Pin to a specific chart version:
 
-#### Configure the way how to expose nightingale service
-
-- **Ingress**: The ingress controller must be installed in the Kubernetes cluster.
-- **ClusterIP**: Exposes the service on a cluster-internal IP. Choosing this value makes the service only reachable from within the cluster.
-- **NodePort**: Exposes the service on each Node’s IP at a static port (the NodePort). You’ll be able to contact the NodePort service, from outside the cluster, by requesting `NodeIP:NodePort`.
-- **LoadBalancer**: Exposes the service externally using a cloud provider’s load balancer.
-
-#### Configure the service over TLS
-
-- **enabled**: Enable TLS or not. Delete the ssl-redirect annotations in `expose.ingress.annotations` when TLS is disabled and `expose.type` is `ingress`.
-- **certSource**: The source of the TLS certificate. Set as `auto`, `secret` or `none` and fill the information in the corresponding section:
-  - auto: generate the TLS certificate automatically
-    - commonName: The common name used to generate the certificate, it's necessary when the type isn't `ingress`
-  - secret: read the TLS certificate from the specified secret. The TLS certificate can be generated manually or by cert manager.
-    - secretName: The name of secret which contains keys named:
-      - tls.crt: the certificate
-      - tls.key: the private key
-  - none: configure no TLS certificate for the `ingress`. **If** the default TLS certificate is configured in the ingress controller, choose this option
-
-#### Configure the external URL
-
-The external URL for nightingale web service is used to visit web service of nightingale 
-
-Format: `protocol://domain[:port]`. Usually:
-
-- if expose the service via `Ingress`, the `domain` should be the value of `expose.ingress.hosts.web`
-- if expose the service via `ClusterIP`, the `domain` should be the value of `expose.clusterIP.name`
-- if expose the service via `NodePort`, the `domain` should be the IP address of one Kubernetes node
-- if expose the service via `LoadBalancer`, set the `domain` as your own domain name and add a CNAME record to map the domain name to the one you got from the cloud provider
-
-> NOTICE:
-
-- If nightingale is deployed behind the proxy, set it as the URL of proxy.
-- The default login user is `root`, default password is `root.2020` .
-
-#### Configure the way how to persistent data
-
-- **Disable**: The data does not survive the termination of a pod.
-- **Persistent Volume Claim(default)**: A default `StorageClass` is needed in the Kubernetes cluster to dynamic provision the volumes. Specify another StorageClass in the `storageClass` or set `existingClaim` if you have already existing persistent volumes to use.
-
-
-### Install the chart
-
-Install the nightingale helm chart with a release name `nightingale`:
 ```bash
-helm install nightingale ./n9e-helm -n n9e --create-namespace
+helm search repo logic-charts/nightingale --versions
+helm install nightingale logic-charts/nightingale --version 0.3.0 \
+  --namespace nightingale --create-namespace
 ```
 
-## Uninstallation
+## Configure
 
-To uninstall/delete the `nightingale` deployment:
-```
-helm uninstall  nightingale -n n9e
+Pull the upstream `values.yaml` as the configuration reference:
+
+```bash
+helm show values logic-charts/nightingale > nightingale-values.yaml
+# edit nightingale-values.yaml
+helm upgrade --install nightingale logic-charts/nightingale \
+  --namespace nightingale --create-namespace \
+  -f nightingale-values.yaml
 ```
 
-## Contributing
-- Create and issue in [Issue List](https://github.com/flashcatcloud/n9e-helm/issues)
-- If necessary, contact and discuss with maintainer
-- Follow the [chart template developer's guide](https://helm.sh/docs/chart_template_guide/)
+A production-leaning example values file lives at
+[`infrastructure/observability/nightingale/nightingale-values.yaml`](../../infrastructure/observability/nightingale/nightingale-values.yaml).
+
+### Key value groups
+
+| Group               | Purpose                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `expose.type`       | `ingress` / `clusterIP` / `nodePort` / `loadBalancer`. Pick `clusterIP` if routing via Istio / external LB.    |
+| `expose.tls`        | TLS for the built-in ingress. `auto`, `secret`, or `none`.                                                     |
+| `externalURL`       | External URL for the n9e web UI (used by NOTES.txt only — actual routing is per `expose.type`).                |
+| `persistence`       | PVC sizes / storage class for `database`, `redis`, `prometheus`.                                               |
+| `database`          | `type: internal` to deploy the bundled MySQL StatefulSet; `external` to point at an existing MySQL.            |
+| `redis`             | `type: internal` to deploy the bundled Redis; `external` for a managed instance.                                |
+| `prometheus`        | `type: internal` to deploy the bundled Prometheus as remote-write target; `external` to plug in your own.       |
+| `n9e.victoriaMetrics` | Set `enabled: true` + `url` to remote-write to a VictoriaMetrics cluster instead of the bundled Prometheus.   |
+| `categraf`          | `type: internal` deploys a Categraf DaemonSet (host metrics) wired to the n9e server.                          |
+| `nginx`             | Front-end nginx that reverse-proxies the n9e API and serves the web UI.                                        |
+
+### Default credentials
+
+- Web UI default user: `root` / password: `root.2020` — change immediately after first login.
+
+## Upgrade
+
+```bash
+helm repo update
+helm upgrade nightingale logic-charts/nightingale \
+  --namespace nightingale \
+  -f nightingale-values.yaml
+```
+
+## Uninstall
+
+```bash
+helm uninstall nightingale -n nightingale
+# PVCs use resourcePolicy: "keep" by default — delete them manually if you want to drop data:
+kubectl delete pvc -n nightingale -l app=n9e
+```
+
+## Source & changes
+
+- Chart source: [`charts/nightingale/`](https://github.com/logic3579/helm-charts/tree/main/charts/nightingale)
+- Companion infra refs (Categraf, dashboards, alert rules, Istio VirtualService):
+  [`infrastructure/observability/nightingale/`](https://github.com/logic3579/helm-charts/tree/main/infrastructure/observability/nightingale)
+- Upstream chart: [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm)
+- Nightingale: [`ccfos/nightingale`](https://github.com/ccfos/nightingale)
