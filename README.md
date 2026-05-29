@@ -16,6 +16,7 @@ This repo provides two things:
 | [python-app](./charts/python-app) | Generic chart for Python application deployment (FastAPI, Django, Flask) | 8000 |
 | [frontend-app](./charts/frontend-app) | Generic chart for frontend application deployment (nginx-based SPA) | 80 |
 | [kafka-ui](./charts/kafka-ui) | Web UI for monitoring and managing Apache Kafka clusters | 8080 |
+| [nightingale](./charts/nightingale) | Nightingale (n9e) cloud-native monitoring system — repackaged from [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) | 80 |
 
 ## Install from Helm Repo
 
@@ -72,7 +73,7 @@ The GitHub Actions workflow will automatically:
 
 ## Chart Features
 
-All application charts (`go-app`, `python-app`, `frontend-app`) support:
+All `common`-based application charts (`go-app`, `python-app`, `frontend-app`, `kafka-ui`) support:
 
 | Feature | Key | Notes |
 |---------|-----|-------|
@@ -85,6 +86,8 @@ All application charts (`go-app`, `python-app`, `frontend-app`) support:
 | ConfigMap / Secret | `configMap.*`, `secret.*` | Secret values are base64-encoded at render time — use ESO for production |
 
 `frontend-app` additionally mounts `emptyDir` volumes for nginx writable directories (`/var/cache/nginx`, `/var/run`, `/tmp`) and runs with `readOnlyRootFilesystem: true`.
+
+`nightingale` is a vendored upstream chart and does NOT share this template surface — its values schema follows [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) directly. Companion infra manifests (Categraf, Istio VirtualService, dashboards, alert rules) live under [`infrastructure/observability/nightingale/`](./infrastructure/observability/nightingale).
 
 ## ArgoCD Integration
 
