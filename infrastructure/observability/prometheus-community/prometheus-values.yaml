@@ -1,0 +1,122 @@
+## prometheus-community/prometheus — clean server-only install.
+## The chart's bundled subcharts (alertmanager, kube-state-metrics, node-exporter,
+## pushgateway) are all OFF by default here. Re-enable individually only when
+## you actually need them — most clusters already run KSM/node-exporter via the
+## VM or LGTM stack, and Alertmanager is typically owned by the alerting layer.
+
+# === Subcharts — all disabled by default ===
+alertmanager:
+  enabled: false
+
+kube-state-metrics:
+  enabled: false
+
+prometheus-node-exporter:
+  enabled: false
+
+prometheus-pushgateway:
+  enabled: false
+
+## Prometheus server — TSDB + query API + rule evaluator.
+server:
+  image:
+    repository: quay.io/prometheus/prometheus
+    tag: v3.12.0
+    pullPolicy: IfNotPresent
+
+  # Single replica by default. Prometheus has no built-in dedup, so HA = 2 replicas
+  # (set `statefulSet.enabled: true` first) that scrape independently and a downstream
+  # dedup layer (Thanos/Mimir/VM via remote_write). For local-only setups, keep
+  # replicaCount=1 and rely on PVC durability.
+  replicaCount: 1
+
+  retention: 15d
+
+  # Global Prometheus config — these fields land in `prometheus.yml > global`
+  # via the chart's cm.yaml template. The bundled `scrapeConfigs` (apiserver,
+  # kubelet, cAdvisor, k8s service-discovery) are preserved untouched.
+  global:
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    evaluation_interval: 30s
+    external_labels:
+      cluster: example-cluster
+
+  persistentVolume:
+    enabled: true
+    storageClass: premium-rwo
+    accessModes:
+      - ReadWriteOnce
+    size: 50Gi
+    mountPath: /data
+
+  service:
+    type: ClusterIP
+    servicePort: 80
+
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+
+  nodeSelector:
+    tier: mgmt
+
+  # Use chart-native podAntiAffinity helper (renders matching `app.kubernetes.io/*`
+  # selectors automatically); set to "soft" or "hard" instead of hand-rolling.
+  podAntiAffinity: hard
+  podAntiAffinityTopologyKey: kubernetes.io/hostname
+
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+
+  # Pod-level: runAsNonRoot + fsGroup. Container-level lives below.
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    runAsGroup: 65534
+    fsGroup: 65534
+
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+
+  # Long-term storage off-ramp — uncomment one to ship blocks elsewhere.
+  # Native remote_write to Mimir / VictoriaMetrics keeps Prometheus hot-only.
+  remoteWrite: []
+  # remoteWrite:
+  #   - url: http://mimir-gateway.lgtm.svc.cluster.local/api/v1/push
+  #   - url: http://vmcluster-vmauth.vm.svc.cluster.local:8427/insert/0/prometheus/api/v1/write
+
+  # `web.enable-lifecycle` is already in the chart's default extraFlags, so the
+  # configmap-reload sidecar can hot-reload rules without a pod restart.
+  # Add `web.enable-remote-write-receiver` here if you want this server to
+  # accept remote_write pushes (e.g. from the OTel collector gateway).
+  # extraFlags:
+  #   - web.enable-lifecycle
+  #   - web.enable-remote-write-receiver
+
+## ServiceAccounts — IRSA / Workload Identity hooks live here.
+## Plain Prometheus only needs cluster-RBAC, not cloud IAM. Use these annotations
+## only if you bolt on Thanos/sidecar uploads or cross-cloud remote_write later.
+serviceAccounts:
+  server:
+    create: true
+    # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/prometheus-server-role
+    # GCP Workload Identity:   iam.gke.io/gcp-service-account: prometheus-server@PROJECT_ID.iam.gserviceaccount.com
+    annotations: {}
+
+## Drop alerting and recording rule groups into these maps. Empty by default —
+## the configmap-reload sidecar picks up edits without a pod restart.
+serverFiles:
+  alerting_rules.yml:
+    groups: []
+  recording_rules.yml:
+    groups: []

@@ -1,0 +1,63 @@
+## prometheus-redis-exporter — exposes Redis instrumentation on :9121.
+## Single deployment can monitor multiple Redis targets via the `check-keys` /
+## `check-single-keys` flags or by deploying one exporter per target.
+
+replicaCount: 1
+
+image:
+  registry: docker.io
+  repository: oliver006/redis_exporter
+  tag: ""  # inherits appVersion (v1.84.0 at chart 6.24.0)
+  pullPolicy: IfNotPresent
+
+# Redis connection. Override for your environment — defaults point at the
+# upstream example `redis://myredis:6379`.
+redisAddress: redis://redis.database.svc.cluster.local:6379
+
+# When auth is required, prefer an existing Secret over inline `redisPassword`.
+auth:
+  enabled: false
+  # secret:
+  #   name: redis-auth
+  #   key: password
+  # redisUser: ""
+  # redisPassword: ""
+
+# Service exposes :9121. Annotations make the prometheus chart's `kubernetes-pods`
+# job auto-discover it without a ServiceMonitor.
+service:
+  type: ClusterIP
+  port: 9121
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9121"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 200m
+    memory: 512Mi
+
+nodeSelector:
+  tier: mgmt
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  fsGroup: 65534
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+# Bundled ServiceMonitor / PrometheusRule off — annotation-driven scrape only.
+serviceMonitor:
+  enabled: false
+prometheusRule:
+  enabled: false

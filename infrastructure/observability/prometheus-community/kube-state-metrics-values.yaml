@@ -1,0 +1,50 @@
+## kube-state-metrics — cluster-object metrics (Deployments, Pods, etc) on :8080.
+## Installed standalone (not via the prometheus chart's bundled subchart) so it
+## can be scraped by multiple consumers — Prometheus, vmagent, Categraf, etc.
+
+image:
+  registry: registry.k8s.io
+  repository: kube-state-metrics/kube-state-metrics
+  tag: ""  # inherits appVersion (v2.19.0 at chart 7.4.0)
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+# Service annotations + container port are wired so the prometheus chart's default
+# `kubernetes-pods` scrape job picks this up via the `prometheus.io/scrape` flow.
+prometheusScrape: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
+
+nodeSelector:
+  tier: mgmt
+
+# Pod-level securityContext — chart default already non-root + RuntimeDefault seccomp.
+securityContext:
+  enabled: true
+  runAsGroup: 65534
+  runAsUser: 65534
+  fsGroup: 65534
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# Container-level — chart default already drops ALL caps + readOnlyRootFilesystem.
+containerSecurityContext:
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+# Bundled ServiceMonitor lives off — scrape config is annotation-driven
+# (prometheus.io/scrape) to stay Operator-free, matching the rest of this stack.
+prometheus:
+  monitor:
+    enabled: false

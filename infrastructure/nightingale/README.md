@@ -7,37 +7,9 @@ helm repo add prometheus-community https://prometheus-community.github.io/helm-c
 kubectl create namespace nightingale
 ```
 
-## kube-state-metrics
-
-```bash
-helm upgrade --install \
-  --namespace nightingale \
-  kube-state-metrics prometheus-community/kube-state-metrics
-```
-
-## prometheus-mysql-exporter
-
-```bash
-helm upgrade --install \
-  --namespace nightingale \
-  prometheus-mysql-exporter prometheus-community/prometheus-mysql-exporter \
-  --set mysql.host="mysql.database.svc.cluster.local" \
-  --set mysql.user="your_user" \
-  --set mysql.password="your_password"
-```
-
-## prometheus-redis-exporter
-
-```bash
-helm upgrade --install \
-  --namespace nightingale \
-  prometheus-redis-exporter prometheus-community/prometheus-redis-exporter \
-  --set resources.requests.cpu=100m \
-  --set resources.requests.memory=256Mi \
-  --set resources.limits.cpu=200m \
-  --set resources.limits.memory=512Mi \
-  --set nodeSelector.tier=mgmt \
-```
+> kube-state-metrics, prometheus-mysql-exporter, and prometheus-redis-exporter
+> moved to [`../observability/prometheus-community/`](../observability/prometheus-community/).
+> Install them from there before continuing — Categraf scrapes the same endpoints.
 
 ## Nightingale
 

@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: prometheus-server
+  namespace: prom
+spec:
+  gateways:
+    - istio-ingress/internal-gateway
+  hosts:
+    - prometheus.example.com
+  http:
+    - match:
+        - uri:
+            prefix: "/"
+      route:
+        - destination:
+            host: prometheus-server.prom.svc.cluster.local
+            port:
+              number: 80

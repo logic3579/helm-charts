@@ -63,6 +63,8 @@ affinity: {}
 # Loki gateway accepts /loki/api/v1/* (set X-Scope-OrgID for multi-tenant).
 # Mimir gateway exposes Prometheus-compatible API at /prometheus.
 # Tempo gateway exposes the query API at the root.
+# Prometheus (../prometheus-community/) is wired as a non-default sibling —
+# uncomment if the cluster also runs the plain prometheus stack alongside Mimir.
 datasources:
   datasources.yaml:
     apiVersion: 1
@@ -93,6 +95,15 @@ datasources:
           exemplarTraceIdDestinations:
             - name: trace_id
               datasourceUid: tempo
+      # - name: Prometheus
+      #   type: prometheus
+      #   access: proxy
+      #   uid: prometheus
+      #   url: http://prometheus-server.prom.svc.cluster.local
+      #   jsonData:
+      #     httpMethod: POST
+      #     prometheusType: Prometheus
+      #     timeInterval: 30s
       - name: Tempo
         type: tempo
         access: proxy

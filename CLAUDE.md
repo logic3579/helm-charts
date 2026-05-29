@@ -51,7 +51,8 @@ App charts delegate most templates to `common` via one-line `{{- include "common
 - **nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules.
 - **observability/grafana-lgtm/** — Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail collectors.
 - **observability/victoriametrics/** — VictoriaMetrics stack (VMCluster + VictoriaLogs + VictoriaTraces) with vmagent / vmalert / vlagent and bundled vmauth gateway.
-- **observability/opentelemetry/** — OTel Operator + agent/gateway Collector CRs + Instrumentation CR (auto-injects Java/Python SDKs); collection layer that exports to either grafana-lgtm or victoriametrics.
+- **observability/prometheus-community/** — `prometheus-community/prometheus` chart, **server-only** (alertmanager/KSM/node-exporter/pushgateway subcharts disabled). Minimal single-node alternative to Mimir / VMCluster; namespace `prom`.
+- **observability/opentelemetry/** — OTel Operator + agent/gateway Collector CRs + Instrumentation CR (auto-injects Java/Python SDKs); collection layer that exports to either grafana-lgtm or victoriametrics (or remote_write to the plain prometheus stack for metrics only).
 - **cert-manager/, database/, bigdata/, streaming/, mgmt/** — Various component manifests.
 
 ## Dual Deployment Model

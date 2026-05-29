@@ -136,6 +136,12 @@ spec:
       # prometheusremotewrite/victoriametrics:
       #   endpoint: http://vmcluster-vmauth.vm.svc.cluster.local:8427/insert/0/prometheus/api/v1/write
 
+      # === prometheus (plain server in `prom` namespace) — metrics-only alternative ===
+      # Requires `--web.enable-remote-write-receiver` on the Prometheus server (off
+      # by default in the chart's `extraArgs` — add it before pointing OTel here).
+      # prometheusremotewrite/prometheus:
+      #   endpoint: http://prometheus-server.prom.svc.cluster.local/api/v1/write
+
     extensions:
       health_check: {}
 
@@ -153,6 +159,7 @@ spec:
           processors: [memory_limiter, k8sattributes, batch]
           exporters: [prometheusremotewrite/mimir]
           # exporters: [prometheusremotewrite/victoriametrics]
+          # exporters: [prometheusremotewrite/prometheus]
         logs:
           receivers: [otlp]
           processors: [memory_limiter, k8sattributes, batch]

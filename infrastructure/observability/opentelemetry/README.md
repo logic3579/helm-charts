@@ -71,6 +71,8 @@ To switch to **VictoriaMetrics**:
 2. In each pipeline under `service.pipelines.{traces,metrics,logs}`, swap the `exporters:` line to the commented VM alternative (already present, just toggle which line is commented).
 3. `kubectl apply` the file — the operator will roll the gateway Deployment.
 
+To forward **metrics only** to the [prometheus-community/](../prometheus-community/) stack, uncomment the `prometheusremotewrite/prometheus` exporter and toggle the metrics pipeline. Prometheus needs `--web.enable-remote-write-receiver` enabled first (off by default in the chart). Traces and logs have no equivalent — keep them pointed at Tempo+Loki or VictoriaTraces+VictoriaLogs.
+
 ## Auto-instrumentation
 
 ```bash
