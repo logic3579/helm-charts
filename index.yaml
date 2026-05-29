@@ -3,7 +3,7 @@ entries:
   frontend-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-05-22T01:47:31.995292569Z"
+    created: "2026-05-29T09:30:25.158706256Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -29,7 +29,7 @@ entries:
   go-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-05-22T01:47:31.996016562Z"
+    created: "2026-05-29T09:30:25.159350231Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -61,7 +61,7 @@ entries:
           url: https://github.com/kafbat/kafka-ui
     apiVersion: v2
     appVersion: v0.7.2
-    created: "2026-05-22T01:47:31.996719595Z"
+    created: "2026-05-29T09:30:25.160094024Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -85,10 +85,50 @@ entries:
     urls:
     - https://logic3579.github.io/helm-charts/kafka-ui-0.1.1.tgz
     version: 0.1.1
+  nightingale:
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: Initial publish via logic-charts (sourced from flashcatcloud/n9e-helm)
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Upstream Project
+          url: https://github.com/flashcatcloud/n9e-helm
+        - name: Nightingale
+          url: https://github.com/ccfos/nightingale
+      catalog.cattle.io/release-name: flashcatcloud
+    apiVersion: v2
+    appVersion: 8.5.0
+    created: "2026-05-29T09:30:25.163351031Z"
+    description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
+    digest: 93bc97829888cf694970adc8c84f8286e082b982d6f7f60ca271d9f92eb3faf3
+    home: https://n9e.github.io
+    icon: https://raw.githubusercontent.com/flashcatcloud/n9e-helm/master/n9e-icon.png
+    keywords:
+    - nightingale
+    - n9e
+    - monitoring
+    - alerting
+    - metrics
+    - traces
+    - logs
+    maintainers:
+    - email: contact-us@flashcat.cloud
+      name: flashcatcloud
+    - name: Logic
+      url: https://github.com/logic3579/helm-charts
+    name: nightingale
+    sources:
+    - https://github.com/ccfos/nightingale
+    - https://github.com/flashcatcloud/n9e-helm
+    type: application
+    urls:
+    - https://logic3579.github.io/helm-charts/nightingale-0.3.0.tgz
+    version: 0.3.0
   python-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-05-22T01:47:31.997379774Z"
+    created: "2026-05-29T09:30:25.16402436Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -110,4 +150,4 @@ entries:
     urls:
     - https://logic3579.github.io/helm-charts/python-app-0.3.1.tgz
     version: 0.3.1
-generated: "2026-05-22T01:47:31.994398997Z"
+generated: "2026-05-29T09:30:25.15779127Z"

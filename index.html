@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-color-mode="light">
 
 <head>
   <meta charset="utf-8">
@@ -1034,17 +1034,109 @@
     }
 
     body {
-      padding: 2em;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+      font-size: 14px;
+      line-height: 1.5;
+      color: #24292e;
+      background-color: #fff;
+    }
+
+    .container-lg {
+      max-width: 1012px;
+      margin-right: auto;
+      margin-left: auto;
+      padding-left: 16px;
+      padding-right: 16px;
+      margin-top: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .markdown-body .badges img {
+      vertical-align: middle;
+      margin-right: 2px;
+    }
+
+    .footer {
+      border-top: 1px solid #eaecef;
+      margin-top: 3rem;
+      padding-top: 1rem;
+      text-align: right;
+      color: #6a737d;
+      font-size: 14px;
+    }
+
+    .footer a {
+      color: #0969da;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 
 <body>
-  <div class="markdown-body">
-    <p><a href="https://artifacthub.io/"><img src="https://img.shields.io/badge/Artifact%20Hub-repo-blue"
-          alt="Static Badge"></a></p>
+  <div class="container-lg markdown-body">
 
-    <h2>Available Charts</h2>
+    <h1><a href="https://logic3579.github.io/helm-charts/">helm-charts</a></h1>
+
+    <h1 id="logic-kubernetes-helm-charts">Logic's Kubernetes Helm Charts</h1>
+
+    <p class="badges">
+      <a href="https://artifacthub.io/packages/search?repo=logic-charts"><img
+          src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/logic-charts"
+          alt="Artifact Hub"></a>
+      <a href="https://opensource.org/licenses/Apache-2.0"><img
+          src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
+      <a href="https://github.com/logic3579/helm-charts/actions/workflows/release.yaml"><img
+          src="https://github.com/logic3579/helm-charts/actions/workflows/release.yaml/badge.svg?branch=main"
+          alt="Release Charts"></a>
+    </p>
+
+    <p>A collection of opinionated Helm charts for Kubernetes application deployment, built around a shared
+      <code>common</code> library chart and routed through Istio. Infrastructure reference configs
+      (ArgoCD, Istio, observability) live alongside the charts in this repository.</p>
+
+    <h2 id="usage">Usage</h2>
+
+    <p><a href="https://helm.sh">Helm</a> must be installed to use the charts.
+      Please refer to Helm's <a href="https://helm.sh/docs/">documentation</a> to get started.</p>
+
+    <p>Once Helm is set up properly, add the repository as follows:</p>
+
+    <pre><code>helm repo add logic-charts https://logic3579.github.io/helm-charts
+helm repo update
+</code></pre>
+
+    <p>You can then run <code>helm search repo logic-charts</code> to see the charts.</p>
+
+    <p>Install a chart:</p>
+
+    <pre><code># Go application
+helm install my-go-app logic-charts/go-app -f my-values.yaml
+
+# Python application
+helm install my-python-app logic-charts/python-app -f my-values.yaml
+
+# Frontend application (nginx-based SPA)
+helm install my-frontend-app logic-charts/frontend-app -f my-values.yaml
+
+# Kafka UI
+helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
+
+# Nightingale (n9e) monitoring system
+helm install my-nightingale logic-charts/nightingale -f my-values.yaml
+</code></pre>
+
+    <p>Uninstall a chart:</p>
+
+    <pre><code>helm uninstall my-go-app
+</code></pre>
+
+    <h2 id="available-charts">Available Charts</h2>
+
     <table>
       <thead>
         <tr>
@@ -1056,7 +1148,7 @@
       <tbody>
         <tr>
           <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/common">common</a></td>
-          <td>Shared library chart (labels, VirtualService, PDB)</td>
+          <td>Shared library chart (labels, VirtualService, PDB, HPA, ServiceAccount)</td>
           <td>&mdash;</td>
         </tr>
         <tr>
@@ -1066,18 +1158,33 @@
         </tr>
         <tr>
           <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/python-app">python-app</a></td>
-          <td>Generic Helm chart for Python application deployment (FastAPI, Django, Flask)</td>
+          <td>Generic Helm chart for Python applications (FastAPI, Django, Flask)</td>
           <td>8000</td>
         </tr>
         <tr>
           <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/frontend-app">frontend-app</a></td>
-          <td>Generic Helm chart for frontend application deployment (nginx-based SPA)</td>
+          <td>Frontend SPA served by nginx, read-only root filesystem</td>
+          <td>80</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/kafka-ui">kafka-ui</a></td>
+          <td>Kafka UI dashboard with multi-cluster, schema-registry, and ksqlDB support</td>
+          <td>8080</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/nightingale">nightingale</a></td>
+          <td>Nightingale (n9e) cloud-native monitoring system — repackaged from flashcatcloud/n9e-helm</td>
           <td>80</td>
         </tr>
       </tbody>
     </table>
 
-    <h2>Examples</h2>
+    <h2 id="infrastructure-references">Infrastructure References</h2>
+
+    <p>Cluster configuration examples (not published as charts) live under
+      <a href="https://github.com/logic3579/helm-charts/tree/main/infrastructure">infrastructure/</a>:
+    </p>
+
     <table>
       <thead>
         <tr>
@@ -1087,57 +1194,93 @@
       </thead>
       <tbody>
         <tr>
-          <td><a href="https://github.com/logic3579/helm-charts/tree/main/infrastructure">infrastructure/</a></td>
-          <td>Cluster infrastructure configs (ArgoCD, Istio, monitoring, etc.)</td>
+          <td><a href="https://github.com/logic3579/helm-charts/tree/main/infrastructure/argocd">argocd/</a></td>
+          <td>Multi-cluster GitOps with multi-source ApplicationSets and per-env overrides</td>
+        </tr>
+        <tr>
+          <td><a href="https://github.com/logic3579/helm-charts/tree/main/infrastructure/istio">istio/</a></td>
+          <td>Gateway and AuthorizationPolicy configs</td>
+        </tr>
+        <tr>
+          <td><a
+              href="https://github.com/logic3579/helm-charts/tree/main/infrastructure/observability/grafana-lgtm">observability/grafana-lgtm/</a>
+          </td>
+          <td>Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail</td>
+        </tr>
+        <tr>
+          <td><a
+              href="https://github.com/logic3579/helm-charts/tree/main/infrastructure/observability/victoriametrics">observability/victoriametrics/</a>
+          </td>
+          <td>VictoriaMetrics stack (VMCluster + VictoriaLogs + VictoriaTraces) with vmauth</td>
+        </tr>
+        <tr>
+          <td><a
+              href="https://github.com/logic3579/helm-charts/tree/main/infrastructure/observability/prometheus-community">observability/prometheus-community/</a>
+          </td>
+          <td>Minimal single-node Prometheus server (alternative to Mimir / VMCluster)</td>
+        </tr>
+        <tr>
+          <td><a
+              href="https://github.com/logic3579/helm-charts/tree/main/infrastructure/observability/opentelemetry">observability/opentelemetry/</a>
+          </td>
+          <td>OTel Operator + agent/gateway Collectors + auto-injecting Instrumentation CR</td>
+        </tr>
+        <tr>
+          <td><a
+              href="https://github.com/logic3579/helm-charts/tree/main/infrastructure/observability/nightingale">observability/nightingale/</a>
+          </td>
+          <td>Nightingale (n9e) + Categraf with curated dashboards and alert rules</td>
         </tr>
       </tbody>
     </table>
 
-    <h2>Usage</h2>
-    <h3>Install from Helm Repo</h3>
-    <p><a href="https://helm.sh">Helm</a> must be installed to use the charts. Please refer to
-      Helm's <a href="https://helm.sh/docs/">documentation</a> to get started.</p>
-    <p>Add the repository:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm repo add logic-charts https://logic3579.github.io/helm-charts
-</span></code></pre>
-    <p>If you had already added this repo earlier, run <code>helm repo update</code> to retrieve
-      the latest versions of the packages.
-      You can then run <code>helm search repo logic-charts</code> to see the charts.</p>
-    <p>Install a chart:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1"># Go application
-</span><span class="code-line line-number" line="2">helm install my-go-app logic-charts/go-app -f my-values.yaml
-</span><span class="code-line line-number" line="3">
-</span><span class="code-line line-number" line="4"># Python application
-</span><span class="code-line line-number" line="5">helm install my-python-app logic-charts/python-app -f my-values.yaml
-</span><span class="code-line line-number" line="6">
-</span><span class="code-line line-number" line="7"># Frontend application
-</span><span class="code-line line-number" line="8">helm install my-frontend-app logic-charts/frontend-app -f my-values.yaml
-</span></code></pre>
-    <p>Uninstall a chart:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1">helm uninstall my-go-app
-</span></code></pre>
-    <h3>Local Development</h3>
+    <h2 id="local-development">Local Development</h2>
+
     <p>Resolve the <code>common</code> library dependency before linting or templating:</p>
-    <pre><code class="code-highlight"><span class="code-line line-number" line="1"># Resolve common library dependency
-</span><span class="code-line line-number" line="2">helm dependency update charts/go-app
-</span><span class="code-line line-number" line="3">
-</span><span class="code-line line-number" line="4"># Lint (application charts only — common is a library and not linted standalone)
-</span><span class="code-line line-number" line="5">helm lint charts/go-app
-</span><span class="code-line line-number" line="6">
-</span><span class="code-line line-number" line="7"># Inspect rendered manifests
-</span><span class="code-line line-number" line="8">helm template my-release charts/go-app -f charts/go-app/values.yaml
-</span></code></pre>
-    <h3>Release a New Version</h3>
+
+    <pre><code># Resolve common library dependency
+helm dependency update charts/go-app
+
+# Lint (application charts only — common is a library and not linted standalone)
+helm lint charts/go-app
+
+# Inspect rendered manifests
+helm template my-release charts/go-app -f charts/go-app/values.yaml
+</code></pre>
+
+    <h2 id="releasing">Releasing a New Version</h2>
+
     <p>Publishing is fully automated via GitHub Actions. To release a new version:</p>
     <ol>
       <li>Modify chart source under <code>charts/</code></li>
       <li>Bump <code>version</code> in <code>Chart.yaml</code> — this is the release trigger</li>
       <li>Commit and push to <code>main</code></li>
     </ol>
-    <p>The workflow will automatically lint, package, create a GitHub Release with the <code>.tgz</code>
-      asset, update <code>index.yaml</code> on the <code>gh-pages</code> branch, and deploy to GitHub Pages.
-      Do <strong>not</strong> manually run <code>helm repo index</code> — the index is managed by
-      <a href="https://github.com/helm/chart-releaser-action">chart-releaser-action</a>.</p>
+    <p>The workflow lints, packages, and publishes the new <code>.tgz</code> to the
+      <code>gh-pages</code> branch alongside a regenerated <code>index.yaml</code>. The repo retains
+      the latest 3 versions per chart. No Git tags, no GitHub Releases.</p>
+
+    <h2 id="contributing">Contributing</h2>
+
+    <p>The source code for all charts and infrastructure references lives on GitHub:
+      <a href="https://github.com/logic3579/helm-charts">https://github.com/logic3579/helm-charts</a>.
+      Issues and pull requests are welcome.</p>
+
+    <h2 id="license">License</h2>
+
+    <p><a href="https://github.com/logic3579/helm-charts/blob/main/LICENSE">Apache 2.0 License</a>.</p>
+
+    <h2 id="build-status">Build Status</h2>
+
+    <p><a href="https://github.com/logic3579/helm-charts/actions/workflows/release.yaml"><img
+          src="https://github.com/logic3579/helm-charts/actions/workflows/release.yaml/badge.svg?branch=main"
+          alt="Release Charts"></a></p>
+
+    <div class="footer">
+      This site is open source.
+      <a href="https://github.com/logic3579/helm-charts/edit/main/index.html">Improve this page</a>.
+    </div>
+
   </div>
 </body>
 
