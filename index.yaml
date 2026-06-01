@@ -3,7 +3,7 @@ entries:
   frontend-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-05-29T09:55:59.616552037Z"
+    created: "2026-06-01T07:30:39.194643685Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -29,7 +29,7 @@ entries:
   go-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-05-29T09:55:59.617194283Z"
+    created: "2026-06-01T07:30:39.195333963Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -61,7 +61,7 @@ entries:
           url: https://github.com/kafbat/kafka-ui
     apiVersion: v2
     appVersion: v0.7.2
-    created: "2026-05-29T09:55:59.617908604Z"
+    created: "2026-06-01T07:30:39.196762831Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -99,7 +99,7 @@ entries:
       catalog.cattle.io/release-name: flashcatcloud
     apiVersion: v2
     appVersion: 8.5.0
-    created: "2026-05-29T09:55:59.620150671Z"
+    created: "2026-06-01T07:30:39.199485663Z"
     description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
     digest: 93bc97829888cf694970adc8c84f8286e082b982d6f7f60ca271d9f92eb3faf3
     home: https://n9e.github.io
@@ -128,7 +128,7 @@ entries:
   python-app:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-05-29T09:55:59.620841097Z"
+    created: "2026-06-01T07:30:39.200111121Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -150,4 +150,4 @@ entries:
     urls:
     - https://logic3579.github.io/helm-charts/python-app-0.3.1.tgz
     version: 0.3.1
-generated: "2026-05-29T09:55:59.615632915Z"
+generated: "2026-06-01T07:30:39.193704521Z"

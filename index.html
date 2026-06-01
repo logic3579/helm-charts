@@ -1114,25 +1114,28 @@ helm repo update
 
     <p>Install a chart:</p>
 
-    <pre><code># Go application
-helm install my-go-app logic-charts/go-app -f my-values.yaml
-
-# Python application
-helm install my-python-app logic-charts/python-app -f my-values.yaml
-
-# Frontend application (nginx-based SPA)
-helm install my-frontend-app logic-charts/frontend-app -f my-values.yaml
-
-# Kafka UI
+    <pre><code># Kafka UI
 helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
 
 # Nightingale (n9e) monitoring system
 helm install my-nightingale logic-charts/nightingale -f my-values.yaml
 </code></pre>
 
+    <p>Or install directly from an OCI registry — every release is mirrored to GHCR, Docker Hub, and Quay:</p>
+
+    <pre><code># GHCR (primary mirror)
+helm install my-kafka-ui oci://ghcr.io/logic3579/helm-charts/kafka-ui --version 0.1.1
+
+# Docker Hub
+helm install my-kafka-ui oci://registry-1.docker.io/logic3579/kafka-ui --version 0.1.1
+
+# Quay
+helm install my-kafka-ui oci://quay.io/logic3579/kafka-ui --version 0.1.1
+</code></pre>
+
     <p>Uninstall a chart:</p>
 
-    <pre><code>helm uninstall my-go-app
+    <pre><code>helm uninstall my-kafka-ui
 </code></pre>
 
     <h2 id="available-charts">Available Charts</h2>
@@ -1150,21 +1153,6 @@ helm install my-nightingale logic-charts/nightingale -f my-values.yaml
           <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/common">common</a></td>
           <td>Shared library chart (labels, VirtualService, PDB, HPA, ServiceAccount)</td>
           <td>&mdash;</td>
-        </tr>
-        <tr>
-          <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/go-app">go-app</a></td>
-          <td>Generic Helm chart for Go application deployment</td>
-          <td>8080</td>
-        </tr>
-        <tr>
-          <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/python-app">python-app</a></td>
-          <td>Generic Helm chart for Python applications (FastAPI, Django, Flask)</td>
-          <td>8000</td>
-        </tr>
-        <tr>
-          <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/frontend-app">frontend-app</a></td>
-          <td>Frontend SPA served by nginx, read-only root filesystem</td>
-          <td>80</td>
         </tr>
         <tr>
           <td><a href="https://github.com/logic3579/helm-charts/tree/main/charts/kafka-ui">kafka-ui</a></td>
@@ -1239,13 +1227,13 @@ helm install my-nightingale logic-charts/nightingale -f my-values.yaml
     <p>Resolve the <code>common</code> library dependency before linting or templating:</p>
 
     <pre><code># Resolve common library dependency
-helm dependency update charts/go-app
+helm dependency update charts/kafka-ui
 
 # Lint (application charts only — common is a library and not linted standalone)
-helm lint charts/go-app
+helm lint charts/kafka-ui
 
 # Inspect rendered manifests
-helm template my-release charts/go-app -f charts/go-app/values.yaml
+helm template my-release charts/kafka-ui -f charts/kafka-ui/values.yaml
 </code></pre>
 
     <h2 id="releasing">Releasing a New Version</h2>
