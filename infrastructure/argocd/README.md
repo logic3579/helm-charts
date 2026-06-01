@@ -52,17 +52,19 @@ infrastructure/argocd/
 ├── argocd-values.yaml              # Helm values for `helm install argocd`
 ├── argocd-virtualservice.yaml      # Istio VS exposing the ArgoCD UI
 ├── applicationsets/
-│   ├── uat-apps.yaml               # UAT ApplicationSet (auto-sync)
-│   └── prod-apps.yaml              # Prod ApplicationSet (manual sync)
+│   ├── mgmt-apps.yaml              # Mgmt ApplicationSet (auto-sync, shared infra — explicit allow-list)
+│   ├── uat-apps.yaml               # UAT ApplicationSet (auto-sync, auto-discover)
+│   └── prod-apps.yaml              # Prod ApplicationSet (manual sync, auto-discover)
 ├── values/                         # Per-env chart overrides (multi-source $values)
+│   ├── mgmt/{nightingale}.yaml
 │   ├── uat/{kafka-ui}.yaml
 │   └── prod/{kafka-ui}.yaml
-├── clusters/                       # Remote cluster registration secrets (edit placeholders in place)
+├── clusters/                       # Cluster registration secrets (edit placeholders in place)
 ├── projects/                       # AppProjects per env (edit placeholders in place)
 └── notifications/                  # Slack notification ConfigMap + Secret template
 ```
 
-Both ApplicationSets use a **multi-source** layout:
+All three ApplicationSets use a **multi-source** layout:
 
 - Source 1 renders `charts/<app>` with two `valueFiles`: the chart's own
   `values.yaml` (defaults) followed by `$values/infrastructure/argocd/values/<env>/<app>.yaml`
@@ -71,9 +73,22 @@ Both ApplicationSets use a **multi-source** layout:
 - Source 2 is a `ref: values` pointer to the same repo — it is *not* rendered,
   it only provides the `$values` prefix used by source 1.
 
-The `charts/common` directory is excluded from the directory generator because
-it's a Helm *library chart* (`type: library`) — it has no installable resources
-and would fail to sync as a standalone Application.
+The `charts/common` directory is excluded from the UAT/Prod directory generator
+because it's a Helm *library chart* (`type: library`) — it has no installable
+resources and would fail to sync as a standalone Application. The mgmt
+ApplicationSet uses an **explicit allow-list** (not a wildcard) — only the
+shared infra charts listed under its `directories:` block are deployed.
+
+**Where each chart lands:**
+
+| Chart            | Mgmt | UAT | Prod | Reason                                                                                  |
+| ---------------- | :--: | :-: | :--: | --------------------------------------------------------------------------------------- |
+| `kafka-ui`       |      | yes | yes  | App workload — UAT for staging, Prod for production.                                    |
+| `nightingale`    | yes  |     |      | Shared monitoring stack — deployed once on the mgmt cluster, observes all environments. |
+| `common`         |      |     |      | Library chart (`type: library`) — never deployed as a standalone Application.           |
+
+`nightingale` is explicitly excluded from the UAT/Prod ApplicationSets
+(`exclude: true`) so it does not get auto-discovered there.
 
 ---
 
@@ -220,6 +235,9 @@ Fill in the placeholders in the cluster secrets and apply:
 #   <PROD_CLUSTER_CA_CERT_BASE64> - Prod cluster CA certificate (base64)
 $EDITOR clusters/uat-cluster-secret.yaml clusters/prod-cluster-secret.yaml
 
+# The mgmt-cluster-secret has no placeholders — it points at the in-cluster
+# Kubernetes API (`https://kubernetes.default.svc`) and uses the controller's
+# own ServiceAccount token. Apply it as-is.
 kubectl apply -f clusters/
 ```
 
@@ -231,7 +249,7 @@ Fill in the placeholders in the AppProject definitions and apply:
 # Edit the files to replace placeholders:
 #   <YOUR_ORG>  - Your GitHub organization
 #   <YOUR_REPO> - Your repository name
-$EDITOR projects/uat-project.yaml projects/prod-project.yaml
+$EDITOR projects/mgmt-project.yaml projects/uat-project.yaml projects/prod-project.yaml
 
 kubectl apply -f projects/
 ```
@@ -253,10 +271,14 @@ The ApplicationSets auto-discover every chart under `charts/` (excluding the
 #   <YOUR_ORG>         - Your GitHub organization
 #   <YOUR_REPO>        - Your repository name
 #   <TARGET_NAMESPACE> - Kubernetes namespace for apps (e.g., default)
-$EDITOR applicationsets/uat-apps.yaml applicationsets/prod-apps.yaml
+#
+# Note: applicationsets/mgmt-apps.yaml has NO <TARGET_NAMESPACE> placeholder —
+# each shared component lands in its own namespace named after the chart
+# (e.g. `nightingale` lands in namespace `nightingale`).
+$EDITOR applicationsets/mgmt-apps.yaml applicationsets/uat-apps.yaml applicationsets/prod-apps.yaml
 
-# Edit env-specific overrides (image tag, replicas, hosts, …)
-$EDITOR values/uat/*.yaml values/prod/*.yaml
+# Edit env-specific overrides (image tag, replicas, hosts, secrets, …)
+$EDITOR values/mgmt/*.yaml values/uat/*.yaml values/prod/*.yaml
 
 kubectl apply -f applicationsets/
 ```
@@ -343,9 +365,14 @@ top of the global layer:
 
 | Project        | Role        | Group              | Adds                                           |
 | -------------- | ----------- | ------------------ | ---------------------------------------------- |
+| `example-mgmt` | —           | —                  | No project-scoped roles (ops-only)             |
 | `example-uat`  | `developer` | `developer-team`   | `applications, sync` on `example-uat/*` apps   |
 | `example-prod` | —           | —                  | No project-scoped roles (see below)            |
 
+> `example-mgmt` deliberately has no project-scoped roles: it holds shared
+> infrastructure components (e.g. nightingale) that only devops-team should
+> manage. devops-team is already global admin via the layer above.
+>
 > `example-prod` deliberately has no project-scoped roles: devops-team is
 > already global admin, developer-team is already global readonly, and Prod
 > sync is intentionally not delegated to developers — it stays a devops-team
@@ -512,20 +539,24 @@ kubectl delete namespace argocd
 
 ## Related Files
 
-| Path                                        | Description                                          |
-| ------------------------------------------- | ---------------------------------------------------- |
-| `argocd-values.yaml`                        | Helm values for ArgoCD installation                  |
-| `argocd-virtualservice.yaml`                | Istio VirtualService exposing the ArgoCD UI          |
-| `clusters/uat-cluster-secret.yaml`          | UAT cluster connection secret (fill in placeholders) |
-| `clusters/prod-cluster-secret.yaml`         | Prod cluster connection secret (fill in placeholders)|
-| `projects/uat-project.yaml`                 | UAT AppProject definition (fill in placeholders)     |
-| `projects/prod-project.yaml`                | Prod AppProject definition (fill in placeholders)    |
-| `applicationsets/uat-apps.yaml`             | UAT ApplicationSet (auto-sync, multi-source)         |
-| `applicationsets/prod-apps.yaml`            | Prod ApplicationSet (manual sync, multi-source)      |
-| `values/uat/*.yaml`                         | Per-chart UAT overrides (loaded via `$values` ref)   |
-| `values/prod/*.yaml`                        | Per-chart Prod overrides (loaded via `$values` ref)  |
-| `notifications/configmap.yaml`              | Slack notification triggers / templates              |
-| `notifications/secret.yaml.template`        | Slack webhook secret template                        |
+| Path                                        | Description                                              |
+| ------------------------------------------- | -------------------------------------------------------- |
+| `argocd-values.yaml`                        | Helm values for ArgoCD installation                      |
+| `argocd-virtualservice.yaml`                | Istio VirtualService exposing the ArgoCD UI              |
+| `clusters/mgmt-cluster-secret.yaml`         | Mgmt cluster registration (in-cluster, no placeholders)  |
+| `clusters/uat-cluster-secret.yaml`          | UAT cluster connection secret (fill in placeholders)     |
+| `clusters/prod-cluster-secret.yaml`         | Prod cluster connection secret (fill in placeholders)    |
+| `projects/mgmt-project.yaml`                | Mgmt AppProject definition (fill in placeholders)        |
+| `projects/uat-project.yaml`                 | UAT AppProject definition (fill in placeholders)         |
+| `projects/prod-project.yaml`                | Prod AppProject definition (fill in placeholders)        |
+| `applicationsets/mgmt-apps.yaml`            | Mgmt ApplicationSet (auto-sync, explicit allow-list)     |
+| `applicationsets/uat-apps.yaml`             | UAT ApplicationSet (auto-sync, multi-source)             |
+| `applicationsets/prod-apps.yaml`            | Prod ApplicationSet (manual sync, multi-source)          |
+| `values/mgmt/*.yaml`                        | Per-chart Mgmt overrides (loaded via `$values` ref)      |
+| `values/uat/*.yaml`                         | Per-chart UAT overrides (loaded via `$values` ref)       |
+| `values/prod/*.yaml`                        | Per-chart Prod overrides (loaded via `$values` ref)      |
+| `notifications/configmap.yaml`              | Slack notification triggers / templates                  |
+| `notifications/secret.yaml.template`        | Slack webhook secret template                            |
 
 ### Placeholders Reference
 

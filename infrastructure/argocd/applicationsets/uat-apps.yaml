@@ -37,6 +37,11 @@ spec:
           # deploy it as a standalone Application.
           - path: charts/common
             exclude: true
+          # Exclude `nightingale` — it's a shared mgmt-tier component deployed
+          # once to the mgmt cluster (see applicationsets/mgmt-apps.yaml), not
+          # per-environment.
+          - path: charts/nightingale
+            exclude: true
 
   # Application template
   template:

@@ -1,0 +1,57 @@
+# ArgoCD AppProject for Mgmt Environment
+# This project manages shared infrastructure components deployed to the Mgmt
+# GKE cluster (the same cluster ArgoCD itself runs on). Examples: Nightingale,
+# other cross-environment observability / management tooling.
+#
+# Usage:
+#   # Edit the file to replace placeholders with actual values
+#   kubectl apply -f mgmt-project.yaml
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: example-mgmt
+  namespace: argocd
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+spec:
+  description: "Mgmt Environment - Shared infra components, auto-sync enabled"
+
+  # Source repositories - replace with your repo URL
+  sourceRepos:
+    - "https://github.com/<YOUR_ORG>/<YOUR_REPO>.git"
+
+  # Destination cluster - use cluster name from cluster secret
+  destinations:
+    - name: mgmt-cluster
+      namespace: "*"
+
+  # Cluster resources allowed to be deployed
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  # Namespace resources allowed
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  # No project-scoped roles — mgmt is ops-only territory:
+  #   - devops-team is bound to the global role:admin in argocd-values.yaml,
+  #     which already grants superuser on everything (including this project).
+  #   - developer-team has no business syncing shared infra components, so no
+  #     project-scoped `developer` role is granted here (unlike example-uat).
+
+  # Orphaned resources monitoring
+  orphanedResources:
+    warn: true
+    ignore:
+      # Istio auto-generated certificates
+      - kind: ConfigMap
+        name: "istio-ca-*"
+      # Manually managed pull secret
+      - kind: Secret
+        name: "github-registry-secret"
+      # Manually managed ServiceAccount
+      - kind: ServiceAccount
+        name: "app"
