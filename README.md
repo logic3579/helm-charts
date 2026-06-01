@@ -31,6 +31,25 @@ helm search repo logic-charts
 helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
 ```
 
+## Install via OCI
+
+Each chart is also mirrored to three OCI registries on every release. No
+`helm repo add` needed — pull directly by URL:
+
+```bash
+# GHCR (primary mirror; same namespace as the Pages repo)
+helm install my-kafka-ui oci://ghcr.io/logic3579/helm-charts/kafka-ui --version 0.1.1 -f my-values.yaml
+
+# Docker Hub
+helm install my-kafka-ui oci://registry-1.docker.io/logic3579/kafka-ui --version 0.1.1 -f my-values.yaml
+
+# Quay
+helm install my-kafka-ui oci://quay.io/logic3579/kafka-ui --version 0.1.1 -f my-values.yaml
+```
+
+The Pages-based Helm repo remains the source of truth; OCI registries are
+downstream mirrors with the same `.tgz` content.
+
 ## Deploy from Local Chart
 
 ```bash

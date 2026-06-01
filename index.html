@@ -1121,6 +1121,18 @@ helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
 helm install my-nightingale logic-charts/nightingale -f my-values.yaml
 </code></pre>
 
+    <p>Or install directly from an OCI registry — every release is mirrored to GHCR, Docker Hub, and Quay:</p>
+
+    <pre><code># GHCR (primary mirror)
+helm install my-kafka-ui oci://ghcr.io/logic3579/helm-charts/kafka-ui --version 0.1.1
+
+# Docker Hub
+helm install my-kafka-ui oci://registry-1.docker.io/logic3579/kafka-ui --version 0.1.1
+
+# Quay
+helm install my-kafka-ui oci://quay.io/logic3579/kafka-ui --version 0.1.1
+</code></pre>
+
     <p>Uninstall a chart:</p>
 
     <pre><code>helm uninstall my-kafka-ui

@@ -70,7 +70,17 @@ To publish a new chart version:
 2. Bump `version` in `Chart.yaml`.
 3. `git commit && git push origin main`.
 
-Workflow (ubuntu-24.04): checkout main → `helm dependency update` → `helm lint` (app charts only) → `helm package` into `.packages/` → `git worktree add gh-pages` → copy new `.tgz` into the worktree (preserve already-published versions via existence check) → prune to the latest 3 versions per chart (strict `^<name>-[0-9]` regex match, `sort -V`) → `helm repo index gh-pages --url https://logic3579.github.io/helm-charts` → sync `index.html` + `artifacthub-repo.yml` from `main` → commit and push to `gh-pages`.
+Workflow (ubuntu-24.04): checkout main → `helm dependency update` → `helm lint` (app charts only) → `helm package` into `.packages/` → **fan-out OCI push to GHCR / Docker Hub / Quay** (soft-fail, see below) → `git worktree add gh-pages` → copy new `.tgz` into the worktree (preserve already-published versions via existence check) → prune to the latest 3 versions per chart (strict `^<name>-[0-9]` regex match, `sort -V`) → `helm repo index gh-pages --url https://logic3579.github.io/helm-charts` → sync `index.html` + `artifacthub-repo.yml` from `main` → commit and push to `gh-pages`.
+
+**OCI fan-out**: after `helm package`, the same `.packages/*.tgz` artifacts are also pushed to three OCI registries:
+
+| Registry | `helm push` target | Resulting OCI path | Auth |
+| --- | --- | --- | --- |
+| GHCR | `oci://ghcr.io/${{ github.repository_owner }}/helm-charts` | `ghcr.io/<owner>/helm-charts/<chart>:<version>` | built-in `GITHUB_TOKEN` + `permissions: packages: write` |
+| Docker Hub | `oci://registry-1.docker.io/${{ github.repository_owner }}` | `docker.io/<owner>/<chart>:<version>` | username = `github.repository_owner`; password from `DOCKERHUB_TOKEN` secret |
+| Quay | `oci://quay.io/${{ github.repository_owner }}` | `quay.io/<owner>/<chart>:<version>` | username = `github.repository_owner`; password from `QUAY_TOKEN` secret |
+
+All three registries assume the same username as the GitHub repo owner (e.g. `logic3579`) — only the per-registry **token** is configured as a repository secret. All three push steps are `continue-on-error: true` — OCI is treated as a downstream mirror, **gh-pages remains the source of truth** and a registry outage doesn't block the static repo publish. Docker Hub / Quay steps are gated on `if: ${{ secrets.X_TOKEN != '' }}` so they self-skip when credentials aren't configured. Same-version re-push is intentionally a no-op (let the registry handle digest-based dedup); we don't probe per-registry tag lists. There is **no retention policy on OCI** (gh-pages still prunes to 3 versions); add `gh api` cleanup later if it ever matters. Artifact Hub does not auto-discover OCI charts via the existing `artifacthub-repo.yml` — register OCI repos as separate Artifact Hub entries via the UI if desired (manual, not automated).
 
 **No Git tags, no GitHub Releases.** Pages source is the `gh-pages` branch root (Settings → Pages → Build and deployment → Source: *Deploy from a branch* → `gh-pages` / `/`); the workflow does NOT use `actions/deploy-pages`.
 
@@ -98,6 +108,7 @@ Branches: **main** (chart source, workflow, docs) — **gh-pages** (auto-managed
 - **Linting**: use the loop above (or the CI pattern). Never `helm lint charts/*` — it includes the library chart and produces misleading errors.
 - **YAML extension**: always `.yaml`, never `.yml`. The repo was normalized in a prior refactor.
 - **Artifact Hub metadata**: when publishing a new chart, add `annotations.artifacthub.io/license` and `annotations.artifacthub.io/links` to `Chart.yaml` (kafka-ui is the reference).
+- **OCI consumption pattern**: alongside the `helm repo add` path, charts are pullable directly via `oci://ghcr.io/logic3579/helm-charts/<chart>`, `oci://registry-1.docker.io/logic3579/<chart>`, or `oci://quay.io/logic3579/<chart>` (note: GHCR has the extra `helm-charts/` infix; Docker Hub and Quay are flat because they don't accept nested namespaces).
 
 ## Infrastructure Conventions
 

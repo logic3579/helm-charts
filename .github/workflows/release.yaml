@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+      packages: write
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -57,6 +58,47 @@ jobs:
               helm package "$chart" -d .packages
             fi
           done
+
+      - name: Push to GHCR (oci://ghcr.io/${{ github.repository_owner }}/helm-charts)
+        continue-on-error: true
+        env:
+          GHCR_USER: ${{ github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GHCR_TOKEN" | helm registry login ghcr.io -u "$GHCR_USER" --password-stdin
+          for pkg in .packages/*.tgz; do
+            [ -f "$pkg" ] || continue
+            helm push "$pkg" "oci://ghcr.io/${GHCR_USER}/helm-charts"
+          done
+          helm registry logout ghcr.io || true
+
+      - name: Push to Docker Hub (oci://registry-1.docker.io/${{ github.repository_owner }})
+        if: ${{ secrets.DOCKERHUB_TOKEN != '' }}
+        continue-on-error: true
+        env:
+          DOCKERHUB_USER: ${{ github.repository_owner }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          echo "$DOCKERHUB_TOKEN" | helm registry login registry-1.docker.io -u "$DOCKERHUB_USER" --password-stdin
+          for pkg in .packages/*.tgz; do
+            [ -f "$pkg" ] || continue
+            helm push "$pkg" "oci://registry-1.docker.io/${DOCKERHUB_USER}"
+          done
+          helm registry logout registry-1.docker.io || true
+
+      - name: Push to Quay (oci://quay.io/${{ github.repository_owner }})
+        if: ${{ secrets.QUAY_TOKEN != '' }}
+        continue-on-error: true
+        env:
+          QUAY_USER: ${{ github.repository_owner }}
+          QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
+        run: |
+          echo "$QUAY_TOKEN" | helm registry login quay.io -u "$QUAY_USER" --password-stdin
+          for pkg in .packages/*.tgz; do
+            [ -f "$pkg" ] || continue
+            helm push "$pkg" "oci://quay.io/${QUAY_USER}"
+          done
+          helm registry logout quay.io || true
 
       - name: Checkout gh-pages worktree
         run: |
