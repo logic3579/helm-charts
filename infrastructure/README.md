@@ -73,8 +73,8 @@ helm pull bitnami/kafka --version=32.4.3 --untar --destination ./charts
 
 ```bash
 # Package a local chart (name + version come from Chart.yaml)
-helm package ./charts/go-app
-helm package ./charts/go-app --destination ./.packages
+helm package ./charts/kafka-ui
+helm package ./charts/kafka-ui --destination ./.packages
 ```
 
 **Push to an OCI registry**:
@@ -84,7 +84,7 @@ helm package ./charts/go-app --destination ./.packages
 helm registry login ghcr.io -u <user> --password-stdin <<< "$GHCR_TOKEN"
 
 # Push the archive — the OCI path is the *namespace*, not the chart name
-helm push go-app-0.1.0.tgz oci://ghcr.io/<org>/charts
+helm push kafka-ui-0.1.0.tgz oci://ghcr.io/<org>/charts
 ```
 
 **Publish to a traditional Helm repo**: there is no `helm push` for HTTP repos. Copy the `.tgz` onto a static host (S3, GCS, GitHub Pages, ChartMuseum) and regenerate `index.yaml`:

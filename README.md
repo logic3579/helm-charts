@@ -12,9 +12,6 @@ This repo provides two things:
 | Chart | Description | Default Port |
 |-------|-------------|-------------|
 | [common](./charts/common) | Shared library chart (labels, VirtualService, PDB) — embedded into app charts, not published to the registry | — |
-| [go-app](./charts/go-app) | Generic chart for Go application deployment | 8080 |
-| [python-app](./charts/python-app) | Generic chart for Python application deployment (FastAPI, Django, Flask) | 8000 |
-| [frontend-app](./charts/frontend-app) | Generic chart for frontend application deployment (nginx-based SPA) | 80 |
 | [kafka-ui](./charts/kafka-ui) | Web UI for monitoring and managing Apache Kafka clusters | 8080 |
 | [nightingale](./charts/nightingale) | Nightingale (n9e) cloud-native monitoring system — repackaged from [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) | 80 |
 
@@ -31,20 +28,20 @@ helm repo update
 helm search repo logic-charts
 
 # Install a chart
-helm install my-go-app logic-charts/go-app -f my-values.yaml
+helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
 ```
 
 ## Deploy from Local Chart
 
 ```bash
 # Update dependencies (required for charts with common library)
-helm dependency update charts/go-app
+helm dependency update charts/kafka-ui
 
 # Template and inspect rendered manifests
-helm template my-release charts/go-app -f charts/go-app/values.yaml
+helm template my-release charts/kafka-ui -f charts/kafka-ui/values.yaml
 
 # Install from local chart
-helm install my-release charts/go-app -f my-values.yaml
+helm install my-release charts/kafka-ui -f my-values.yaml
 ```
 
 ## Release a New Version
@@ -57,11 +54,11 @@ To release a new version of the charts:
 
 ```bash
 # Example: bump version to 0.3.0
-# Edit charts/go-app/Chart.yaml, charts/python-app/Chart.yaml, charts/frontend-app/Chart.yaml
+# Edit charts/kafka-ui/Chart.yaml
 # Set version: 0.3.0
 
 git add charts/
-git commit -m "release: bump charts to v0.3.0"
+git commit -m "release: bump kafka-ui to v0.3.0"
 git push origin main
 ```
 
@@ -73,22 +70,20 @@ The GitHub Actions workflow will automatically:
 
 ## Chart Features
 
-All `common`-based application charts (`go-app`, `python-app`, `frontend-app`, `kafka-ui`) support:
+`common`-based application charts (currently `kafka-ui`) support:
 
 | Feature | Key | Notes |
 |---------|-----|-------|
 | Liveness / Readiness probe | `livenessProbe`, `readinessProbe` | Configurable path, timing, thresholds |
-| Startup probe | `startupProbe` | Optional; python-app enables it by default (30×5s window) |
+| Startup probe | `startupProbe` | Optional |
 | Horizontal Pod Autoscaler | `autoscaling.*` | CPU and memory targets |
 | Pod Disruption Budget | `podDisruptionBudget.*` | `minAvailable` or `maxUnavailable` (mutually exclusive) |
 | Istio VirtualService | `virtualservice.*` | CORS origins support `exact`/`prefix`/`regex` match types |
 | Extra volumes | `volumes`, `volumeMounts` | Inject arbitrary volumes (e.g. tmpfs for `/tmp`) |
 | ConfigMap / Secret | `configMap.*`, `secret.*` | Secret values are base64-encoded at render time — use ESO for production |
 
-`frontend-app` additionally mounts `emptyDir` volumes for nginx writable directories (`/var/cache/nginx`, `/var/run`, `/tmp`) and runs with `readOnlyRootFilesystem: true`.
-
 `nightingale` is a vendored upstream chart and does NOT share this template surface — its values schema follows [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) directly. Companion infra manifests (Categraf, Istio VirtualService, dashboards, alert rules) live under [`infrastructure/observability/nightingale/`](./infrastructure/observability/nightingale).
 
 ## ArgoCD Integration
 
-The `charts/` directory can also be used directly with ArgoCD. Point ArgoCD to a chart path (e.g., `charts/go-app`) and provide deployment-specific values in the Application's `values` field.
+The `charts/` directory can also be used directly with ArgoCD. Point ArgoCD to a chart path (e.g., `charts/kafka-ui`) and provide deployment-specific values in the Application's `values` field.

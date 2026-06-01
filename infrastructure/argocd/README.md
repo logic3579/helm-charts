@@ -55,8 +55,8 @@ infrastructure/argocd/
 │   ├── uat-apps.yaml               # UAT ApplicationSet (auto-sync)
 │   └── prod-apps.yaml              # Prod ApplicationSet (manual sync)
 ├── values/                         # Per-env chart overrides (multi-source $values)
-│   ├── uat/{go-app,python-app,frontend-app,kafka-ui}.yaml
-│   └── prod/{go-app,python-app,frontend-app,kafka-ui}.yaml
+│   ├── uat/{kafka-ui}.yaml
+│   └── prod/{kafka-ui}.yaml
 ├── clusters/                       # Remote cluster registration secrets (edit placeholders in place)
 ├── projects/                       # AppProjects per env (edit placeholders in place)
 └── notifications/                  # Slack notification ConfigMap + Secret template

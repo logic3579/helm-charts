@@ -132,8 +132,8 @@ data:
       - url: http://nightingale-center.nightingale.svc/prometheus/v1/write?ignore_ident=true
 
     scrape_configs:
-      # python-app — all pods via kubernetes endpoints SD
-      - job_name: python-app
+      # Example: scrape all pods of a Service named `my-app` in namespace `app` via kubernetes endpoints SD
+      - job_name: my-app
         metrics_path: /metrics
         kubernetes_sd_configs:
           - role: endpoints
@@ -141,7 +141,7 @@ data:
               names: [app]
         relabel_configs:
           - source_labels: [__meta_kubernetes_endpointslice_label_kubernetes_io_service_name]
-            regex: python-app
+            regex: my-app
             action: keep
           - source_labels: [__meta_kubernetes_endpointslice_port_name]
             regex: http
@@ -151,7 +151,7 @@ data:
           - source_labels: [__address__]
             target_label: instance
           - target_label: service
-            replacement: python-app
+            replacement: my-app
 ---
 apiVersion: apps/v1
 kind: Deployment

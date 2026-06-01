@@ -79,5 +79,5 @@ After Nightingale comes up, import the curated JSON via the UI:
 
 - Namespace is `nightingale` (chart default and where Categraf manifests target).
 - The chart is vendored from upstream and does NOT use the `common` library chart — `values.yaml` schema follows
-  upstream `flashcatcloud/n9e-helm`, not the conventions of go-app / python-app / kafka-ui.
+  upstream `flashcatcloud/n9e-helm`, not the conventions of `common`-based app charts (e.g. kafka-ui).
 - For an external-only deployment (no in-cluster scrape), skip the Categraf manifests entirely.
