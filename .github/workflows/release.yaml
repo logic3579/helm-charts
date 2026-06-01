@@ -121,6 +121,28 @@ jobs:
             fi
           done
 
+      - name: Remove artifacts for deleted charts
+        run: |
+          # Build set of chart names currently present under charts/ (skip library).
+          declare -A current
+          for chart_dir in charts/*/; do
+            [ -f "$chart_dir/Chart.yaml" ] || continue
+            grep -q '^type: library' "$chart_dir/Chart.yaml" && continue
+            name=$(awk '/^name:/ {print $2; exit}' "$chart_dir/Chart.yaml")
+            current["$name"]=1
+          done
+          # Any gh-pages .tgz whose embedded chart name is no longer in the set
+          # is an orphan from a deleted chart — remove it so index.yaml regen
+          # drops the entry and Artifact Hub catches up on its next scan.
+          for tgz in gh-pages/*.tgz; do
+            [ -e "$tgz" ] || continue
+            tgz_name=$(helm show chart "$tgz" | awk '/^name:/ {print $2; exit}')
+            if [ -z "${current[$tgz_name]:-}" ]; then
+              rm -f "$tgz"
+              echo "removed orphan: $(basename "$tgz")"
+            fi
+          done
+
       - name: Prune to latest ${RETENTION} versions per chart
         run: |
           for chart_dir in charts/*/; do

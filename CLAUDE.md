@@ -70,7 +70,7 @@ To publish a new chart version:
 2. Bump `version` in `Chart.yaml`.
 3. `git commit && git push origin main`.
 
-Workflow (ubuntu-24.04): checkout main → `helm dependency update` → `helm lint` (app charts only) → `helm package` into `.packages/` → **fan-out OCI push to GHCR / Docker Hub / Quay** (soft-fail, see below) → `git worktree add gh-pages` → copy new `.tgz` into the worktree (preserve already-published versions via existence check) → prune to the latest 3 versions per chart (strict `^<name>-[0-9]` regex match, `sort -V`) → `helm repo index gh-pages --url https://logic3579.github.io/helm-charts` → sync `index.html` + `artifacthub-repo.yml` from `main` → commit and push to `gh-pages`.
+Workflow (ubuntu-24.04): checkout main → `helm dependency update` → `helm lint` (app charts only) → `helm package` into `.packages/` → **fan-out OCI push to GHCR / Docker Hub / Quay** (soft-fail, see below) → `git worktree add gh-pages` → copy new `.tgz` into the worktree (preserve already-published versions via existence check) → **remove orphan `.tgz` whose chart name no longer exists under `charts/`** (chart name read via `helm show chart`) → prune to the latest 3 versions per chart (strict `^<name>-[0-9]` regex match, `sort -V`) → `helm repo index gh-pages --url https://logic3579.github.io/helm-charts` → sync `index.html` + `artifacthub-repo.yml` from `main` → commit and push to `gh-pages`.
 
 **OCI fan-out**: after `helm package`, the same `.packages/*.tgz` artifacts are also pushed to three OCI registries:
 
@@ -87,6 +87,7 @@ All three registries assume the same username as the GitHub repo owner (e.g. `lo
 **Important**:
 - `index.yaml` is regenerated from scratch by `helm repo index` on every run, based on the `.tgz` files currently in the `gh-pages` worktree. Do NOT hand-edit `index.yaml`.
 - Retention: 3 versions per chart. Older `.tgz` files are deleted from `gh-pages` automatically. To keep more, change `RETENTION` in the workflow `env` block.
+- Orphan cleanup: when a chart is removed from `charts/`, its `.tgz` files on `gh-pages` are automatically deleted on the next workflow run (`Remove artifacts for deleted charts` step). Artifact Hub re-reads `index.yaml` on its own polling cycle and drops the entry within ~30-60min; OCI registries keep historical tags forever (no auto-cleanup, intentional).
 - `artifacthub-repo.yml` must remain reachable at `https://logic3579.github.io/helm-charts/artifacthub-repo.yml` for ownership verification — the workflow copies it onto `gh-pages` on every run.
 - The prune step uses a strict `^<chart-name>-[0-9]` regex (not a raw glob) so that, e.g., a future `kafka` chart wouldn't accidentally match `kafka-ui-*.tgz`.
 
