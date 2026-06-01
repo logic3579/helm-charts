@@ -29,7 +29,7 @@ jobs:
       QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
     steps:
       - name: Checkout main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configure Git
         run: |
@@ -37,7 +37,7 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Install Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
 
       - name: Update chart dependencies
         run: |
