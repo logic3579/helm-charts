@@ -22,6 +22,11 @@ jobs:
     permissions:
       contents: write
       packages: write
+    # NOTE: secrets context is not available in step-level `if:` conditions.
+    # Surface the optional tokens here so the steps can gate on env.X != ''.
+    env:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -73,11 +78,10 @@ jobs:
           helm registry logout ghcr.io || true
 
       - name: Push to Docker Hub (oci://registry-1.docker.io/${{ github.repository_owner }})
-        if: ${{ secrets.DOCKERHUB_TOKEN != '' }}
+        if: env.DOCKERHUB_TOKEN != ''
         continue-on-error: true
         env:
           DOCKERHUB_USER: ${{ github.repository_owner }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           echo "$DOCKERHUB_TOKEN" | helm registry login registry-1.docker.io -u "$DOCKERHUB_USER" --password-stdin
           for pkg in .packages/*.tgz; do
@@ -87,11 +91,10 @@ jobs:
           helm registry logout registry-1.docker.io || true
 
       - name: Push to Quay (oci://quay.io/${{ github.repository_owner }})
-        if: ${{ secrets.QUAY_TOKEN != '' }}
+        if: env.QUAY_TOKEN != ''
         continue-on-error: true
         env:
           QUAY_USER: ${{ github.repository_owner }}
-          QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
         run: |
           echo "$QUAY_TOKEN" | helm registry login quay.io -u "$QUAY_USER" --password-stdin
           for pkg in .packages/*.tgz; do
