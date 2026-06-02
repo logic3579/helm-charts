@@ -1,4 +1,4 @@
-# Values for logic-charts/redisinsight deployed on the mgmt cluster.
+# Values for logic3579/redisinsight deployed on the mgmt cluster.
 # Saved Redis connections and query history persist on the PVC at /data.
 
 persistence:

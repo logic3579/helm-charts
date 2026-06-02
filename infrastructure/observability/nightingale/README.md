@@ -5,13 +5,13 @@ Categraf manifests, dashboards, and alert rules for the agent / content side.
 
 The Helm chart is published from this repo (`charts/nightingale/`) — upstream
 [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) does not push to Artifact Hub, so
-`logic-charts/nightingale` is a repackaged mirror tracking upstream.
+`logic3579/nightingale` is a repackaged mirror tracking upstream.
 
 ## Layout
 
 | File / dir                        | Purpose                                                                             |
 | --------------------------------- | ----------------------------------------------------------------------------------- |
-| `nightingale-values.yaml`         | Override values for `logic-charts/nightingale` (ingress, persistence, externalURL)  |
+| `nightingale-values.yaml`         | Override values for `logic3579/nightingale` (ingress, persistence, externalURL)  |
 | `nightingale-virtualservice.yaml` | Istio VirtualService (external gateway → `nightingale.<ns>.svc`)                    |
 | `categraf-daemonset.yaml`         | Categraf DaemonSet — per-node host metrics                                          |
 | `categraf-deployment.yaml`        | Categraf Deployment — scrapes kube-state-metrics, MySQL/Redis exporters, ClickHouse |
@@ -32,7 +32,7 @@ Categraf scrapes the same exporters as the Prometheus stack. Install them once f
 Add the chart repo and create the namespace:
 
 ```bash
-helm repo add logic-charts https://logic3579.github.io/helm-charts
+helm repo add logic3579 https://logic3579.github.io/helm-charts
 helm repo update
 kubectl create namespace nightingale
 ```
@@ -40,7 +40,7 @@ kubectl create namespace nightingale
 ## Install Nightingale server
 
 ```bash
-helm upgrade --install nightingale logic-charts/nightingale \
+helm upgrade --install nightingale logic3579/nightingale \
   --namespace nightingale \
   -f nightingale-values.yaml
 
@@ -48,8 +48,8 @@ kubectl apply -n nightingale -f nightingale-virtualservice.yaml
 ```
 
 Pin to a specific chart version with `--version <x.y.z>`. See available versions:
-[Artifact Hub](https://artifacthub.io/packages/helm/logic-charts/nightingale) or
-`helm search repo logic-charts/nightingale --versions`.
+[Artifact Hub](https://artifacthub.io/packages/helm/logic3579/nightingale) or
+`helm search repo logic3579/nightingale --versions`.
 
 ## Install Categraf (this cluster)
 

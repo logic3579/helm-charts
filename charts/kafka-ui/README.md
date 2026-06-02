@@ -11,9 +11,9 @@ A Helm chart for [UI for Apache Kafka](https://github.com/kafbat/kafka-ui) — a
 ## Install
 
 ```bash
-helm repo add logic-charts https://logic3579.github.io/helm-charts
+helm repo add logic3579 https://logic3579.github.io/helm-charts
 helm repo update
-helm install kafka-ui logic-charts/kafka-ui \
+helm install kafka-ui logic3579/kafka-ui \
   --set secret.enabled=true \
   --set secret.data.username=admin \
   --set secret.data.password=changeme \

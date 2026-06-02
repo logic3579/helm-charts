@@ -5,7 +5,7 @@ packaged as a Helm chart.
 
 This chart is repackaged from upstream [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm), which
 does not publish to Artifact Hub. It is published from `logic3579/helm-charts` so the chart is discoverable as
-`logic-charts/nightingale` on [Artifact Hub](https://artifacthub.io/packages/helm/logic-charts/nightingale).
+`logic3579/nightingale` on [Artifact Hub](https://artifacthub.io/packages/helm/logic3579/nightingale).
 
 For application-level (n9e UI / agent / alerting) issues, file them on
 [`ccfos/nightingale`](https://github.com/ccfos/nightingale) instead of this chart.
@@ -19,18 +19,18 @@ For application-level (n9e UI / agent / alerting) issues, file them on
 ## Install
 
 ```bash
-helm repo add logic-charts https://logic3579.github.io/helm-charts
+helm repo add logic3579 https://logic3579.github.io/helm-charts
 helm repo update
 
-helm install nightingale logic-charts/nightingale \
+helm install nightingale logic3579/nightingale \
   --namespace nightingale --create-namespace
 ```
 
 Pin to a specific chart version:
 
 ```bash
-helm search repo logic-charts/nightingale --versions
-helm install nightingale logic-charts/nightingale --version 0.3.0 \
+helm search repo logic3579/nightingale --versions
+helm install nightingale logic3579/nightingale --version 0.3.0 \
   --namespace nightingale --create-namespace
 ```
 
@@ -39,9 +39,9 @@ helm install nightingale logic-charts/nightingale --version 0.3.0 \
 Pull the upstream `values.yaml` as the configuration reference:
 
 ```bash
-helm show values logic-charts/nightingale > nightingale-values.yaml
+helm show values logic3579/nightingale > nightingale-values.yaml
 # edit nightingale-values.yaml
-helm upgrade --install nightingale logic-charts/nightingale \
+helm upgrade --install nightingale logic3579/nightingale \
   --namespace nightingale --create-namespace \
   -f nightingale-values.yaml
 ```
@@ -72,7 +72,7 @@ A production-leaning example values file lives at
 
 ```bash
 helm repo update
-helm upgrade nightingale logic-charts/nightingale \
+helm upgrade nightingale logic3579/nightingale \
   --namespace nightingale \
   -f nightingale-values.yaml
 ```

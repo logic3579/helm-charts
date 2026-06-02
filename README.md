@@ -19,16 +19,16 @@ This repo provides two things:
 
 ```bash
 # Add the chart repository
-helm repo add logic-charts https://logic3579.github.io/helm-charts
+helm repo add logic3579 https://logic3579.github.io/helm-charts
 
 # Update repository
 helm repo update
 
 # Search for available charts
-helm search repo logic-charts
+helm search repo logic3579
 
 # Install a chart
-helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
+helm install my-kafka-ui logic3579/kafka-ui -f my-values.yaml
 ```
 
 ## Install via OCI

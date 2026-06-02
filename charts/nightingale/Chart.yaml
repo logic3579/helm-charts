@@ -46,7 +46,7 @@ annotations:
       url: https://github.com/ccfos/nightingale
   artifacthub.io/changes: |
     - kind: added
-      description: Initial publish via logic-charts (sourced from flashcatcloud/n9e-helm)
+      description: Initial publish via logic3579 (sourced from flashcatcloud/n9e-helm)
     - kind: changed
       description: Bump nightingale appVersion to 8.5.1
     - kind: changed

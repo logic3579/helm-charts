@@ -1,4 +1,4 @@
-# Values for logic-charts/rocketmq-exporter deployed on the mgmt cluster.
+# Values for logic3579/rocketmq-exporter deployed on the mgmt cluster.
 
 rocketmq:
   namesrvAddr: "rocketmq-nameserver.middleware.svc:9876"

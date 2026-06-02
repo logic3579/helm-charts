@@ -28,8 +28,8 @@ helm dependency update charts/kafka-ui
 helm template my-release charts/kafka-ui -f charts/kafka-ui/values.yaml
 
 # Install from registry
-helm repo add logic-charts https://logic3579.github.io/helm-charts
-helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
+helm repo add logic3579 https://logic3579.github.io/helm-charts
+helm install my-kafka-ui logic3579/kafka-ui -f my-values.yaml
 ```
 
 ## Architecture
@@ -54,7 +54,7 @@ helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
 - **observability/prometheus-community/** — `prometheus-community/prometheus` chart, **server-only** (alertmanager/KSM/node-exporter/pushgateway subcharts disabled). Minimal single-node alternative to Mimir / VMCluster; namespace `prom`.
 - **observability/opentelemetry/** — OTel Operator + agent/gateway Collector CRs + Instrumentation CR (auto-injects Java/Python SDKs); collection layer that exports to either grafana-lgtm or victoriametrics (or remote_write to the plain prometheus stack for metrics only).
 - **observability/nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules. Pairs with `prometheus-community/` exporters; namespace `nightingale`.
-- **mgmt/** — Standalone `helm upgrade --install` values files for the management cluster's UIs (`elasticvue`, `kafka-ui`, `redisinsight`, `rocketmq-exporter` — all installed from the in-repo `logic-charts` registry). VirtualService is configured through chart values (`virtualservice.enabled`), not standalone manifests. This is the manual-helm path; ArgoCD-managed mgmt components are listed in `argocd/applicationsets/mgmt-apps.yaml`'s allow-list (currently just nightingale).
+- **mgmt/** — Standalone `helm upgrade --install` values files for the management cluster's UIs (`elasticvue`, `kafka-ui`, `redisinsight`, `rocketmq-exporter` — all installed from the in-repo `logic3579` registry). VirtualService is configured through chart values (`virtualservice.enabled`), not standalone manifests. This is the manual-helm path; ArgoCD-managed mgmt components are listed in `argocd/applicationsets/mgmt-apps.yaml`'s allow-list (currently just nightingale).
 - **cert-manager/, database/, bigdata/, streaming/** — Various component manifests.
 
 ## Dual Deployment Model

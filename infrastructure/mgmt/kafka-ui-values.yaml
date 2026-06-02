@@ -1,4 +1,4 @@
-# Values for logic-charts/kafka-ui deployed on the mgmt cluster.
+# Values for logic3579/kafka-ui deployed on the mgmt cluster.
 # Edit <PLACEHOLDER> tokens in place before running `helm upgrade --install`.
 
 kafkaClusters:

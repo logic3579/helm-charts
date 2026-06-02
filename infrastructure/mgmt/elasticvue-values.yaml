@@ -1,4 +1,4 @@
-# Values for logic-charts/elasticvue deployed on the mgmt cluster.
+# Values for logic3579/elasticvue deployed on the mgmt cluster.
 # Clusters can be configured in two ways:
 #   1. Inline below (plaintext — fine when there's no ES auth)
 #   2. From a Secret: set `elasticvue.existingSecret` to a Secret whose
