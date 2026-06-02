@@ -1085,8 +1085,8 @@
     <h1 id="logic-kubernetes-helm-charts">Logic's Kubernetes Helm Charts</h1>
 
     <p class="badges">
-      <a href="https://artifacthub.io/packages/search?repo=logic-charts"><img
-          src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/logic-charts"
+      <a href="https://artifacthub.io/packages/search?repo=logic3579"><img
+          src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/logic3579"
           alt="Artifact Hub"></a>
       <a href="https://opensource.org/licenses/Apache-2.0"><img
           src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License"></a>
@@ -1106,19 +1106,19 @@
 
     <p>Once Helm is set up properly, add the repository as follows:</p>
 
-    <pre><code>helm repo add logic-charts https://logic3579.github.io/helm-charts
+    <pre><code>helm repo add logic3579 https://logic3579.github.io/helm-charts
 helm repo update
 </code></pre>
 
-    <p>You can then run <code>helm search repo logic-charts</code> to see the charts.</p>
+    <p>You can then run <code>helm search repo logic3579</code> to see the charts.</p>
 
     <p>Install a chart:</p>
 
     <pre><code># Kafka UI
-helm install my-kafka-ui logic-charts/kafka-ui -f my-values.yaml
+helm install my-kafka-ui logic3579/kafka-ui -f my-values.yaml
 
 # Nightingale (n9e) monitoring system
-helm install my-nightingale logic-charts/nightingale -f my-values.yaml
+helm install my-nightingale logic3579/nightingale -f my-values.yaml
 </code></pre>
 
     <p>Or install directly from an OCI registry — every release is mirrored to GHCR, Docker Hub, and Quay:</p>
