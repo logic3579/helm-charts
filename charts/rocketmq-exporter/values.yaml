@@ -1,0 +1,223 @@
+# -- Number of pod replicas
+replicaCount: 1
+
+# -- Container image configuration
+image:
+  # -- Image repository
+  repository: apache/rocketmq-exporter
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag (defaults to .Chart.AppVersion)
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full release name
+fullnameOverride: ""
+
+# -- RocketMQ exporter settings. Each key below is injected as a
+# ROCKETMQ_CONFIG_<UPPER_KEY> env var via Spring Boot relaxed binding.
+rocketmq:
+  # -- NameServer address(es). Comma-separated for clusters, e.g. "ns-a:9876;ns-b:9876".
+  # → ROCKETMQ_CONFIG_NAMESRVADDR
+  namesrvAddr: "127.0.0.1:9876"
+  # -- RocketMQ broker version (e.g. 4_3_2, 4_4_0, 4_9_4)
+  # → ROCKETMQ_CONFIG_ROCKETMQVERSION
+  rocketmqVersion: "4_9_4"
+  # -- Prometheus metrics path
+  # → ROCKETMQ_CONFIG_WEBTELEMETRYPATH
+  webTelemetryPath: "/metrics"
+  # -- Whether to actively collect metrics
+  # → ROCKETMQ_CONFIG_ENABLECOLLECT
+  enableCollect: true
+  # -- Cache clear timeout when no broker updates received (seconds)
+  # → ROCKETMQ_CONFIG_OUTOFTIMESECONDS
+  outOfTimeSeconds: 60
+  # -- Free-form extra exporter settings, rendered as ROCKETMQ_CONFIG_<UPPER_KEY>.
+  # Example: { taskCount: 10 } → ROCKETMQ_CONFIG_TASKCOUNT=10
+  extraConfig: {}
+
+# -- RocketMQ ACL credentials (RocketMQ ≥4.4.0 with ACL enabled)
+auth:
+  # -- Enable ACL — sets ROCKETMQ_CONFIG_ENABLEACL=true and injects accessKey/secretKey
+  enabled: false
+  # -- Use an existing secret for ACL credentials (must contain 'accessKey' and 'secretKey' keys).
+  # If empty, falls back to the chart-managed Secret named '{{ include "common.fullname" . }}' —
+  # in that case also set `secret.enabled: true` with `data: { accessKey, secretKey }`.
+  existingSecret: ""
+
+# -- Service account configuration
+serviceAccount:
+  # -- Whether to create a service account
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account (generated if not set)
+  name: ""
+  # -- Mount the service account token into pods (exporter does not need API access)
+  automountServiceAccountToken: false
+
+# -- Annotations to add to pods
+podAnnotations: {}
+
+# -- Labels to add to pods
+podLabels: {}
+
+# -- Pod-level security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# -- Container-level security context
+# Note: readOnlyRootFilesystem is false because the exporter (Spring Boot) writes /tmp
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+# -- Service configuration
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port (also used as the container port and SERVER_PORT env)
+  port: 5557
+
+# -- Resource requests and limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# -- Liveness probe (TCP socket — exporter's actuator endpoints are not guaranteed)
+livenessProbe:
+  tcpSocket:
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# -- Readiness probe (TCP socket)
+readinessProbe:
+  tcpSocket:
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# -- Startup probe (Java apps are slow to start)
+startupProbe:
+  tcpSocket:
+    port: http
+  failureThreshold: 30
+  periodSeconds: 5
+
+# -- Horizontal Pod Autoscaler configuration
+autoscaling:
+  # -- Enable HPA
+  enabled: false
+  # -- Minimum number of replicas
+  minReplicas: 1
+  # -- Maximum number of replicas
+  maxReplicas: 5
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+  # -- Target memory utilization percentage (optional)
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Additional volumes to add to the pod
+volumes: []
+
+# -- Additional volume mounts for the container
+volumeMounts: []
+
+# -- Extra environment variables (list of name/value pairs).
+# Use this for arbitrary overrides not covered by the rocketmq.* block.
+env: []
+  # - name: JAVA_OPTS
+  #   value: "-Xmx256m"
+
+# -- Extra environment variable sources (configMapRef / secretRef)
+envFrom: []
+  # - secretRef:
+  #     name: my-secret
+
+# -- ConfigMap configuration
+configMap:
+  # -- Create a ConfigMap
+  enabled: false
+  # -- ConfigMap key-value data
+  data: {}
+    # key: value
+
+# -- Secret configuration
+# WARNING: values are stored as plaintext and base64-encoded at render time.
+# For production secrets, use External Secrets Operator (ESO) or Sealed Secrets instead.
+# When auth.enabled is true and auth.existingSecret is empty, this secret is also used
+# for ACL credentials (must include 'accessKey' and 'secretKey' keys).
+secret:
+  # -- Create a Secret
+  enabled: false
+  # -- Secret key-value data (values will be base64-encoded)
+  data: {}
+    # accessKey: my-access-key
+    # secretKey: my-secret-key
+
+# -- Node selector for pod scheduling
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}
+
+# -- Istio VirtualService configuration
+virtualservice:
+  # -- Enable VirtualService
+  enabled: false
+  # -- Istio gateway references
+  gateways: []
+    # - istio-ingress/internal-gateway
+  # -- VirtualService hostnames
+  hosts: []
+    # - rocketmq-exporter.example.com
+  # -- Destination port (defaults to service.port)
+  port: ""
+
+# -- PodDisruptionBudget configuration
+podDisruptionBudget:
+  # -- Enable PDB
+  enabled: false
+  # -- Minimum number of available pods
+  minAvailable: 1
+  # -- Maximum number of unavailable pods (mutually exclusive with minAvailable)
+  # maxUnavailable: 1
+
+# -- Prometheus Operator ServiceMonitor
+serviceMonitor:
+  # -- Create a ServiceMonitor for this exporter
+  enabled: false
+  # -- Extra labels — often used so the cluster's Prometheus selector picks this up
+  # (e.g. { release: kube-prometheus-stack })
+  labels: {}
+  # -- Scrape interval
+  interval: 30s
+  # -- Scrape timeout
+  scrapeTimeout: 10s
+  # -- Metrics path (defaults to rocketmq.webTelemetryPath)
+  path: ""
+  # -- Prometheus relabeling rules applied before scrape
+  relabelings: []
+  # -- Prometheus relabeling rules applied to scraped metrics
+  metricRelabelings: []

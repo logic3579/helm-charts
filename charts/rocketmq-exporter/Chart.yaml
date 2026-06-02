@@ -1,0 +1,30 @@
+apiVersion: v2
+name: rocketmq-exporter
+description: A Helm chart for Apache RocketMQ Exporter — a Prometheus exporter for Apache RocketMQ
+type: application
+version: 0.0.2
+appVersion: "0.0.2"
+home: https://github.com/logic3579/helm-charts
+sources:
+  - https://github.com/apache/rocketmq-exporter
+maintainers:
+  - name: logic3579
+    url: https://github.com/logic3579/helm-charts
+keywords:
+  - rocketmq
+  - exporter
+  - prometheus
+  - metrics
+  - monitoring
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/links: |
+    - name: Upstream Project
+      url: https://github.com/apache/rocketmq-exporter
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial publish of rocketmq-exporter chart
+dependencies:
+  - name: common
+    version: "0.2.0"
+    repository: "file://../common"

@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "common.fullname" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "common.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "common.podLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "common.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "common.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: SERVER_PORT
+              value: {{ .Values.service.port | quote }}
+            - name: ROCKETMQ_CONFIG_NAMESRVADDR
+              value: {{ .Values.rocketmq.namesrvAddr | quote }}
+            - name: ROCKETMQ_CONFIG_ROCKETMQVERSION
+              value: {{ .Values.rocketmq.rocketmqVersion | quote }}
+            - name: ROCKETMQ_CONFIG_WEBTELEMETRYPATH
+              value: {{ .Values.rocketmq.webTelemetryPath | quote }}
+            - name: ROCKETMQ_CONFIG_ENABLECOLLECT
+              value: {{ .Values.rocketmq.enableCollect | quote }}
+            - name: ROCKETMQ_CONFIG_OUTOFTIMESECONDS
+              value: {{ .Values.rocketmq.outOfTimeSeconds | quote }}
+            {{- if .Values.auth.enabled }}
+            - name: ROCKETMQ_CONFIG_ENABLEACL
+              value: "true"
+            {{- $authSecret := .Values.auth.existingSecret | default (include "common.fullname" .) }}
+            - name: ROCKETMQ_CONFIG_ACCESSKEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $authSecret }}
+                  key: accessKey
+            - name: ROCKETMQ_CONFIG_SECRETKEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $authSecret }}
+                  key: secretKey
+            {{- end }}
+            {{- range $key, $value := .Values.rocketmq.extraConfig }}
+            - name: {{ printf "ROCKETMQ_CONFIG_%s" ($key | upper) }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
