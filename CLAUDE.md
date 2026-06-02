@@ -22,14 +22,14 @@ for chart in charts/*/; do
 done
 
 # Update chart dependencies (after modifying Chart.yaml dependencies)
-helm dependency update charts/kafka-ui
+helm dependency update charts/elasticvue
 
 # Render locally
-helm template my-release charts/kafka-ui -f charts/kafka-ui/values.yaml
+helm template my-release charts/elasticvue -f charts/elasticvue/values.yaml
 
 # Install from registry
 helm repo add logic3579 https://logic3579.github.io/helm-charts
-helm install my-kafka-ui logic3579/kafka-ui -f my-values.yaml
+helm install my-elasticvue logic3579/elasticvue -f my-values.yaml
 ```
 
 ## Architecture
@@ -38,12 +38,11 @@ helm install my-kafka-ui logic3579/kafka-ui -f my-values.yaml
 
 - **common** — Library chart (`type: library`, version `0.2.0`) embedded into every app chart via `file://../common`. Not published to the registry. Provides `common.{name,fullname,chart,labels,selectorLabels,serviceAccountName,image,podLabels}` helpers plus reusable templates: `service`, `serviceaccount` (parameterized `automountServiceAccountToken`), `configmap`, `secret` (with ESO warning), `hpa` (CPU+memory), `pdb` (mutual-exclusivity validation), `virtualservice` (CORS exact/prefix/regex).
 - **elasticvue** — Web UI for Elasticsearch / OpenSearch (port 8080, `nginx-unprivileged` base, TCP probes — no `/health` endpoint upstream). Deployment template injects `ELASTICVUE_CLUSTERS`: JSON-encoded from the `elasticvue.clusters` list, or wired via `secretKeyRef` from `elasticvue.existingSecret` for credential safety (secret wins if both are set). On every version bump, append a `kind/description` entry to `Chart.yaml`'s `annotations.artifacthub.io/changes` block.
-- **kafka-ui** — Kafka UI (port 8080, Spring Boot actuator probes, `startupProbe` enabled). Deployment template injects kafka-specific env: `auth` (LOGIN_FORM/DISABLED/LDAP/OAUTH2 via `secretKeyRef`) and `kafkaClusters` rendered as `KAFKA_CLUSTERS_N_*` (bootstrapServers, readonly, schemaRegistry, ksqldbServer, arbitrary properties). On every version bump, append a `kind/description` entry to `Chart.yaml`'s `annotations.artifacthub.io/changes` block.
 - **redisinsight** — Redis Inc.'s official Redis GUI (port 5540, Node.js, TCP probes — no documented HTTP health endpoint). `RI_APP_HOST=0.0.0.0` and `RI_APP_PORT` are derived from `service.port`; arbitrary overrides via `redisinsight.extraConfig` (→ `RI_<UPPER_KEY>`). Stateful — SQLite at `/data`. Persistence is opt-in via `persistence.{enabled,size,storageClass,accessMode,existingClaim}`; chart-specific `templates/pvc.yaml` renders when enabled, and the Deployment uses `strategy: Recreate` so a RWO PVC can detach cleanly on rollout. Image: `redis/redisinsight` — the `redislabs/` namespace is a legacy mirror with identical content, but upstream's README links to `redis/`. On every version bump, append a `kind/description` entry to `Chart.yaml`'s `annotations.artifacthub.io/changes` block.
 - **rocketmq-exporter** — Apache RocketMQ Prometheus exporter (port 5557, Spring Boot, TCP probes). Deployment template injects `ROCKETMQ_CONFIG_*` env via Spring's relaxed binding from `rocketmq.{namesrvAddr,rocketmqVersion,webTelemetryPath,enableCollect,outOfTimeSeconds,extraConfig}`. Optional ACL via `auth.{enabled,existingSecret}` (accessKey/secretKey from a Secret). Chart-specific `templates/servicemonitor.yaml` gated on `serviceMonitor.enabled` for Prometheus Operator discovery. On every version bump, append a `kind/description` entry to `Chart.yaml`'s `annotations.artifacthub.io/changes` block.
 - **nightingale** — Repackaged from upstream [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) so the chart is discoverable on Artifact Hub (upstream doesn't publish there). Self-contained — does NOT depend on `common`. Has its own `templates/{n9e,nginx,prometheus,redis,database,ingress,categraf}/` subtree and is *not* refactored to use `common`. Keep the chart structurally aligned with upstream; pull upstream changes wholesale rather than diverging. On every version bump, append a `kind/description` entry to `Chart.yaml`'s `annotations.artifacthub.io/changes` block. Companion infra reference manifests (categraf, VirtualService, dashboards) live under `infrastructure/observability/nightingale/`.
 
-`common`-based app charts (`elasticvue`, `kafka-ui`, `redisinsight`, `rocketmq-exporter`) delegate most templates to `common` via one-line `{{- include "common.xxx" . }}`. Only `deployment.yaml`, `NOTES.txt`, and the occasional chart-specific add-on (e.g. `redisinsight`'s `pvc.yaml`, `rocketmq-exporter`'s `servicemonitor.yaml`) carry chart-specific logic. They support `startupProbe`, `volumes`/`volumeMounts`, HPA (CPU+memory), and Istio VirtualService CORS (`exact`/`prefix`/`regex`). Each chart's `values.yaml` doubles as the configuration reference — deployment-specific overrides live OUTSIDE the chart directory: ArgoCD users put them under `infrastructure/argocd/values/<env>/<chart>.yaml`; standalone Helm users pass `-f my-values.yaml` (the management cluster's standalone values live under `infrastructure/mgmt/<chart>-values.yaml`). The nightingale chart is an exception — it's a vendored upstream chart, not a `common`-based app chart.
+`common`-based app charts (`elasticvue`, `redisinsight`, `rocketmq-exporter`) delegate most templates to `common` via one-line `{{- include "common.xxx" . }}`. Only `deployment.yaml`, `NOTES.txt`, and the occasional chart-specific add-on (e.g. `redisinsight`'s `pvc.yaml`, `rocketmq-exporter`'s `servicemonitor.yaml`) carry chart-specific logic. They support `startupProbe`, `volumes`/`volumeMounts`, HPA (CPU+memory), and Istio VirtualService CORS (`exact`/`prefix`/`regex`). Each chart's `values.yaml` doubles as the configuration reference — deployment-specific overrides live OUTSIDE the chart directory: ArgoCD users put them under `infrastructure/argocd/values/<env>/<chart>.yaml`; standalone Helm users pass `-f my-values.yaml` (the management cluster's standalone values live under `infrastructure/mgmt/<chart>-values.yaml`). The nightingale chart is an exception — it's a vendored upstream chart, not a `common`-based app chart. **kafka-ui is not shipped from `charts/`** — it's installed from the upstream [`kafbat/kafka-ui`](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui) helm chart; standalone values + companion Istio VS live under `infrastructure/mgmt/kafka-ui-{values,virtualservice}.yaml`, and the ArgoCD-managed instance is wired via an explicit multi-source `Application` at `infrastructure/argocd/applications/kafka-ui.yaml` (mgmt cluster only, configured with multi-cluster bootstrap servers).
 
 ### infrastructure/
 
@@ -54,7 +53,7 @@ helm install my-kafka-ui logic3579/kafka-ui -f my-values.yaml
 - **observability/prometheus-community/** — `prometheus-community/prometheus` chart, **server-only** (alertmanager/KSM/node-exporter/pushgateway subcharts disabled). Minimal single-node alternative to Mimir / VMCluster; namespace `prom`.
 - **observability/opentelemetry/** — OTel Operator + agent/gateway Collector CRs + Instrumentation CR (auto-injects Java/Python SDKs); collection layer that exports to either grafana-lgtm or victoriametrics (or remote_write to the plain prometheus stack for metrics only).
 - **observability/nightingale/** — Nightingale (n9e) + Categraf with curated dashboards and alert rules. Pairs with `prometheus-community/` exporters; namespace `nightingale`.
-- **mgmt/** — Standalone `helm upgrade --install` values files for the management cluster's UIs (`elasticvue`, `kafka-ui`, `redisinsight`, `rocketmq-exporter` — all installed from the in-repo `logic3579` registry). VirtualService is configured through chart values (`virtualservice.enabled`), not standalone manifests. This is the manual-helm path; ArgoCD-managed mgmt components are listed in `argocd/applicationsets/mgmt-apps.yaml`'s allow-list (currently just nightingale).
+- **mgmt/** — Standalone `helm upgrade --install` values files for the management cluster's UIs. `elasticvue` / `redisinsight` / `rocketmq-exporter` install from the in-repo `logic3579` registry with VirtualService driven by chart values (`virtualservice.enabled`). `kafka-ui` is the exception: it installs from the upstream `kafbat/kafka-ui` chart and ships a companion `kafka-ui-virtualservice.yaml` applied separately (the upstream chart only ships an Ingress template). This is the manual-helm path; ArgoCD-managed mgmt components are wired via `argocd/applicationsets/mgmt-apps.yaml` (allow-list — currently just nightingale) and `argocd/applications/kafka-ui.yaml` (explicit Application for the kafbat upstream chart).
 - **cert-manager/, database/, bigdata/, streaming/** — Various component manifests.
 
 ## Dual Deployment Model
@@ -62,7 +61,7 @@ helm install my-kafka-ui logic3579/kafka-ui -f my-values.yaml
 `charts/` supports two methods simultaneously:
 
 1. **Helm Registry** — packaged on push and hosted on `gh-pages` (served via GitHub Pages). Users install via `helm repo add` / `helm install`.
-2. **ArgoCD Directory** — ArgoCD points at a chart path (e.g. `charts/kafka-ui`) with `source.helm`. ArgoCD auto-runs `helm dependency build` to resolve `file://../common`.
+2. **ArgoCD Directory** — ArgoCD points at a chart path (e.g. `charts/elasticvue`) with `source.helm`. ArgoCD auto-runs `helm dependency build` to resolve `file://../common`.
 
 ## CI/CD — Release Workflow
 
@@ -93,7 +92,7 @@ All three registries assume the same username as the GitHub repo owner (e.g. `lo
 - Retention: 3 versions per chart. Older `.tgz` files are deleted from `gh-pages` automatically. To keep more, change `RETENTION` in the workflow `env` block.
 - Orphan cleanup: when a chart is removed from `charts/`, its `.tgz` files on `gh-pages` are automatically deleted on the next workflow run (`Remove artifacts for deleted charts` step). Artifact Hub re-reads `index.yaml` on its own polling cycle and drops the entry within ~30-60min; OCI registries keep historical tags forever (no auto-cleanup, intentional).
 - `artifacthub-repo.yml` must remain reachable at `https://logic3579.github.io/helm-charts/artifacthub-repo.yml` for ownership verification — the workflow copies it onto `gh-pages` on every run.
-- The prune step uses a strict `^<chart-name>-[0-9]` regex (not a raw glob) so that, e.g., a future `kafka` chart wouldn't accidentally match `kafka-ui-*.tgz`.
+- The prune step uses a strict `^<chart-name>-[0-9]` regex (not a raw glob) — important when chart names share prefixes (e.g. a `rocketmq` chart wouldn't accidentally match `rocketmq-exporter-*.tgz`).
 
 Branches: **main** (chart source, workflow, docs) — **gh-pages** (auto-managed by the workflow: `.tgz` artifacts + `index.yaml` + `index.html` + `artifacthub-repo.yml`; do not edit manually).
 
@@ -108,12 +107,13 @@ Branches: **main** (chart source, workflow, docs) — **gh-pages** (auto-managed
 - **PDB**: `minAvailable` and `maxUnavailable` are mutually exclusive — setting both fails `helm template` by design.
 - **Volumes**: app charts accept `volumes` and `volumeMounts` lists. For charts with `readOnlyRootFilesystem: true`, mount a tmpfs `emptyDir` for `/tmp` if the app writes temp files.
 - **No Ingress**: route via Istio VirtualService (`virtualservice.*` in values), not Ingress resources.
-- **ServiceAccount token**: `serviceAccount.automountServiceAccountToken` is per-chart in `values.yaml` (kafka-ui defaults to `false`).
+- **ServiceAccount token**: `serviceAccount.automountServiceAccountToken` is per-chart in `values.yaml` (most charts default to `false`).
 - **Template structure**: only `deployment.yaml`, `NOTES.txt`, and the occasional chart-specific add-on (e.g. a `pvc.yaml` for stateful charts, a `servicemonitor.yaml` for metrics exporters) are chart-specific. Don't duplicate template logic across charts — add new shared templates to `common` when they apply broadly.
 - **Linting**: use the loop above (or the CI pattern). Never `helm lint charts/*` — it includes the library chart and produces misleading errors.
 - **YAML extension**: always `.yaml`, never `.yml`. The repo was normalized in a prior refactor.
-- **Artifact Hub metadata**: when publishing a new chart, add `annotations.artifacthub.io/license` and `annotations.artifacthub.io/links` to `Chart.yaml` (kafka-ui is the reference).
+- **Artifact Hub metadata**: when publishing a new chart, add `annotations.artifacthub.io/license` and `annotations.artifacthub.io/links` to `Chart.yaml` (elasticvue is the reference).
 - **OCI consumption pattern**: alongside the `helm repo add` path, charts are pullable directly via `oci://ghcr.io/logic3579/helm-charts/<chart>`, `oci://registry-1.docker.io/logic3579/<chart>`, or `oci://quay.io/logic3579/<chart>` (note: GHCR has the extra `helm-charts/` infix; Docker Hub and Quay are flat because they don't accept nested namespaces).
+- **Upstream charts beat reinventing**: when a well-maintained upstream chart exists (e.g. `kafbat/kafka-ui` for kafka-ui), prefer it over publishing a parallel chart from this repo. Use `infrastructure/argocd/applications/<chart>.yaml` (explicit multi-source Application — chart from upstream repo + `$values` ref + raw manifests dir for VS/etc.) and `infrastructure/mgmt/<chart>-{values,virtualservice}.yaml` (standalone helm) to wire it up.
 
 ## Infrastructure Conventions
 

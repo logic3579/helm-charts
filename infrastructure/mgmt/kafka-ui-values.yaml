@@ -1,15 +1,79 @@
-# Values for logic3579/kafka-ui deployed on the mgmt cluster.
-# Edit <PLACEHOLDER> tokens in place before running `helm upgrade --install`.
+# Values for the upstream kafbat/kafka-ui Helm chart, deployed standalone on
+# the mgmt cluster.
+#
+# Install:
+#   helm repo add kafbat https://kafbat.github.io/helm-charts
+#   helm repo update
+#   helm upgrade --install --namespace mgmt --create-namespace \
+#     kafka-ui kafbat/kafka-ui --version 1.6.4 \
+#     -f kafka-ui-values.yaml
+#
+# Then apply the companion VirtualService (the upstream chart only ships an
+# Ingress template; this repo routes via Istio):
+#   kubectl apply -f kafka-ui-virtualservice.yaml
+#
+# Edit <PLACEHOLDER> tokens in place before running the commands above.
 
-kafkaClusters:
-  - name: mgmt
-    bootstrapServers: "<PLACEHOLDER>:9092"
-    readonly: false
+replicaCount: 1
 
-# VirtualService is enabled here instead of via a standalone manifest.
-virtualservice:
-  enabled: true
-  gateways:
-    - istio-ingress/external-gateway
-  hosts:
-    - kafka-ui.example.com
+image:
+  # Defaults to ghcr.io/kafbat/kafka-ui (also mirrored at hub.docker.com/r/kafbat/kafka-ui).
+  registry: ghcr.io
+  repository: kafbat/kafka-ui
+  pullPolicy: IfNotPresent
+  tag: ""   # defaults to chart appVersion (v1.5.0 in chart 1.6.4)
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+# Multi-cluster configuration — a single kafka-ui on mgmt monitoring kafka
+# instances across mgmt / uat / prod. Each cluster's bootstrap servers must be
+# resolvable from the mgmt cluster (cross-cluster networking, peering, or LB).
+yamlApplicationConfig:
+  auth:
+    type: LOGIN_FORM
+  spring:
+    security:
+      user:
+        # Username only — password is injected from a Secret via envs.secretMappings below.
+        name: admin
+  kafka:
+    clusters:
+      - name: mgmt
+        bootstrapServers: "<MGMT_KAFKA_BOOTSTRAP>:9092"
+        # schemaRegistry: "http://<MGMT_SCHEMA_REGISTRY>:8081"
+        readOnly: false
+      - name: uat
+        bootstrapServers: "<UAT_KAFKA_BOOTSTRAP>:9092"
+        # schemaRegistry: "http://<UAT_SCHEMA_REGISTRY>:8081"
+        readOnly: false
+      - name: prod
+        bootstrapServers: "<PROD_KAFKA_BOOTSTRAP>:9092"
+        # schemaRegistry: "http://<PROD_SCHEMA_REGISTRY>:8081"
+        readOnly: true
+
+# Pull the login password from a pre-existing Secret (recommended: managed by
+# ESO or Sealed Secrets). The Secret must contain the key referenced below.
+#
+# Example one-off bootstrap:
+#   kubectl -n mgmt create secret generic kafka-ui-auth \
+#     --from-literal=password='<choose-a-strong-password>'
+envs:
+  secretMappings:
+    SPRING_SECURITY_USER_PASSWORD:
+      name: kafka-ui-auth
+      keyName: password
+
+# Upstream chart only ships Ingress — leave it disabled and apply
+# kafka-ui-virtualservice.yaml after the helm install.
+ingress:
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 80

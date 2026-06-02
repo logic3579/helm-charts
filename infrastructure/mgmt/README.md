@@ -4,6 +4,7 @@
 
 ```bash
 helm repo add logic3579 https://logic3579.github.io/helm-charts
+helm repo add kafbat https://kafbat.github.io/helm-charts   # upstream kafka-ui
 helm repo update
 kubectl create namespace mgmt
 ```
@@ -24,15 +25,30 @@ helm upgrade --install \
 
 ## kafka-ui
 
-Uses the in-repo `logic3579/kafka-ui` chart. VirtualService is enabled
-through values — no standalone manifest needed. Edit `<PLACEHOLDER>` tokens
-in `kafka-ui-values.yaml` (kafka bootstrap servers, VS host) before installing.
+Uses the upstream `kafbat/kafka-ui` chart (the official chart published at
+[artifacthub.io/packages/helm/kafka-ui/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)) —
+this repo no longer ships an in-house kafka-ui chart. The upstream chart
+only ships an Ingress template, so the VirtualService is applied as a
+companion manifest. Edit `<PLACEHOLDER>` tokens in both files before
+installing.
+
+Bootstrap the login password Secret once (or manage it via ESO / Sealed
+Secrets):
+
+```bash
+kubectl -n mgmt create secret generic kafka-ui-auth \
+  --from-literal=password='<choose-a-strong-password>'
+```
+
+Install / upgrade:
 
 ```bash
 helm upgrade --install \
   --namespace mgmt \
-  kafka-ui logic3579/kafka-ui \
+  kafka-ui kafbat/kafka-ui --version 1.6.4 \
   -f kafka-ui-values.yaml
+
+kubectl apply -f kafka-ui-virtualservice.yaml
 ```
 
 ## redisinsight

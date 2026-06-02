@@ -1,0 +1,91 @@
+# Explicit ArgoCD Application for kafka-ui on the mgmt cluster.
+#
+# Unlike the in-repo `charts/*` workloads that are auto-discovered by the
+# ApplicationSets, kafka-ui is installed from the upstream kafbat helm repo
+# (https://artifacthub.io/packages/helm/kafka-ui/kafka-ui). It runs only on
+# mgmt and is configured to monitor kafka instances across all environments
+# via cross-cluster connectivity (see values/mgmt/kafka-ui.yaml).
+#
+# This is a multi-source Application:
+#   1. Chart source — kafbat helm repo (renders the chart).
+#   2. Values ref   — this repo, provides $values for the per-env override.
+#   3. Manifests    — this repo, contains the Istio VirtualService that the
+#                     upstream chart doesn't ship.
+#
+# Usage:
+#   # Edit the file to replace placeholders with actual values, then:
+#   kubectl apply -f kafka-ui.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kafka-ui-mgmt
+  namespace: argocd
+  labels:
+    environment: mgmt
+    app.kubernetes.io/part-of: example
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack-webhook: ""
+    notifications.argoproj.io/subscribe.on-sync-failed.slack-webhook: ""
+    notifications.argoproj.io/subscribe.on-health-degraded.slack-webhook: ""
+    notifications.argoproj.io/subscribe.on-sync-running.slack-webhook: ""
+spec:
+  project: example-mgmt
+
+  sources:
+    # 1) Chart source — kafbat upstream helm repo.
+    - repoURL: https://kafbat.github.io/helm-charts
+      chart: kafka-ui
+      targetRevision: 1.6.4   # appVersion v1.5.0
+      helm:
+        valueFiles:
+          - $values/infrastructure/argocd/values/mgmt/kafka-ui.yaml
+        ignoreMissingValueFiles: false
+
+    # 2) Values ref — this repo. NOT rendered; only resolves $values.
+    - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+      targetRevision: main
+      ref: values
+
+    # 3) Raw manifests directory — Istio VirtualService (upstream chart only
+    #    ships an Ingress template).
+    - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+      targetRevision: main
+      path: infrastructure/argocd/applications/kafka-ui-manifests
+      directory:
+        recurse: false
+
+  destination:
+    name: mgmt-cluster
+    namespace: kafka-ui
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ""
+      kind: ServiceAccount
+      jsonPointers:
+        - /secrets

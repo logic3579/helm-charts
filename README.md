@@ -13,10 +13,16 @@ This repo provides two things:
 |-------|-------------|-------------|
 | [common](./charts/common) | Shared library chart (labels, VirtualService, PDB, HPA, ServiceAccount) — embedded into app charts, not published to the registry | — |
 | [elasticvue](./charts/elasticvue) | Web UI for Elasticsearch / OpenSearch | 8080 |
-| [kafka-ui](./charts/kafka-ui) | Web UI for monitoring and managing Apache Kafka clusters | 8080 |
 | [nightingale](./charts/nightingale) | Nightingale (n9e) cloud-native monitoring system — repackaged from [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) | 80 |
 | [redisinsight](./charts/redisinsight) | Redis Inc.'s official web UI for Redis (stateful — SQLite at `/data`) | 5540 |
 | [rocketmq-exporter](./charts/rocketmq-exporter) | Apache RocketMQ Prometheus exporter | 5557 |
+
+> Looking for `kafka-ui`? Use the upstream chart published by the kafbat
+> team: [`kafbat/kafka-ui`](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
+> (`helm repo add kafbat https://kafbat.github.io/helm-charts`). See
+> [`infrastructure/mgmt/`](./infrastructure/mgmt/) and
+> [`infrastructure/argocd/applications/kafka-ui.yaml`](./infrastructure/argocd/applications/kafka-ui.yaml)
+> for how this repo wires it up.
 
 ## Install from Helm Repo
 
@@ -31,7 +37,7 @@ helm repo update
 helm search repo logic3579
 
 # Install a chart
-helm install my-kafka-ui logic3579/kafka-ui -f my-values.yaml
+helm install my-elasticvue logic3579/elasticvue -f my-values.yaml
 ```
 
 ## Install via OCI
@@ -41,13 +47,13 @@ Each chart is also mirrored to three OCI registries on every release. No
 
 ```bash
 # GHCR (primary mirror; same namespace as the Pages repo)
-helm install my-kafka-ui oci://ghcr.io/logic3579/helm-charts/kafka-ui --version 0.1.1 -f my-values.yaml
+helm install my-elasticvue oci://ghcr.io/logic3579/helm-charts/elasticvue --version 1.15.0 -f my-values.yaml
 
 # Docker Hub
-helm install my-kafka-ui oci://registry-1.docker.io/logic3579/kafka-ui --version 0.1.1 -f my-values.yaml
+helm install my-elasticvue oci://registry-1.docker.io/logic3579/elasticvue --version 1.15.0 -f my-values.yaml
 
 # Quay
-helm install my-kafka-ui oci://quay.io/logic3579/kafka-ui --version 0.1.1 -f my-values.yaml
+helm install my-elasticvue oci://quay.io/logic3579/elasticvue --version 1.15.0 -f my-values.yaml
 ```
 
 The Pages-based Helm repo remains the source of truth; OCI registries are
@@ -57,13 +63,13 @@ downstream mirrors with the same `.tgz` content.
 
 ```bash
 # Update dependencies (required for charts with common library)
-helm dependency update charts/kafka-ui
+helm dependency update charts/elasticvue
 
 # Template and inspect rendered manifests
-helm template my-release charts/kafka-ui -f charts/kafka-ui/values.yaml
+helm template my-release charts/elasticvue -f charts/elasticvue/values.yaml
 
 # Install from local chart
-helm install my-release charts/kafka-ui -f my-values.yaml
+helm install my-release charts/elasticvue -f my-values.yaml
 ```
 
 ## Release a New Version
@@ -76,11 +82,11 @@ To release a new version of the charts:
 
 ```bash
 # Example: bump version to 0.3.0
-# Edit charts/kafka-ui/Chart.yaml
+# Edit charts/elasticvue/Chart.yaml
 # Set version: 0.3.0
 
 git add charts/
-git commit -m "release: bump kafka-ui to v0.3.0"
+git commit -m "release: bump elasticvue to v0.3.0"
 git push origin main
 ```
 
@@ -92,7 +98,7 @@ The GitHub Actions workflow will automatically:
 
 ## Chart Features
 
-`common`-based application charts (`elasticvue`, `kafka-ui`, `redisinsight`, `rocketmq-exporter`) support:
+`common`-based application charts (`elasticvue`, `redisinsight`, `rocketmq-exporter`) support:
 
 | Feature | Key | Notes |
 |---------|-----|-------|
@@ -108,7 +114,7 @@ The GitHub Actions workflow will automatically:
 
 ## ArgoCD Integration
 
-The `charts/` directory can also be used directly with ArgoCD. Point ArgoCD to a chart path (e.g., `charts/kafka-ui`) and provide deployment-specific values in the Application's `values` field.
+The `charts/` directory can also be used directly with ArgoCD. Point ArgoCD to a chart path (e.g., `charts/elasticvue`) and provide deployment-specific values in the Application's `values` field. For upstream charts (e.g. kafka-ui), use an explicit multi-source `Application` instead — see [`infrastructure/argocd/applications/kafka-ui.yaml`](./infrastructure/argocd/applications/kafka-ui.yaml).
 
 ## Helm chart workflows
 
@@ -159,8 +165,8 @@ helm pull bitnami/kafka --version=32.4.3 --untar --destination ./charts
 
 ```bash
 # Package a local chart (name + version come from Chart.yaml)
-helm package ./charts/kafka-ui
-helm package ./charts/kafka-ui --destination ./.packages
+helm package ./charts/elasticvue
+helm package ./charts/elasticvue --destination ./.packages
 ```
 
 **Push to an OCI registry**:
@@ -170,7 +176,7 @@ helm package ./charts/kafka-ui --destination ./.packages
 helm registry login ghcr.io -u <user> --password-stdin <<< "$GHCR_TOKEN"
 
 # Push the archive — the OCI path is the *namespace*, not the chart name
-helm push kafka-ui-0.1.0.tgz oci://ghcr.io/<org>/charts
+helm push elasticvue-1.15.0.tgz oci://ghcr.io/<org>/charts
 ```
 
 **Publish to a traditional Helm repo**: there is no `helm push` for HTTP repos. Copy the `.tgz` onto a static host (S3, GCS, GitHub Pages, ChartMuseum) and regenerate `index.yaml`:

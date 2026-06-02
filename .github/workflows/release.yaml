@@ -154,7 +154,7 @@ jobs:
               [ -e "$tgz" ] || continue
               bn=$(basename "$tgz" .tgz)
               # Strict match: chart name followed by '-' then a digit (semver).
-              # Prevents prefix collisions (e.g. "kafka" vs "kafka-ui").
+              # Prevents prefix collisions (e.g. "rocketmq" vs "rocketmq-exporter").
               if [[ "$bn" =~ ^${name}-[0-9] ]]; then
                 matches+=("$tgz")
               fi

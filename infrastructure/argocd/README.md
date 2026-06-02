@@ -55,10 +55,11 @@ infrastructure/argocd/
 │   ├── mgmt-apps.yaml              # Mgmt ApplicationSet (auto-sync, shared infra — explicit allow-list)
 │   ├── uat-apps.yaml               # UAT ApplicationSet (auto-sync, auto-discover)
 │   └── prod-apps.yaml              # Prod ApplicationSet (manual sync, auto-discover)
+├── applications/                   # Explicit Applications for external/upstream charts
+│   ├── kafka-ui.yaml               # kafbat/kafka-ui (mgmt cluster, multi-source)
+│   └── kafka-ui-manifests/         # Raw manifests merged into the kafka-ui Application (VirtualService)
 ├── values/                         # Per-env chart overrides (multi-source $values)
-│   ├── mgmt/{nightingale}.yaml
-│   ├── uat/{kafka-ui}.yaml
-│   └── prod/{kafka-ui}.yaml
+│   └── mgmt/{nightingale,kafka-ui}.yaml
 ├── clusters/                       # Cluster registration secrets (edit placeholders in place)
 ├── projects/                       # AppProjects per env (edit placeholders in place)
 └── notifications/                  # Slack notification ConfigMap + Secret template
@@ -81,14 +82,17 @@ shared infra charts listed under its `directories:` block are deployed.
 
 **Where each chart lands:**
 
-| Chart            | Mgmt | UAT | Prod | Reason                                                                                  |
-| ---------------- | :--: | :-: | :--: | --------------------------------------------------------------------------------------- |
-| `kafka-ui`       |      | yes | yes  | App workload — UAT for staging, Prod for production.                                    |
-| `nightingale`    | yes  |     |      | Shared monitoring stack — deployed once on the mgmt cluster, observes all environments. |
-| `common`         |      |     |      | Library chart (`type: library`) — never deployed as a standalone Application.           |
+| Chart            | Mgmt | UAT | Prod | Source                       | Reason                                                                                                                       |
+| ---------------- | :--: | :-: | :--: | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `kafka-ui`       | yes  |     |      | upstream `kafbat/kafka-ui`   | Shared mgmt-tier UI configured with multi-cluster bootstrap servers — monitors kafka across mgmt/uat/prod from one instance. |
+| `nightingale`    | yes  |     |      | in-repo `charts/nightingale` | Shared monitoring stack — deployed once on the mgmt cluster, observes all environments.                                      |
+| `common`         |      |     |      | in-repo `charts/common`      | Library chart (`type: library`) — never deployed as a standalone Application.                                                |
 
 `nightingale` is explicitly excluded from the UAT/Prod ApplicationSets
-(`exclude: true`) so it does not get auto-discovered there.
+(`exclude: true`) so it does not get auto-discovered there. `kafka-ui` is
+deployed via an explicit Application manifest under `applications/` rather
+than the directory generator, because its chart source is the upstream
+kafbat helm repo, not a local `charts/<name>` path.
 
 ---
 
@@ -278,9 +282,14 @@ The ApplicationSets auto-discover every chart under `charts/` (excluding the
 $EDITOR applicationsets/mgmt-apps.yaml applicationsets/uat-apps.yaml applicationsets/prod-apps.yaml
 
 # Edit env-specific overrides (image tag, replicas, hosts, secrets, …)
-$EDITOR values/mgmt/*.yaml values/uat/*.yaml values/prod/*.yaml
+$EDITOR values/mgmt/*.yaml
 
 kubectl apply -f applicationsets/
+
+# Explicit Applications for upstream/external charts (kafka-ui)
+$EDITOR applications/kafka-ui.yaml         # fill <YOUR_ORG>/<YOUR_REPO>
+$EDITOR applications/kafka-ui-manifests/virtualservice.yaml  # set host
+kubectl apply -f applications/kafka-ui.yaml
 ```
 
 > **Why `charts/common` is excluded:** `common` is a Helm *library chart*
@@ -552,9 +561,9 @@ kubectl delete namespace argocd
 | `applicationsets/mgmt-apps.yaml`            | Mgmt ApplicationSet (auto-sync, explicit allow-list)     |
 | `applicationsets/uat-apps.yaml`             | UAT ApplicationSet (auto-sync, multi-source)             |
 | `applicationsets/prod-apps.yaml`            | Prod ApplicationSet (manual sync, multi-source)          |
+| `applications/kafka-ui.yaml`                | Explicit Application for kafbat/kafka-ui on mgmt         |
+| `applications/kafka-ui-manifests/*.yaml`    | Raw manifests (Istio VS) merged into the kafka-ui App    |
 | `values/mgmt/*.yaml`                        | Per-chart Mgmt overrides (loaded via `$values` ref)      |
-| `values/uat/*.yaml`                         | Per-chart UAT overrides (loaded via `$values` ref)       |
-| `values/prod/*.yaml`                        | Per-chart Prod overrides (loaded via `$values` ref)      |
 | `notifications/configmap.yaml`              | Slack notification triggers / templates                  |
 | `notifications/secret.yaml.template`        | Slack webhook secret template                            |
 

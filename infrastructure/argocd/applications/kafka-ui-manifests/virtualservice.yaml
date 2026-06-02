@@ -1,0 +1,21 @@
+# Istio VirtualService for the ArgoCD-managed kafka-ui (mgmt cluster).
+# Picked up by the directory source in ../kafka-ui.yaml.
+#
+# The upstream kafbat/kafka-ui chart only ships an Ingress template, but this
+# repo routes via Istio. Edit <PLACEHOLDER> tokens before kubectl apply.
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: kafka-ui
+  namespace: kafka-ui
+spec:
+  gateways:
+    - istio-ingress/external-gateway
+  hosts:
+    - kafka-ui.example.com
+  http:
+    - route:
+        - destination:
+            host: kafka-ui.kafka-ui.svc.cluster.local
+            port:
+              number: 80
