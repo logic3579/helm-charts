@@ -1,0 +1,23 @@
+# UAT-specific overrides for the nginx example app.
+# Picked up by infrastructure/argocd/applicationsets/uat-apps.yaml.
+
+replicaCount: 2
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+virtualservice:
+  enabled: true
+  gateways:
+    - istio-ingress/internal-gateway
+  hosts:
+    - nginx.uat.example.com
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

@@ -7,6 +7,15 @@ The Helm chart is published from this repo (`charts/nightingale/`) — upstream
 [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) does not push to Artifact Hub, so
 `logic3579/nightingale` is a repackaged mirror tracking upstream.
 
+> **Dual-purpose values file.** `nightingale-values.yaml` in this directory is
+> consumed by **both** the ArgoCD Application at
+> [`infrastructure/argocd/applications/nightingale.yaml`](../../argocd/applications/nightingale.yaml)
+> (via a multi-source `$values` ref) **and** the standalone `helm upgrade --install`
+> commands below. ArgoCD is the canonical mgmt-cluster deployment route; the
+> standalone helm path is a fallback / debug escape hatch (e.g. when ArgoCD
+> itself is down or not yet bootstrapped). Edit `<PLACEHOLDER>` tokens in
+> place — both paths render the same config.
+
 ## Layout
 
 | File / dir                        | Purpose                                                                             |

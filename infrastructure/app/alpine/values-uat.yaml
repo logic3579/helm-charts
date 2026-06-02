@@ -1,0 +1,19 @@
+# UAT-specific overrides for the alpine example app.
+# Picked up by infrastructure/argocd/applicationsets/uat-apps.yaml.
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 64Mi
+
+virtualservice:
+  enabled: true
+  gateways:
+    - istio-ingress/internal-gateway
+  hosts:
+    - alpine.uat.example.com

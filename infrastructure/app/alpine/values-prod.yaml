@@ -1,0 +1,23 @@
+# Prod-specific overrides for the alpine example app.
+# Picked up by infrastructure/argocd/applicationsets/prod-apps.yaml.
+
+replicaCount: 2
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+virtualservice:
+  enabled: true
+  gateways:
+    - istio-ingress/internal-gateway
+  hosts:
+    - alpine.example.com
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

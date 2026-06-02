@@ -1,0 +1,29 @@
+# Prod-specific overrides for the nginx example app.
+# Picked up by infrastructure/argocd/applicationsets/prod-apps.yaml.
+
+replicaCount: 3
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+virtualservice:
+  enabled: true
+  gateways:
+    - istio-ingress/external-gateway
+  hosts:
+    - nginx.example.com
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2

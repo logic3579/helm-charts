@@ -6,12 +6,13 @@ Production-ready reference configurations for Kubernetes cluster infrastructure 
 
 | Directory                          | Description                                                                                  |
 | ---------------------------------- | -------------------------------------------------------------------------------------------- |
-| [argocd/](./argocd/)               | Multi-cluster GitOps (ApplicationSets, GKE Workload Identity, Slack notifications)           |
+| [app/](./app/)                     | In-cluster example apps (nginx + alpine) for the uat/prod ApplicationSets, plus a private `common` library copy |
+| [argocd/](./argocd/)               | Multi-cluster GitOps — per-component Applications on mgmt + ApplicationSets on uat/prod, Workload Identity, Slack notifications |
 | [bigdata/](./bigdata/)             | Flink, HBase, MLflow VirtualService configs                                                  |
 | [cert-manager/](./cert-manager/)   | TLS automation via Let's Encrypt + GCP Cloud DNS                                             |
 | [database/](./database/)           | ClickHouse (with GCS backup), Elasticsearch, Neo4j                                           |
 | [istio/](./istio/)                 | Service mesh gateways, AuthorizationPolicy, EnvoyFilter access logging                       |
-| [mgmt/](./mgmt/)                   | Management UIs (Elasticvue, Kafka-UI, RedisInsight, RocketMQ Exporter) via `artifacthub.io`  |
+| [mgmt/](./mgmt/)                   | Shared values files for mgmt-tier UIs + rocketmq-exporter — consumed by both ArgoCD Applications (`argocd/applications/`) and the standalone helm fallback documented in `mgmt/README.md` |
 | [observability/](./observability/) | Observability stacks — Grafana LGTM, VictoriaMetrics, Prometheus, OpenTelemetry, Nightingale |
 | [streaming/](./streaming/)         | Kafka broker service aliases                                                                 |
 

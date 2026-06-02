@@ -1,0 +1,21 @@
+apiVersion: v2
+name: nginx
+description: Example front-end app using the Docker Hardened nginx image (dhi/nginx)
+type: application
+version: 1.30.2
+appVersion: "1.30.2"
+home: https://github.com/logic3579/helm-charts
+icon: https://nginx.org/nginx.png
+sources:
+  - https://nginx.org
+maintainers:
+  - name: logic3579
+    url: https://github.com/logic3579/helm-charts
+keywords:
+  - nginx
+  - frontend
+  - example
+dependencies:
+  - name: common
+    version: "0.3.0"
+    repository: "file://../common"

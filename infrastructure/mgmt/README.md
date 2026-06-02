@@ -1,4 +1,19 @@
-# README.md
+# Mgmt cluster — standalone helm fallback
+
+> **Fallback path.** The canonical way to deploy these mgmt-tier components
+> is ArgoCD — see `infrastructure/argocd/applications/{elasticvue,redisinsight,kafka-ui}.yaml`.
+> The standalone `helm upgrade --install` commands below are a debug /
+> disaster-recovery escape hatch (e.g. when ArgoCD itself is down or not
+> yet bootstrapped on the mgmt cluster).
+>
+> **The values files in this directory are the single source of truth.**
+> The ArgoCD Applications reference these same files via `$values`, so
+> ArgoCD-managed and standalone-helm renders are identical. Edit
+> `<PLACEHOLDER>` tokens in place before installing.
+
+All components land in the shared `mgmt` namespace — both the ArgoCD
+Applications (`destination.namespace: mgmt`) and the standalone helm
+commands below.
 
 ## Prerequisites
 
@@ -29,8 +44,8 @@ Uses the upstream `kafbat/kafka-ui` chart (the official chart published at
 [artifacthub.io/packages/helm/kafka-ui/kafka-ui](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)) —
 this repo no longer ships an in-house kafka-ui chart. The upstream chart
 only ships an Ingress template, so the VirtualService is applied as a
-companion manifest. Edit `<PLACEHOLDER>` tokens in both files before
-installing.
+companion manifest from `kafka-ui-manifests/` (also rendered by ArgoCD's
+multi-source Application so both paths apply the same VS).
 
 Bootstrap the login password Secret once (or manage it via ESO / Sealed
 Secrets):
@@ -40,7 +55,7 @@ kubectl -n mgmt create secret generic kafka-ui-auth \
   --from-literal=password='<choose-a-strong-password>'
 ```
 
-Install / upgrade:
+Install / upgrade + apply the VS:
 
 ```bash
 helm upgrade --install \
@@ -48,7 +63,7 @@ helm upgrade --install \
   kafka-ui kafbat/kafka-ui --version 1.6.4 \
   -f kafka-ui-values.yaml
 
-kubectl apply -f kafka-ui-virtualservice.yaml
+kubectl apply -f kafka-ui-manifests/virtualservice.yaml
 ```
 
 ## redisinsight
@@ -66,9 +81,10 @@ helm upgrade --install \
 
 ## rocketmq-exporter
 
-Uses the in-repo `logic3579/rocketmq-exporter` chart. NameServer address,
-RocketMQ version, Prometheus scrape annotations, and VirtualService are all
-configured through values — no standalone manifest needed.
+Not ArgoCD-managed — this is a standalone-only component. Uses the in-repo
+`logic3579/rocketmq-exporter` chart. NameServer address, RocketMQ version,
+Prometheus scrape annotations, and VirtualService are all configured
+through values — no standalone manifest needed.
 
 ```bash
 helm upgrade --install \

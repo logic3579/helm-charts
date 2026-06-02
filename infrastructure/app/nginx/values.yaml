@@ -1,0 +1,185 @@
+# -- Number of pod replicas
+replicaCount: 1
+
+# -- Container image configuration.
+# Default points at the Docker Hardened Image (DHI) nginx catalog.
+# NOTE: the DHI catalog currently publishes mainline-tagged images
+# (e.g. `mainline`, `mainline-fips`). If `dhi/nginx:1.30.2` does not exist
+# at deploy time, switch to the mainline tag your catalog ships and pin a
+# digest from `crane digest dhi/nginx:mainline`.
+image:
+  # -- Image repository
+  repository: dhi/nginx
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag (defaults to .Chart.AppVersion)
+  tag: ""
+
+# -- Image pull secrets for private registries (DHI typically requires one)
+imagePullSecrets: []
+
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full release name
+fullnameOverride: ""
+
+# -- Container command override (leave empty to use the image's default
+# ENTRYPOINT, which starts nginx with /etc/nginx/nginx.conf).
+command: []
+# -- Container args override (leave empty to use the image's default CMD).
+args: []
+
+# -- Service account configuration
+serviceAccount:
+  # -- Whether to create a service account
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/nginx-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: nginx@PROJECT_ID.iam.gserviceaccount.com
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account (generated if not set)
+  name: ""
+  # -- Mount the service account token into pods (nginx does not need API access)
+  automountServiceAccountToken: false
+
+# -- Annotations to add to pods
+podAnnotations: {}
+
+# -- Labels to add to pods
+podLabels: {}
+
+# -- Pod-level security context.
+# DHI nginx runs as a non-root user (nginx, UID 101 in the unprivileged variant).
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101
+  fsGroup: 101
+
+# -- Container-level security context.
+# readOnlyRootFilesystem requires writable tmpfs mounts for nginx's
+# /var/cache/nginx and /var/run; pre-wired below in `volumes`/`volumeMounts`.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# -- Service configuration
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port (also used as the container port)
+  port: 80
+
+# -- Resource requests and limits
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# -- Liveness probe (TCP — works against any nginx instance)
+livenessProbe:
+  tcpSocket:
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# -- Readiness probe (TCP)
+readinessProbe:
+  tcpSocket:
+    port: http
+  initialDelaySeconds: 3
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# -- Horizontal Pod Autoscaler configuration
+autoscaling:
+  # -- Enable HPA
+  enabled: false
+  # -- Minimum number of replicas
+  minReplicas: 1
+  # -- Maximum number of replicas
+  maxReplicas: 5
+  # -- Target CPU utilization percentage
+  targetCPUUtilizationPercentage: 80
+  # -- Target memory utilization percentage (optional)
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Additional volumes to add to the pod.
+# Default ships emptyDir tmpfs mounts so readOnlyRootFilesystem works.
+volumes:
+  - name: nginx-cache
+    emptyDir: {}
+  - name: nginx-run
+    emptyDir: {}
+  - name: tmp
+    emptyDir: {}
+
+# -- Additional volume mounts for the container.
+volumeMounts:
+  - name: nginx-cache
+    mountPath: /var/cache/nginx
+  - name: nginx-run
+    mountPath: /var/run
+  - name: tmp
+    mountPath: /tmp
+
+# -- Extra environment variables (list of name/value pairs).
+env: []
+
+# -- Extra environment variable sources (configMapRef / secretRef)
+envFrom: []
+
+# -- ConfigMap configuration
+configMap:
+  # -- Create a ConfigMap
+  enabled: false
+  # -- ConfigMap key-value data
+  data: {}
+
+# -- Secret configuration
+# WARNING: values are stored as plaintext and base64-encoded at render time.
+# For production secrets, use External Secrets Operator (ESO) or Sealed Secrets instead.
+secret:
+  # -- Create a Secret
+  enabled: false
+  # -- Secret key-value data (values will be base64-encoded)
+  data: {}
+
+# -- Node selector for pod scheduling
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}
+
+# -- Istio VirtualService configuration
+virtualservice:
+  # -- Enable VirtualService
+  enabled: false
+  # -- Istio gateway references
+  gateways: []
+    # - istio-ingress/internal-gateway
+  # -- VirtualService hostnames
+  hosts: []
+    # - nginx.example.com
+  # -- Destination port (defaults to service.port)
+  port: ""
+
+# -- PodDisruptionBudget configuration
+podDisruptionBudget:
+  # -- Enable PDB
+  enabled: false
+  # -- Minimum number of available pods
+  minAvailable: 1
+  # -- Maximum number of unavailable pods (mutually exclusive with minAvailable)
+  # maxUnavailable: 1

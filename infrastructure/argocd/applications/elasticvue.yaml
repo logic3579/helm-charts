@@ -1,26 +1,21 @@
-# Explicit ArgoCD Application for kafka-ui on the mgmt cluster.
+# Explicit ArgoCD Application for elasticvue on the mgmt cluster.
 #
-# All mgmt-tier workloads are wired as explicit `Application` files under
-# this directory (one per component). kafka-ui specifically installs from
-# the upstream kafbat helm repo
-# (https://artifacthub.io/packages/helm/kafka-ui/kafka-ui) rather than an
-# in-repo `charts/<name>` path. It runs only on mgmt and is configured to
-# monitor kafka instances across all environments via cross-cluster
-# connectivity (see infrastructure/mgmt/kafka-ui-values.yaml).
+# mgmt is the cluster ArgoCD itself runs on. Unlike uat/prod (which run via
+# the `infrastructure/app/*` ApplicationSets), mgmt-tier components are
+# wired as explicit `Application` resources so each can be sized,
+# scheduled, and synced independently.
 #
 # This is a multi-source Application:
-#   1. Chart source — kafbat helm repo (renders the chart).
-#   2. Values ref   — this repo, provides $values for the per-env override.
-#   3. Manifests    — this repo, contains the Istio VirtualService that the
-#                     upstream chart doesn't ship.
+#   1. Chart source — in-repo `charts/elasticvue` (renders the chart).
+#   2. Values ref   — same repo, provides $values for the per-env override.
 #
 # Usage:
 #   # Edit the file to replace placeholders with actual values, then:
-#   kubectl apply -f kafka-ui.yaml
+#   kubectl apply -f elasticvue.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kafka-ui-mgmt
+  name: elasticvue-mgmt
   namespace: argocd
   labels:
     environment: mgmt
@@ -36,15 +31,17 @@ spec:
   project: example-mgmt
 
   sources:
-    # 1) Chart source — kafbat upstream helm repo.
-    - repoURL: https://kafbat.github.io/helm-charts
-      chart: kafka-ui
-      targetRevision: 1.6.4   # appVersion v1.5.0
+    # 1) Chart source — in-repo chart at charts/elasticvue.
+    - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+      targetRevision: main
+      path: charts/elasticvue
       helm:
         valueFiles:
+          # Chart defaults (relative to the chart path).
+          - values.yaml
           # mgmt overrides — same file used by the standalone helm fallback in
           # infrastructure/mgmt/README.md, so ArgoCD and helm render identically.
-          - $values/infrastructure/mgmt/kafka-ui-values.yaml
+          - $values/infrastructure/mgmt/elasticvue-values.yaml
         # The shared values file is required — fail loudly if it's missing.
         ignoreMissingValueFiles: false
 
@@ -52,16 +49,6 @@ spec:
     - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
       targetRevision: main
       ref: values
-
-    # 3) Raw manifests directory — Istio VirtualService (upstream chart only
-    #    ships an Ingress template). Co-located with the mgmt values file
-    #    under infrastructure/mgmt/ so both ArgoCD and the standalone helm
-    #    fallback (mgmt/README.md) apply the same manifest.
-    - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
-      targetRevision: main
-      path: infrastructure/mgmt/kafka-ui-manifests
-      directory:
-        recurse: false
 
   destination:
     name: mgmt-cluster

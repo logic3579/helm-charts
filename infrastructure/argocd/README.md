@@ -51,48 +51,81 @@ This guide covers the installation and configuration of ArgoCD for multi-cluster
 infrastructure/argocd/
 ├── argocd-values.yaml              # Helm values for `helm install argocd`
 ├── argocd-virtualservice.yaml      # Istio VS exposing the ArgoCD UI
+├── applications/                   # Explicit per-component Applications (mgmt cluster ONLY)
+│   ├── elasticvue.yaml             # mgmt — in-repo charts/elasticvue
+│   ├── redisinsight.yaml           # mgmt — in-repo charts/redisinsight
+│   ├── kafka-ui.yaml               # mgmt — upstream kafbat/kafka-ui (multi-source: chart + $values + manifests)
+│   └── nightingale.yaml            # mgmt — in-repo charts/nightingale (values under observability/nightingale/)
 ├── applicationsets/
-│   ├── mgmt-apps.yaml              # Mgmt ApplicationSet (auto-sync, shared infra — explicit allow-list)
-│   ├── uat-apps.yaml               # UAT ApplicationSet (auto-sync, auto-discover)
-│   └── prod-apps.yaml              # Prod ApplicationSet (manual sync, auto-discover)
-├── applications/                   # Explicit Applications for external/upstream charts
-│   ├── kafka-ui.yaml               # kafbat/kafka-ui (mgmt cluster, multi-source)
-│   └── kafka-ui-manifests/         # Raw manifests merged into the kafka-ui Application (VirtualService)
-├── values/                         # Per-env chart overrides (multi-source $values)
-│   └── mgmt/{nightingale,kafka-ui}.yaml
+│   ├── uat-apps.yaml               # UAT ApplicationSet (auto-sync, scans infrastructure/app/*)
+│   └── prod-apps.yaml              # Prod ApplicationSet (manual sync, scans infrastructure/app/*)
 ├── clusters/                       # Cluster registration secrets (edit placeholders in place)
 ├── projects/                       # AppProjects per env (edit placeholders in place)
 └── notifications/                  # Slack notification ConfigMap + Secret template
 ```
 
-All three ApplicationSets use a **multi-source** layout:
+mgmt values and the kafka-ui VS manifest live under
+`../mgmt/<chart>-values.yaml` and `../mgmt/kafka-ui-manifests/` respectively
+— shared with the standalone helm fallback so both paths render identically.
 
-- Source 1 renders `charts/<app>` with two `valueFiles`: the chart's own
-  `values.yaml` (defaults) followed by `$values/infrastructure/argocd/values/<env>/<app>.yaml`
-  (env override). `ignoreMissingValueFiles: true` keeps charts without an
-  override file syncable.
-- Source 2 is a `ref: values` pointer to the same repo — it is *not* rendered,
-  it only provides the `$values` prefix used by source 1.
+### Two routing patterns
 
-The `charts/common` directory is excluded from the UAT/Prod directory generator
-because it's a Helm *library chart* (`type: library`) — it has no installable
-resources and would fail to sync as a standalone Application. The mgmt
-ApplicationSet uses an **explicit allow-list** (not a wildcard) — only the
-shared infra charts listed under its `directories:` block are deployed.
+ArgoCD topology is split by env type, not unified under one ApplicationSet.
 
-**Where each chart lands:**
+**mgmt cluster** — no ApplicationSet. Each component is wired as an
+explicit `applications/<name>.yaml` so it can be sized, scheduled, and
+synced independently. Layout per file:
 
-| Chart            | Mgmt | UAT | Prod | Source                       | Reason                                                                                                                       |
-| ---------------- | :--: | :-: | :--: | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `kafka-ui`       | yes  |     |      | upstream `kafbat/kafka-ui`   | Shared mgmt-tier UI configured with multi-cluster bootstrap servers — monitors kafka across mgmt/uat/prod from one instance. |
-| `nightingale`    | yes  |     |      | in-repo `charts/nightingale` | Shared monitoring stack — deployed once on the mgmt cluster, observes all environments.                                      |
-| `common`         |      |     |      | in-repo `charts/common`      | Library chart (`type: library`) — never deployed as a standalone Application.                                                |
+- **Source 1** renders the chart (`charts/<name>` for in-repo charts, or
+  the upstream helm repo URL for `kafka-ui`) with two `valueFiles`: the
+  chart's own `values.yaml` (defaults) followed by a shared `$values/...`
+  file consumed by both ArgoCD and the standalone helm fallback so both
+  renders are identical. Path depends on the component:
+    - UIs (elasticvue / redisinsight / kafka-ui):
+      `$values/infrastructure/mgmt/<name>-values.yaml`
+    - nightingale (lives alongside its observability companions):
+      `$values/infrastructure/observability/nightingale/nightingale-values.yaml`
+  `ignoreMissingValueFiles: false` — the shared values file is required.
+- **Source 2** is a `ref: values` pointer to the same repo — it is *not*
+  rendered, it only provides the `$values` prefix used by source 1.
+- **Source 3** (kafka-ui only) is the raw manifests directory under
+  `infrastructure/mgmt/kafka-ui-manifests/` — adds the Istio VS that
+  upstream's chart doesn't ship.
+- `destination.namespace`: UIs (elasticvue / redisinsight / kafka-ui) share the
+  `mgmt` namespace — the kafka-ui VS at
+  `infrastructure/mgmt/kafka-ui-manifests/virtualservice.yaml` also pins
+  `namespace: mgmt`. nightingale lives in its own `nightingale` namespace
+  (matching `infrastructure/observability/nightingale/nightingale-virtualservice.yaml`).
 
-`nightingale` is explicitly excluded from the UAT/Prod ApplicationSets
-(`exclude: true`) so it does not get auto-discovered there. `kafka-ui` is
-deployed via an explicit Application manifest under `applications/` rather
-than the directory generator, because its chart source is the upstream
-kafbat helm repo, not a local `charts/<name>` path.
+**uat / prod clusters** — `applicationsets/{uat,prod}-apps.yaml` use a
+Git directory generator on `infrastructure/app/*` to auto-discover every
+example application. Layout per generated Application:
+
+- **Single source**, no `$values` ref. `valueFiles: [values.yaml,
+  values-<env>.yaml]` — both colocated under `infrastructure/app/<name>/`.
+- `ignoreMissingValueFiles: false` — each app **must** ship a
+  `values-uat.yaml` and `values-prod.yaml`. New apps fail loudly until
+  both env override files exist.
+- `destination.namespace: "{{ .path.basename }}"` — namespace is the chart
+  directory name (e.g. `infrastructure/app/nginx` → namespace `nginx`),
+  symmetric with the mgmt Applications. Auto-created via
+  `CreateNamespace=true`.
+
+`infrastructure/app/common` is excluded from the directory generator
+because it's a Helm *library chart* (`type: library`).
+
+**Where each component lands:**
+
+| Component            | Mgmt | UAT | Prod | Source                                       | Notes                                                                                                                       |
+| -------------------- | :--: | :-: | :--: | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `elasticvue`         | yes  |     |      | `charts/elasticvue`                          | Mgmt-tier UI. Namespace `mgmt`.                                                                                             |
+| `redisinsight`       | yes  |     |      | `charts/redisinsight`                        | Mgmt-tier UI. Namespace `mgmt`.                                                                                             |
+| `kafka-ui`           | yes  |     |      | upstream `kafbat/kafka-ui`                   | Multi-cluster bootstrap servers — monitors kafka across mgmt/uat/prod from one instance. Namespace `mgmt`.                  |
+| `nightingale`        | yes  |     |      | `charts/nightingale`                         | Shared monitoring stack. Namespace `nightingale`; values at `infrastructure/observability/nightingale/nightingale-values.yaml`. |
+| `nginx` (example)    |      | yes | yes  | `infrastructure/app/nginx`                   | Front-end example app — DHI hardened nginx image.                                                                           |
+| `alpine` (example)   |      | yes | yes  | `infrastructure/app/alpine`                  | Back-end example app — BusyBox `nc` httpd loop.                                                                             |
+| `common` (library)   |      |     |      | both `charts/common` and `infrastructure/app/common` | Library charts (`type: library`) — never deployed as standalone Applications.                                       |
+| `rocketmq-exporter`  |      |     |      | `charts/rocketmq-exporter`                   | Published to the registry; not ArgoCD-deployed (standalone-only via `infrastructure/mgmt/rocketmq-exporter-values.yaml`).   |
 
 ---
 
@@ -258,45 +291,75 @@ $EDITOR projects/mgmt-project.yaml projects/uat-project.yaml projects/prod-proje
 kubectl apply -f projects/
 ```
 
-### Step 11: Create ApplicationSets
+### Step 11: Create mgmt Applications and uat/prod ApplicationSets
 
-The ApplicationSets auto-discover every chart under `charts/` (excluding the
-`common` library chart) and use a multi-source layout:
+**mgmt** uses explicit per-component Application manifests under `applications/`
+— one file per workload. Each consumes its values via a multi-source `$values`
+ref pointing at `infrastructure/mgmt/<name>-values.yaml` — the **same** file
+used by the standalone helm fallback in `infrastructure/mgmt/README.md`, so
+ArgoCD-managed and standalone renders are identical (`ignoreMissingValueFiles: false`).
 
-- **Chart source**: `charts/<app>/values.yaml` — chart defaults baked into the
-  publishable chart, kept clean of any deployment-specific values.
-- **Env overrides**: `infrastructure/argocd/values/<env>/<app>.yaml` — UAT/Prod
-  deployment-specific values (replicas, image tag, resources, hosts, etc.).
-  Missing files are tolerated (`ignoreMissingValueFiles: true`), so adding a
-  new chart doesn't immediately require a matching override file.
+**uat / prod** use ApplicationSet directory generators on `infrastructure/app/*`.
+Each generated Application is single-source with colocated `valueFiles:
+[values.yaml, values-<env>.yaml]` both under `infrastructure/app/<name>/`.
+`ignoreMissingValueFiles: false` — each example app **must** ship a
+`values-uat.yaml` and `values-prod.yaml`.
 
 ```bash
-# Edit the files to replace placeholders:
-#   <YOUR_ORG>         - Your GitHub organization
-#   <YOUR_REPO>        - Your repository name
-#   <TARGET_NAMESPACE> - Kubernetes namespace for apps (e.g., default)
-#
-# Note: applicationsets/mgmt-apps.yaml has NO <TARGET_NAMESPACE> placeholder —
-# each shared component lands in its own namespace named after the chart
-# (e.g. `nightingale` lands in namespace `nightingale`).
-$EDITOR applicationsets/mgmt-apps.yaml applicationsets/uat-apps.yaml applicationsets/prod-apps.yaml
+# 1) Edit placeholders in mgmt Applications:
+#    <YOUR_ORG>  - Your GitHub organization
+#    <YOUR_REPO> - Your repository name
+# UIs land in the shared `mgmt` namespace; nightingale lands in `nightingale`.
+$EDITOR applications/elasticvue.yaml \
+        applications/redisinsight.yaml \
+        applications/kafka-ui.yaml \
+        applications/nightingale.yaml
 
-# Edit env-specific overrides (image tag, replicas, hosts, secrets, …)
-$EDITOR values/mgmt/*.yaml
+# 2) Edit the shared values files + the kafka-ui VS:
+$EDITOR ../mgmt/elasticvue-values.yaml \
+        ../mgmt/redisinsight-values.yaml \
+        ../mgmt/kafka-ui-values.yaml \
+        ../mgmt/kafka-ui-manifests/virtualservice.yaml \
+        ../observability/nightingale/nightingale-values.yaml
 
+# 3) Apply mgmt Applications:
+kubectl apply -f applications/
+
+# 4) Edit placeholders in the uat/prod ApplicationSets:
+#    <YOUR_ORG>  - Your GitHub organization
+#    <YOUR_REPO> - Your repository name
+# Note: each example app lands in a namespace named after its chart
+# directory (e.g. `infrastructure/app/nginx` -> namespace `nginx`),
+# auto-derived via `{{ .path.basename }}` — no namespace placeholder.
+$EDITOR applicationsets/uat-apps.yaml applicationsets/prod-apps.yaml
+
+# 5) Apply the ApplicationSets:
 kubectl apply -f applicationsets/
-
-# Explicit Applications for upstream/external charts (kafka-ui)
-$EDITOR applications/kafka-ui.yaml         # fill <YOUR_ORG>/<YOUR_REPO>
-$EDITOR applications/kafka-ui-manifests/virtualservice.yaml  # set host
-kubectl apply -f applications/kafka-ui.yaml
 ```
 
-> **Why `charts/common` is excluded:** `common` is a Helm *library chart*
-> (`type: library`) consumed by the other charts via `file://../common`. It has
-> no installable resources of its own, so ArgoCD would fail to sync it as a
-> standalone Application. The `exclude: true` rule keeps the directory
-> generator from picking it up.
+> **Adding a new mgmt-tier component:** copy one of the existing
+> `applications/<name>.yaml` files (e.g. `elasticvue.yaml`), adjust
+> `metadata.name` and `path`. Default to `destination.namespace: mgmt`
+> for UIs; components that warrant their own namespace (large stateful
+> apps, observability stacks, etc.) set their own — see `nightingale.yaml`
+> for the pattern. Drop a values file in the matching subtree
+> (`infrastructure/mgmt/<name>-values.yaml` for UIs;
+> `infrastructure/observability/<stack>/<name>-values.yaml` for
+> observability stacks) — the same file is consumed by the standalone
+> helm fallback documented in the adjacent README.
+>
+> **Adding a new uat/prod example app:** create
+> `infrastructure/app/<name>/` with its own `Chart.yaml`,
+> `values.yaml`, `values-uat.yaml`, `values-prod.yaml`, and standard
+> templates (delegating to `infrastructure/app/common` via
+> `file://../common`). The directory generator picks it up automatically.
+>
+> **Why `common` is excluded from the generator:** both
+> `charts/common` and `infrastructure/app/common` are Helm *library
+> charts* (`type: library`) — they have no installable resources and
+> would fail to sync as a standalone Application. The uat/prod
+> ApplicationSets carry an `exclude: true` rule for
+> `infrastructure/app/common`.
 
 ### Step 12: Apply Notifications (Optional)
 
@@ -379,8 +442,9 @@ top of the global layer:
 | `example-prod` | —           | —                  | No project-scoped roles (see below)            |
 
 > `example-mgmt` deliberately has no project-scoped roles: it holds shared
-> infrastructure components (e.g. nightingale) that only devops-team should
-> manage. devops-team is already global admin via the layer above.
+> infrastructure components (the mgmt UIs — elasticvue, redisinsight,
+> kafka-ui) that only devops-team should manage. devops-team is already
+> global admin via the layer above.
 >
 > `example-prod` deliberately has no project-scoped roles: devops-team is
 > already global admin, developer-team is already global readonly, and Prod
@@ -534,7 +598,8 @@ helm upgrade argocd argo/argo-cd \
 ## Uninstallation
 
 ```bash
-# Delete ApplicationSets first
+# Delete mgmt Applications and uat/prod ApplicationSets first
+kubectl delete -f applications/
 kubectl delete -f applicationsets/
 
 # Uninstall ArgoCD
@@ -558,12 +623,15 @@ kubectl delete namespace argocd
 | `projects/mgmt-project.yaml`                | Mgmt AppProject definition (fill in placeholders)        |
 | `projects/uat-project.yaml`                 | UAT AppProject definition (fill in placeholders)         |
 | `projects/prod-project.yaml`                | Prod AppProject definition (fill in placeholders)        |
-| `applicationsets/mgmt-apps.yaml`            | Mgmt ApplicationSet (auto-sync, explicit allow-list)     |
-| `applicationsets/uat-apps.yaml`             | UAT ApplicationSet (auto-sync, multi-source)             |
-| `applicationsets/prod-apps.yaml`            | Prod ApplicationSet (manual sync, multi-source)          |
-| `applications/kafka-ui.yaml`                | Explicit Application for kafbat/kafka-ui on mgmt         |
-| `applications/kafka-ui-manifests/*.yaml`    | Raw manifests (Istio VS) merged into the kafka-ui App    |
-| `values/mgmt/*.yaml`                        | Per-chart Mgmt overrides (loaded via `$values` ref)      |
+| `applications/elasticvue.yaml`              | Mgmt Application — in-repo charts/elasticvue             |
+| `applications/redisinsight.yaml`            | Mgmt Application — in-repo charts/redisinsight           |
+| `applications/kafka-ui.yaml`                | Mgmt Application — upstream kafbat/kafka-ui              |
+| `applications/nightingale.yaml`             | Mgmt Application — in-repo charts/nightingale (ns `nightingale`) |
+| `applicationsets/uat-apps.yaml`             | UAT ApplicationSet (auto-sync, scans infrastructure/app/*) |
+| `applicationsets/prod-apps.yaml`            | Prod ApplicationSet (manual sync, scans infrastructure/app/*) |
+| `../mgmt/<chart>-values.yaml`               | Mgmt UI values — shared by ArgoCD Applications and standalone helm fallback |
+| `../mgmt/kafka-ui-manifests/`               | Raw Istio VS manifest — rendered by kafka-ui Application + applied standalone |
+| `../observability/nightingale/nightingale-values.yaml` | Nightingale values — shared by the nightingale Application and the observability standalone helm path |
 | `notifications/configmap.yaml`              | Slack notification triggers / templates                  |
 | `notifications/secret.yaml.template`        | Slack webhook secret template                            |
 
@@ -580,6 +648,5 @@ kubectl delete namespace argocd
 | `<PROD_CLUSTER_ENDPOINT>`       | Prod cluster API server IP            | `gcloud container clusters describe <name> --format='value(endpoint)'`                        |
 | `<UAT_CLUSTER_CA_CERT_BASE64>`  | UAT cluster CA certificate (base64)   | `gcloud container clusters describe <name> --format='value(masterAuth.clusterCaCertificate)'` |
 | `<PROD_CLUSTER_CA_CERT_BASE64>` | Prod cluster CA certificate (base64)  | `gcloud container clusters describe <name> --format='value(masterAuth.clusterCaCertificate)'` |
-| `<TARGET_NAMESPACE>`            | Kubernetes namespace for applications | e.g., `default`, `apps`, `example`                                                            |
 | `<GITHUB_PAT>`                  | GitHub Personal Access Token          | Create at GitHub Settings > Developer settings > Personal access tokens                       |
 | `<ARGOCD_DOMAIN>`               | ArgoCD UI domain                      | e.g., `argocd.example.com`                                                                    |

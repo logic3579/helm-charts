@@ -1,0 +1,21 @@
+apiVersion: v2
+name: alpine
+description: Example back-end app — Alpine Linux running a minimal BusyBox nc HTTP responder
+type: application
+version: 3.23.4
+appVersion: "3.23.4"
+home: https://github.com/logic3579/helm-charts
+icon: https://alpinelinux.org/alpinelinux-logo.svg
+sources:
+  - https://alpinelinux.org
+maintainers:
+  - name: logic3579
+    url: https://github.com/logic3579/helm-charts
+keywords:
+  - alpine
+  - backend
+  - example
+dependencies:
+  - name: common
+    version: "0.3.0"
+    repository: "file://../common"

@@ -10,7 +10,7 @@
 #
 # Then apply the companion VirtualService (the upstream chart only ships an
 # Ingress template; this repo routes via Istio):
-#   kubectl apply -f kafka-ui-virtualservice.yaml
+#   kubectl apply -f kafka-ui-manifests/virtualservice.yaml
 #
 # Edit <PLACEHOLDER> tokens in place before running the commands above.
 
@@ -70,7 +70,7 @@ envs:
       keyName: password
 
 # Upstream chart only ships Ingress — leave it disabled and apply
-# kafka-ui-virtualservice.yaml after the helm install.
+# kafka-ui-manifests/virtualservice.yaml after the helm install.
 ingress:
   enabled: false
 

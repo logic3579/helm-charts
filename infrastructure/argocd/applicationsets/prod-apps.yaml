@@ -1,14 +1,21 @@
 # ApplicationSet for Prod Environment
 #
-# Auto-discovers every chart under `charts/` (excluding the `common` library
-# chart) and deploys it to the Prod cluster.
+# Auto-discovers every example app under `infrastructure/app/` (excluding
+# the `common` library chart) and deploys it to the Prod cluster.
 #
-# Layout (multi-source):
-#   - Chart source:   charts/<app>/values.yaml                                 (defaults baked into the chart)
-#   - Env overrides:  infrastructure/argocd/values/prod/<app>.yaml             (deployment-specific values)
+# Each app provides its own env-specific values colocated with the chart:
+#   - infrastructure/app/<name>/values.yaml         (chart defaults)
+#   - infrastructure/app/<name>/values-prod.yaml    (prod override — required)
 #
-# Missing override files are tolerated (`ignoreMissingValueFiles: true`) so a
-# new chart can be added without immediately requiring a Prod override file.
+# Both files are passed to helm in order. `ignoreMissingValueFiles: false`
+# because each app is expected to ship its env override; if a new app is
+# added without a prod override it should fail loudly rather than silently
+# fall back to defaults.
+#
+# Note: publishable charts under `charts/` are NOT deployed here — they
+# either ship via the gh-pages registry / OCI to external consumers, or
+# are wired to mgmt as explicit Applications under
+# `infrastructure/argocd/applications/`.
 #
 # NOTE: Auto-sync is DISABLED — changes are applied only after a manual sync.
 #
@@ -26,23 +33,18 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
 
-  # Generator: Git Directory - auto-discover all helm charts
+  # Generator: Git Directory — auto-discover every example app.
   generators:
     - git:
         repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
         revision: main
         directories:
-          # Include every chart directly under charts/
-          - path: charts/*
-          # Exclude the `common` library chart — it has `type: library` and is
-          # consumed by the other charts via file://../common; ArgoCD cannot
-          # deploy it as a standalone Application.
-          - path: charts/common
-            exclude: true
-          # Exclude `nightingale` — it's a shared mgmt-tier component deployed
-          # once to the mgmt cluster (see applicationsets/mgmt-apps.yaml), not
-          # per-environment.
-          - path: charts/nightingale
+          # Include every app directly under infrastructure/app/
+          - path: infrastructure/app/*
+          # Exclude the `common` library chart — it has `type: library` and
+          # is consumed by the other apps via file://../common; ArgoCD
+          # cannot deploy it as a standalone Application.
+          - path: infrastructure/app/common
             exclude: true
 
   # Application template
@@ -67,30 +69,27 @@ spec:
       # Project reference
       project: example-prod
 
-      # Multi-source: chart source + values-only ref
-      sources:
-        # 1) Chart source — ArgoCD renders this with Helm
-        - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
-          targetRevision: main
-          path: "{{ .path.path }}"
-          helm:
-            valueFiles:
-              # Chart defaults (relative to the chart path)
-              - values.yaml
-              # Env-specific override (resolved via the $values ref source below)
-              - $values/infrastructure/argocd/values/prod/{{ .path.basename }}.yaml
-            # Tolerate charts that don't yet have a Prod override file
-            ignoreMissingValueFiles: true
-        # 2) Values ref — provides the `$values` prefix used above. This source
-        #    is NOT rendered; it only resolves paths for valueFiles lookups.
-        - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
-          targetRevision: main
-          ref: values
+      # Single source — values colocated with the chart so no `$values` ref needed.
+      source:
+        repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+        targetRevision: main
+        path: "{{ .path.path }}"
+        helm:
+          valueFiles:
+            # Chart defaults
+            - values.yaml
+            # Prod-specific override (colocated, relative to the chart path)
+            - values-prod.yaml
+          # Colocated override is required — fail loudly if missing.
+          ignoreMissingValueFiles: false
 
-      # Destination: Prod cluster (use cluster name from cluster secret)
+      # Destination: Prod cluster (use cluster name from cluster secret).
+      # Namespace = chart directory name (e.g. `infrastructure/app/nginx` -> ns `nginx`),
+      # symmetric with the per-component mgmt Applications. Auto-created via
+      # `CreateNamespace=true` below.
       destination:
         name: prod-cluster
-        namespace: <TARGET_NAMESPACE>
+        namespace: "{{ .path.basename }}"
 
       # Sync policy: MANUAL for Production environment
       # Auto-sync is intentionally disabled

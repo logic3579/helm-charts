@@ -1,0 +1,91 @@
+# Explicit ArgoCD Application for nightingale on the mgmt cluster.
+#
+# Nightingale (n9e) is a shared monitoring stack — deployed once on the
+# mgmt cluster, observes targets across all environments. Unlike the
+# other mgmt-tier Applications whose values live under
+# `infrastructure/mgmt/<chart>-values.yaml`, nightingale's values
+# live alongside its companion infra reference manifests (Categraf,
+# Istio VS, dashboards, alert rules) under
+# `infrastructure/observability/nightingale/`. The same values file is
+# consumed by both this Application and the standalone helm path
+# documented in `infrastructure/observability/nightingale/README.md`.
+#
+# This is a multi-source Application:
+#   1. Chart source — in-repo `charts/nightingale` (renders the chart).
+#   2. Values ref   — same repo, provides $values for the shared override.
+#
+# Usage:
+#   # Edit the file to replace placeholders with actual values, then:
+#   kubectl apply -f nightingale.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nightingale-mgmt
+  namespace: argocd
+  labels:
+    environment: mgmt
+    app.kubernetes.io/part-of: example
+  finalizers:
+    - argocd.argoproj.io/resources-finalizer
+  annotations:
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack-webhook: ""
+    notifications.argoproj.io/subscribe.on-sync-failed.slack-webhook: ""
+    notifications.argoproj.io/subscribe.on-health-degraded.slack-webhook: ""
+    notifications.argoproj.io/subscribe.on-sync-running.slack-webhook: ""
+spec:
+  project: example-mgmt
+
+  sources:
+    # 1) Chart source — in-repo chart at charts/nightingale.
+    - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+      targetRevision: main
+      path: charts/nightingale
+      helm:
+        valueFiles:
+          # Chart defaults (relative to the chart path).
+          - values.yaml
+          # Shared values — same file used by the standalone helm path in
+          # infrastructure/observability/nightingale/README.md, so ArgoCD
+          # and helm render identically.
+          - $values/infrastructure/observability/nightingale/nightingale-values.yaml
+        # The shared values file is required — fail loudly if it's missing.
+        ignoreMissingValueFiles: false
+
+    # 2) Values ref — this repo. NOT rendered; only resolves $values.
+    - repoURL: https://github.com/<YOUR_ORG>/<YOUR_REPO>.git
+      targetRevision: main
+      ref: values
+
+  destination:
+    name: mgmt-cluster
+    namespace: nightingale
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    - group: ""
+      kind: ServiceAccount
+      jsonPointers:
+        - /secrets
