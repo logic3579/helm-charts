@@ -11,7 +11,7 @@ Production-ready reference configurations for Kubernetes cluster infrastructure 
 | [cert-manager/](./cert-manager/)   | TLS automation via Let's Encrypt + GCP Cloud DNS                                             |
 | [database/](./database/)           | ClickHouse (with GCS backup), Elasticsearch, Neo4j                                           |
 | [istio/](./istio/)                 | Service mesh gateways, AuthorizationPolicy, EnvoyFilter access logging                       |
-| [mgmt/](./mgmt/)                   | Management UIs (Kafka-UI, Cerebro, RedisInsight, RocketMQ Exporter)                          |
+| [mgmt/](./mgmt/)                   | Management UIs (Elasticvue, Kafka-UI, RedisInsight, RocketMQ Exporter) via `logic-charts`    |
 | [observability/](./observability/) | Observability stacks — Grafana LGTM, VictoriaMetrics, Prometheus, OpenTelemetry, Nightingale |
 | [streaming/](./streaming/)         | Kafka broker service aliases                                                                 |
 

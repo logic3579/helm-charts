@@ -1,0 +1,28 @@
+apiVersion: v2
+name: redisinsight
+description: A Helm chart for RedisInsight — Redis Inc.'s official web UI for Redis
+type: application
+version: 3.4.0
+appVersion: "3.4"
+home: https://github.com/logic3579/helm-charts
+sources:
+  - https://github.com/redis/RedisInsight
+maintainers:
+  - name: logic3579
+    url: https://github.com/logic3579/helm-charts
+keywords:
+  - redis
+  - redisinsight
+  - ui
+annotations:
+  artifacthub.io/license: SSPL-1.0
+  artifacthub.io/links: |
+    - name: Upstream Project
+      url: https://github.com/redis/RedisInsight
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial publish of redisinsight chart
+dependencies:
+  - name: common
+    version: "0.2.0"
+    repository: "file://../common"

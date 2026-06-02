@@ -1,0 +1,29 @@
+apiVersion: v2
+name: elasticvue
+description: A Helm chart for Elasticvue — a web UI for Elasticsearch and OpenSearch
+type: application
+version: 1.15.0
+appVersion: "1.15.0"
+home: https://github.com/logic3579/helm-charts
+sources:
+  - https://github.com/cars10/elasticvue
+maintainers:
+  - name: logic3579
+    url: https://github.com/logic3579/helm-charts
+keywords:
+  - elasticsearch
+  - opensearch
+  - elasticvue
+  - ui
+annotations:
+  artifacthub.io/license: MIT
+  artifacthub.io/links: |
+    - name: Upstream Project
+      url: https://github.com/cars10/elasticvue
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial publish of elasticvue chart
+dependencies:
+  - name: common
+    version: "0.2.0"
+    repository: "file://../common"

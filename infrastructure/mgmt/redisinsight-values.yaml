@@ -1,0 +1,15 @@
+# Values for logic-charts/redisinsight deployed on the mgmt cluster.
+# Saved Redis connections and query history persist on the PVC at /data.
+
+persistence:
+  enabled: true
+  size: 1Gi
+  # storageClass: ""  # cluster default
+
+# VirtualService is enabled here instead of via a standalone manifest.
+virtualservice:
+  enabled: true
+  gateways:
+    - istio-ingress/external-gateway
+  hosts:
+    - redisinsight.example.com
