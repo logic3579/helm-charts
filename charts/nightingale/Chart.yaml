@@ -16,8 +16,8 @@ apiVersion: v2
 name: nightingale
 description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
 type: application
-version: 0.3.0
-appVersion: "8.5.0"
+version: 0.3.1
+appVersion: "8.5.1"
 home: https://n9e.github.io
 icon: https://raw.githubusercontent.com/flashcatcloud/n9e-helm/master/n9e-icon.png
 sources:
@@ -34,7 +34,7 @@ keywords:
 maintainers:
   - name: flashcatcloud
     email: contact-us@flashcat.cloud
-  - name: Logic
+  - name: logic3579
     url: https://github.com/logic3579/helm-charts
 annotations:
   catalog.cattle.io/release-name: flashcatcloud
@@ -47,3 +47,7 @@ annotations:
   artifacthub.io/changes: |
     - kind: added
       description: Initial publish via logic-charts (sourced from flashcatcloud/n9e-helm)
+    - kind: changed
+      description: Bump nightingale appVersion to 8.5.1
+    - kind: changed
+      description: Consolidate maintainers to logic3579

@@ -243,7 +243,7 @@ n9e:
     automountServiceAccountToken: false
     image:
       repository: flashcatcloud/nightingale
-      tag: 8.5.0
+      tag: 8.5.1
     resources:
       requests:
         cpu: 500m

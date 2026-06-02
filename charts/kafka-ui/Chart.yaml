@@ -7,7 +7,7 @@ appVersion: "v0.7.2"
 home: https://github.com/logic3579/helm-charts
 icon: https://raw.githubusercontent.com/kafbat/kafka-ui/main/documentation/images/logo.png
 maintainers:
-  - name: Logic
+  - name: logic3579
     url: https://github.com/logic3579/helm-charts
 keywords:
   - kafka
