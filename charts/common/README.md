@@ -7,7 +7,7 @@ It is not installable on its own — application charts depend on it via `file:/
 # charts/<app>/Chart.yaml
 dependencies:
   - name: common
-    version: "0.2.0"
+    version: "0.3.0"
     repository: "file://../common"
 ```
 
@@ -60,7 +60,7 @@ else should be a one-line include of a `common.*` template.
 
 ## Versioning
 
-Consumers pin to an exact version (e.g. `"0.2.0"`), not a range — ranges have caused surprise
+Consumers pin to an exact version (e.g. `"0.3.0"`), not a range — ranges have caused surprise
 template churn in the past. Bump `common`'s `version` whenever a template's rendered output changes,
 and bump every consuming chart's pinned version in the same change set.
 

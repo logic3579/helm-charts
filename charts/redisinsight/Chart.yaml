@@ -2,7 +2,7 @@ apiVersion: v2
 name: redisinsight
 description: A Helm chart for RedisInsight — Redis Inc.'s official web UI for Redis
 type: application
-version: 3.4.1
+version: 3.4.0
 appVersion: "3.4"
 home: https://github.com/logic3579/helm-charts
 icon: https://raw.githubusercontent.com/redis/RedisInsight/main/resources/icon.png
@@ -23,9 +23,7 @@ annotations:
   artifacthub.io/changes: |
     - kind: added
       description: Initial publish of redisinsight chart
-    - kind: added
-      description: Add upstream project icon and chart README
 dependencies:
   - name: common
-    version: "0.2.0"
+    version: "0.3.0"
     repository: "file://../common"
