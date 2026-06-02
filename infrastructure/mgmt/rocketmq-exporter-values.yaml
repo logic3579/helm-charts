@@ -1,0 +1,21 @@
+# Values for logic-charts/rocketmq-exporter deployed on the mgmt cluster.
+
+rocketmq:
+  namesrvAddr: "rocketmq-nameserver.middleware.svc:9876"
+  # mgmt cluster runs RocketMQ 5.3.0 (chart default is 4_9_4)
+  rocketmqVersion: "V5_3_0"
+
+# Preserve the original prometheus.io/* scrape pattern.
+# Switch to `serviceMonitor.enabled: true` if Prometheus Operator is in use.
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "5557"
+  prometheus.io/path: "/metrics"
+
+# VirtualService is enabled here instead of via a standalone manifest.
+virtualservice:
+  enabled: true
+  gateways:
+    - istio-ingress/external-gateway
+  hosts:
+    - rocketmq-ui.example.com
