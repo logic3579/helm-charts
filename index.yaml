@@ -5,13 +5,49 @@ entries:
       artifacthub.io/changes: |
         - kind: added
           description: Initial publish of elasticvue chart
+        - kind: added
+          description: Add upstream project icon and chart README
       artifacthub.io/license: MIT
       artifacthub.io/links: |
         - name: Upstream Project
           url: https://github.com/cars10/elasticvue
     apiVersion: v2
     appVersion: 1.15.0
-    created: "2026-06-02T06:21:32.985479159Z"
+    created: "2026-06-02T06:47:41.456799542Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.2.0
+    description: A Helm chart for Elasticvue — a web UI for Elasticsearch and OpenSearch
+    digest: 2fac54d0399937649315cde69611bc9e74786d92399a2ee3022c4fd317a3f351
+    home: https://github.com/logic3579/helm-charts
+    icon: https://raw.githubusercontent.com/cars10/elasticvue/master/src/assets/images/logo/blue_96.png
+    keywords:
+    - elasticsearch
+    - opensearch
+    - elasticvue
+    - ui
+    maintainers:
+    - name: logic3579
+      url: https://github.com/logic3579/helm-charts
+    name: elasticvue
+    sources:
+    - https://github.com/cars10/elasticvue
+    type: application
+    urls:
+    - https://logic3579.github.io/helm-charts/elasticvue-1.15.1.tgz
+    version: 1.15.1
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: Initial publish of elasticvue chart
+      artifacthub.io/license: MIT
+      artifacthub.io/links: |
+        - name: Upstream Project
+          url: https://github.com/cars10/elasticvue
+    apiVersion: v2
+    appVersion: 1.15.0
+    created: "2026-06-02T06:47:41.45610061Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -38,6 +74,51 @@ entries:
   - annotations:
       artifacthub.io/changes: |
         - kind: added
+          description: Initial publish via logic3579 (sourced from flashcatcloud/n9e-helm)
+        - kind: changed
+          description: Bump nightingale appVersion to 8.5.1
+        - kind: changed
+          description: Consolidate maintainers to logic3579
+        - kind: changed
+          description: Update icon to the official n9e.github.io favicon
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Upstream Project
+          url: https://github.com/flashcatcloud/n9e-helm
+        - name: Nightingale
+          url: https://github.com/ccfos/nightingale
+      catalog.cattle.io/release-name: flashcatcloud
+    apiVersion: v2
+    appVersion: 8.5.1
+    created: "2026-06-02T06:47:41.465012044Z"
+    description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
+    digest: 9a13ff10318525be4728073c589774304258b66171addc959503239dc07e40a3
+    home: https://n9e.github.io
+    icon: https://n9e.github.io/favicon-32x32.png
+    keywords:
+    - nightingale
+    - n9e
+    - monitoring
+    - alerting
+    - metrics
+    - traces
+    - logs
+    maintainers:
+    - email: contact-us@flashcat.cloud
+      name: flashcatcloud
+    - name: logic3579
+      url: https://github.com/logic3579/helm-charts
+    name: nightingale
+    sources:
+    - https://github.com/ccfos/nightingale
+    - https://github.com/flashcatcloud/n9e-helm
+    type: application
+    urls:
+    - https://logic3579.github.io/helm-charts/nightingale-0.3.2.tgz
+    version: 0.3.2
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
           description: Initial publish via logic-charts (sourced from flashcatcloud/n9e-helm)
         - kind: changed
           description: Bump nightingale appVersion to 8.5.1
@@ -52,7 +133,7 @@ entries:
       catalog.cattle.io/release-name: flashcatcloud
     apiVersion: v2
     appVersion: 8.5.1
-    created: "2026-06-02T06:21:32.990989856Z"
+    created: "2026-06-02T06:47:41.462232226Z"
     description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
     digest: fbcf9b0faf2c8d55d2e8d87cd0b2ce2ae153f9c22f8a7a75e2c9d50118947108
     home: https://n9e.github.io
@@ -91,7 +172,7 @@ entries:
       catalog.cattle.io/release-name: flashcatcloud
     apiVersion: v2
     appVersion: 8.5.0
-    created: "2026-06-02T06:21:32.987734742Z"
+    created: "2026-06-02T06:47:41.460022335Z"
     description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
     digest: 93bc97829888cf694970adc8c84f8286e082b982d6f7f60ca271d9f92eb3faf3
     home: https://n9e.github.io
@@ -122,13 +203,49 @@ entries:
       artifacthub.io/changes: |
         - kind: added
           description: Initial publish of redisinsight chart
+        - kind: added
+          description: Add upstream project icon and chart README
       artifacthub.io/license: SSPL-1.0
       artifacthub.io/links: |
         - name: Upstream Project
           url: https://github.com/redis/RedisInsight
     apiVersion: v2
     appVersion: "3.4"
-    created: "2026-06-02T06:21:32.991654012Z"
+    created: "2026-06-02T06:47:41.466722742Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.2.0
+    description: A Helm chart for RedisInsight — Redis Inc.'s official web UI for
+      Redis
+    digest: 4cb0e85136756f9669099ba10ab72f8a75ed040470949a6d1f58453b3896011e
+    home: https://github.com/logic3579/helm-charts
+    icon: https://raw.githubusercontent.com/redis/RedisInsight/main/resources/icon.png
+    keywords:
+    - redis
+    - redisinsight
+    - ui
+    maintainers:
+    - name: logic3579
+      url: https://github.com/logic3579/helm-charts
+    name: redisinsight
+    sources:
+    - https://github.com/redis/RedisInsight
+    type: application
+    urls:
+    - https://logic3579.github.io/helm-charts/redisinsight-3.4.1.tgz
+    version: 3.4.1
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: Initial publish of redisinsight chart
+      artifacthub.io/license: SSPL-1.0
+      artifacthub.io/links: |
+        - name: Upstream Project
+          url: https://github.com/redis/RedisInsight
+    apiVersion: v2
+    appVersion: "3.4"
+    created: "2026-06-02T06:47:41.465997079Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -156,13 +273,51 @@ entries:
       artifacthub.io/changes: |
         - kind: added
           description: Initial publish of rocketmq-exporter chart
+        - kind: added
+          description: Add upstream project icon and chart README
       artifacthub.io/license: Apache-2.0
       artifacthub.io/links: |
         - name: Upstream Project
           url: https://github.com/apache/rocketmq-exporter
     apiVersion: v2
     appVersion: 0.0.2
-    created: "2026-06-02T06:21:32.992438013Z"
+    created: "2026-06-02T06:47:41.468229301Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 0.2.0
+    description: A Helm chart for Apache RocketMQ Exporter — a Prometheus exporter
+      for Apache RocketMQ
+    digest: 1dea881e9b95c6bb1fcb40db7f6bb8fe0739f60d0b0f9e7c3079805da16de5a1
+    home: https://github.com/logic3579/helm-charts
+    icon: https://rocketmq.apache.org/img/logo.svg
+    keywords:
+    - rocketmq
+    - exporter
+    - prometheus
+    - metrics
+    - monitoring
+    maintainers:
+    - name: logic3579
+      url: https://github.com/logic3579/helm-charts
+    name: rocketmq-exporter
+    sources:
+    - https://github.com/apache/rocketmq-exporter
+    type: application
+    urls:
+    - https://logic3579.github.io/helm-charts/rocketmq-exporter-0.0.3.tgz
+    version: 0.0.3
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: Initial publish of rocketmq-exporter chart
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Upstream Project
+          url: https://github.com/apache/rocketmq-exporter
+    apiVersion: v2
+    appVersion: 0.0.2
+    created: "2026-06-02T06:47:41.46745122Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -187,4 +342,4 @@ entries:
     urls:
     - https://logic3579.github.io/helm-charts/rocketmq-exporter-0.0.2.tgz
     version: 0.0.2
-generated: "2026-06-02T06:21:32.984577056Z"
+generated: "2026-06-02T06:47:41.455281672Z"
