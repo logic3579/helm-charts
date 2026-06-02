@@ -16,7 +16,7 @@ apiVersion: v2
 name: nightingale
 description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
 type: application
-version: 0.3.1
+version: 0.3.2
 appVersion: "8.5.1"
 home: https://n9e.github.io
 icon: https://n9e.github.io/favicon-32x32.png
@@ -51,3 +51,5 @@ annotations:
       description: Bump nightingale appVersion to 8.5.1
     - kind: changed
       description: Consolidate maintainers to logic3579
+    - kind: changed
+      description: Update icon to the official n9e.github.io favicon

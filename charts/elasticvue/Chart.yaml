@@ -2,7 +2,7 @@ apiVersion: v2
 name: elasticvue
 description: A Helm chart for Elasticvue — a web UI for Elasticsearch and OpenSearch
 type: application
-version: 1.15.0
+version: 1.15.1
 appVersion: "1.15.0"
 home: https://github.com/logic3579/helm-charts
 icon: https://raw.githubusercontent.com/cars10/elasticvue/master/src/assets/images/logo/blue_96.png
@@ -24,6 +24,8 @@ annotations:
   artifacthub.io/changes: |
     - kind: added
       description: Initial publish of elasticvue chart
+    - kind: added
+      description: Add upstream project icon and chart README
 dependencies:
   - name: common
     version: "0.2.0"
