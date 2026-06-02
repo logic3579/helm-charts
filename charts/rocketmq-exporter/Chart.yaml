@@ -5,6 +5,7 @@ type: application
 version: 0.0.2
 appVersion: "0.0.2"
 home: https://github.com/logic3579/helm-charts
+icon: https://rocketmq.apache.org/img/logo.svg
 sources:
   - https://github.com/apache/rocketmq-exporter
 maintainers:

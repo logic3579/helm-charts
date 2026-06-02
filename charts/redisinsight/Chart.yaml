@@ -5,6 +5,7 @@ type: application
 version: 3.4.0
 appVersion: "3.4"
 home: https://github.com/logic3579/helm-charts
+icon: https://raw.githubusercontent.com/redis/RedisInsight/main/resources/icon.png
 sources:
   - https://github.com/redis/RedisInsight
 maintainers:

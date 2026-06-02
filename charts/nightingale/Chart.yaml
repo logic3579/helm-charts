@@ -19,7 +19,7 @@ type: application
 version: 0.3.1
 appVersion: "8.5.1"
 home: https://n9e.github.io
-icon: https://raw.githubusercontent.com/flashcatcloud/n9e-helm/master/n9e-icon.png
+icon: https://n9e.github.io/favicon-32x32.png
 sources:
   - https://github.com/ccfos/nightingale
   - https://github.com/flashcatcloud/n9e-helm
