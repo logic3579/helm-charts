@@ -11,7 +11,7 @@ entries:
           url: https://github.com/cars10/elasticvue
     apiVersion: v2
     appVersion: 1.15.0
-    created: "2026-06-02T04:10:41.879478042Z"
+    created: "2026-06-02T04:11:52.158029635Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -45,7 +45,7 @@ entries:
           url: https://github.com/kafbat/kafka-ui
     apiVersion: v2
     appVersion: v0.7.2
-    created: "2026-06-02T04:10:41.880237105Z"
+    created: "2026-06-02T04:11:52.158809615Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -87,7 +87,7 @@ entries:
       catalog.cattle.io/release-name: flashcatcloud
     apiVersion: v2
     appVersion: 8.5.1
-    created: "2026-06-02T04:10:41.885199407Z"
+    created: "2026-06-02T04:11:52.164373914Z"
     description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
     digest: fbcf9b0faf2c8d55d2e8d87cd0b2ce2ae153f9c22f8a7a75e2c9d50118947108
     home: https://n9e.github.io
@@ -126,7 +126,7 @@ entries:
       catalog.cattle.io/release-name: flashcatcloud
     apiVersion: v2
     appVersion: 8.5.0
-    created: "2026-06-02T04:10:41.882489297Z"
+    created: "2026-06-02T04:11:52.161126551Z"
     description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
     digest: 93bc97829888cf694970adc8c84f8286e082b982d6f7f60ca271d9f92eb3faf3
     home: https://n9e.github.io
@@ -163,7 +163,7 @@ entries:
           url: https://github.com/redis/RedisInsight
     apiVersion: v2
     appVersion: "3.4"
-    created: "2026-06-02T04:10:41.88633163Z"
+    created: "2026-06-02T04:11:52.165074033Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -197,7 +197,7 @@ entries:
           url: https://github.com/apache/rocketmq-exporter
     apiVersion: v2
     appVersion: 0.0.2
-    created: "2026-06-02T04:10:41.887087617Z"
+    created: "2026-06-02T04:11:52.165824338Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -222,4 +222,4 @@ entries:
     urls:
     - https://logic3579.github.io/helm-charts/rocketmq-exporter-0.0.2.tgz
     version: 0.0.2
-generated: "2026-06-02T04:10:41.878571262Z"
+generated: "2026-06-02T04:11:52.157104435Z"
