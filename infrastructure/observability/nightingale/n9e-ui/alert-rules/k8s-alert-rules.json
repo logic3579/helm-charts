@@ -5,12 +5,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesContainerCPUPressure",
+    "name": "K8S - KubernetesContainerCPUPressure",
     "note": "Pod {{ $labels.pod }} Container {{ $labels.container }} in Namespace {{ $labels.namespace }} has cpu pressure.",
     "prod": "metric",
     "delay": 0,
@@ -19,7 +17,7 @@
       "inhibit": true,
       "queries": [
         {
-          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",image!~\".*pause.*\",container!=\"\",container!=\"clickhouse\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 75",
+          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",image!~\".*pause.*\",container!=\"\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 75",
           "recover_config": {
             "judge_type": 0,
             "recover_exp": ""
@@ -33,15 +31,11 @@
           "var_enabled": false
         },
         {
-          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",image!~\".*pause.*\",container!=\"\",container!=\"clickhouse\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 85",
+          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",image!~\".*pause.*\",container!=\"\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 85",
           "severity": 2
         },
         {
-          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",image!~\".*pause.*\",container!=\"\",container!=\"clickhouse\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 95",
-          "severity": 1
-        },
-        {
-          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",container=\"clickhouse\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 95",
+          "prom_ql": "sum(rate(container_cpu_usage_seconds_total{env=\"prod\",image!~\".*pause.*\",container!=\"\"}[2m])) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!=\"\",resource=\"cpu\"}) by (pod,namespace,container) * 100 > 95",
           "severity": 1
         }
       ]
@@ -69,12 +63,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesContainerMemoryPressure",
+    "name": "K8S - KubernetesContainerMemoryPressure",
     "note": "Pod {{ $labels.pod }} Container {{ $labels.container }} in Namespace {{ $labels.namespace }} has memory pressure.",
     "prod": "metric",
     "delay": 0,
@@ -83,7 +75,7 @@
       "inhibit": false,
       "queries": [
         {
-          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached|clickhouse|kafka|zookeeper\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached|clickhouse\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 75",
+          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 75",
           "recover_config": {
             "judge_type": 0,
             "recover_exp": ""
@@ -97,15 +89,11 @@
           "var_enabled": false
         },
         {
-          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached|clickhouse|kafka|zookeeper\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 85",
+          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 85",
           "severity": 2
         },
         {
-          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached|clickhouse|kafka|zookeeper\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container!~\"|memcached\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 95",
-          "severity": 1
-        },
-        {
-          "prom_ql": "sum(container_memory_working_set_bytes{env=\"prod\",image!~\".*pause.*\",container=~\"clickhouse|kafka|zookeeper\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",container=~\"clickhouse|kafka\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 95",
+          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 95",
           "severity": 1
         }
       ]
@@ -133,12 +121,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesContainerOomKiller",
+    "name": "K8S - KubernetesContainerOomKiller",
     "note": "Pod {{ $labels.pod }} Container {{ $labels.container }} in Namespace {{ $labels.namespace }} has oom.",
     "prod": "metric",
     "delay": 0,
@@ -188,12 +174,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesDeploymentDown",
+    "name": "K8S - KubernetesDeploymentDown",
     "note": "Kubernetes Deployment down ({{ $labels.namespace }}/{{ $labels.deployment }})",
     "prod": "metric",
     "delay": 0,
@@ -240,12 +224,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesDeploymentGenerationMismatch",
+    "name": "K8S - KubernetesDeploymentGenerationMismatch",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -298,12 +280,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesDeploymentReplicasMismatch",
+    "name": "K8S - KubernetesDeploymentReplicasMismatch",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -356,12 +336,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesHpaMetricsUnavailability",
+    "name": "K8S - KubernetesHpaMetricsUnavailability",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -408,12 +386,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesHpaScaleInability",
+    "name": "K8S - KubernetesHpaScaleInability",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -466,12 +442,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesHpaScaleMaximum",
+    "name": "K8S - KubernetesHpaScaleMaximum",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -524,12 +498,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesHpaUnderutilized",
+    "name": "K8S - KubernetesHpaUnderutilized",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -582,12 +554,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesNodeDiskPressure",
+    "name": "K8S - KubernetesNodeDiskPressure",
     "note": "Node {{ $labels.node }} has DiskPressure condition.",
     "prod": "metric",
     "delay": 0,
@@ -634,12 +604,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesNodeMemoryPressure",
+    "name": "K8S - KubernetesNodeMemoryPressure",
     "note": "Node {{ $labels.node }} has MemoryPressure condition.",
     "prod": "metric",
     "delay": 0,
@@ -686,12 +654,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesNodeNetworkUnavailable",
+    "name": "K8S - KubernetesNodeNetworkUnavailable",
     "note": "Node {{ $labels.node }} has network unavailable.",
     "prod": "metric",
     "delay": 0,
@@ -741,12 +707,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesNodeNotReady",
+    "name": "K8S - KubernetesNodeNotReady",
     "note": "Node {{ $labels.node }} has been unready for a long time.",
     "prod": "metric",
     "delay": 0,
@@ -793,12 +757,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesNodeOutOfPodCapacity",
+    "name": "K8S - KubernetesNodeOutOfPodCapacity",
     "note": "Node {{ $labels.node }} has out of pod capacity.",
     "prod": "metric",
     "delay": 0,
@@ -848,12 +810,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesPersistentvolumeclaimPending",
+    "name": "K8S - KubernetesPersistentvolumeclaimPending",
     "note": "Kubernetes Volume {{ $labels.persistentvolumeclaim }} out of disk space.",
     "prod": "metric",
     "delay": 0,
@@ -903,12 +863,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesPersistentvolumeError",
+    "name": "K8S - KubernetesPersistentvolumeError",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -961,12 +919,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesPodCrashLooping",
+    "name": "K8S - KubernetesPodCrashLooping",
     "note": "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping.",
     "prod": "metric",
     "delay": 0,
@@ -1013,12 +969,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesPodNotHealthy",
+    "name": "K8S - KubernetesPodNotHealthy",
     "note": "Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-running state for longer than 5 minutes.",
     "prod": "metric",
     "delay": 0,
@@ -1065,12 +1019,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesStatefulsetDown",
+    "name": "K8S - KubernetesStatefulsetDown",
     "note": "Kubernetes StatefulSet down ({{ $labels.namespace }}/{{ $labels.statefulset }})",
     "prod": "metric",
     "delay": 0,
@@ -1117,12 +1069,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesStatefulsetUpdateNotRolledOut",
+    "name": "K8S - KubernetesStatefulsetUpdateNotRolledOut",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -1175,12 +1125,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "KubernetesVolumeOutOfDiskSpace",
+    "name": "K8S - KubernetesVolumeOutOfDiskSpace",
     "note": "Kubernetes Volume {{ $labels.persistentvolumeclaim }} out of disk space.",
     "prod": "metric",
     "delay": 0,

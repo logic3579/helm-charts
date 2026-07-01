@@ -1,0 +1,208 @@
+[
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Kafka - Broker is down",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "kafka_broker_info{cluster_name=\"my-kafka-cluster\"} < 1",
+          "severity": 1
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 60s",
+    "notify_rule_ids": [5],
+    "pipeline_configs": null,
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Kafka - Consumption Delay",
+    "note": "Consumer group {{ $labels.consumergroup }} consumption Topic {{ $labels.topic }} was delay exceeds 5 minutes.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "max(kafka_consumer_lag_millis{cluster_name=\"my-kafka-cluster\"}) by (topic, consumergroup)  / 1000 > 2000",
+          "severity": 2,
+          "var_enabled": false
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [5],
+    "pipeline_configs": null,
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Kafka - The number of replicas is less than 3",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum(kafka_topic_partition_in_sync_replica{cluster_name=\"my-kafka-cluster\"}) by (topic) < 3",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [5],
+    "pipeline_configs": null,
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Kafka - Too many consumer lag",
+    "note": "Consumer group {{ $labels. }} Topic {{ $labels.topic }} has too many consumer lag messages with 1 minute.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum(rate(kafka_consumergroup_lag_sum{cluster_name=\"my-kafka-cluster\"}[1m])) by (consumergroup, topic) > 2000",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [5],
+    "pipeline_configs": null,
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Kafka - Too many production messages",
+    "note": "Topic {{ $labels.topic }} has too many production messages with 1 minute.",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "sum(rate(kafka_topic_partition_current_offset{cluster_name=\"my-kafka-cluster\"}[1m])) by (topic) > 2000",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": [],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [5],
+    "pipeline_configs": null,
+    "notify_version": 1
+  }
+]

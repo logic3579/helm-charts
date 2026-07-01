@@ -5,12 +5,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "Disk - IO is a bit busy",
+    "name": "Common - Disk IO is a bit busy",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -46,11 +44,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -59,12 +54,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "Disk - usage percent exceeds",
+    "name": "Common - Disk usage percent exceeds",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -73,15 +66,15 @@
       "inhibit": true,
       "queries": [
         {
-          "prom_ql": "disk_used_percent{env=\"prod\",device=\"sda1\",path=~'/|/home'} > 80",
+          "prom_ql": "disk_used_percent{env=\"prod\",device=\"sda1\"} > 80",
           "severity": 3
         },
         {
-          "prom_ql": "disk_used_percent{env=\"prod\",device=\"sda1\",path=~'/|/home'} > 85",
+          "prom_ql": "disk_used_percent{env=\"prod\",device=\"sda1\"} > 85",
           "severity": 2
         },
         {
-          "prom_ql": "disk_used_percent{env=\"prod\",device=\"sda1\",path=~'/|/home'} > 90",
+          "prom_ql": "disk_used_percent{env=\"prod\",device=\"sda1\"} > 90",
           "severity": 1
         }
       ]
@@ -98,11 +91,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 30s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -119,15 +109,7 @@
         {
           "key": "hosts",
           "op": "==",
-          "values": [
-            "algorithm-as1-vm-a",
-            "algorithm-ew2-vm-a",
-            "algorithm-uc1-vm-a",
-            "algorithm-uc1-vm-b",
-            "hbase-prod-as1-vm-a",
-            "hbase-prod-ew2-vm-a",
-            "hbase-prod-uc1-vm-a"
-          ]
+          "values": ["algorithm-as1-vm-a"]
         }
       ],
       "triggers": [
@@ -150,11 +132,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -163,12 +142,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "Network - number of TME_WAIT exceeds 20,000",
+    "name": "Common - Number of TME_WAIT exceeds 20,000",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -204,11 +181,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -217,12 +191,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "Network - packet loss in the inbound direction",
+    "name": "Common - Packet loss in the inbound direction",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -258,11 +230,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -271,12 +240,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "Network - packet loss in the outbound direction",
+    "name": "Common - Packet loss in the outbound direction",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -312,11 +279,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -325,12 +289,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "System - high cpu load",
+    "name": "Common - High cpu load",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -356,11 +318,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -369,12 +328,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "System - high memory load",
+    "name": "Common - High memory load",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -404,11 +361,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -417,12 +371,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "System - inode is about to run out",
+    "name": "Common - System inode is about to run out",
     "note": "",
     "prod": "metric",
     "delay": 0,
@@ -458,11 +410,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -471,12 +420,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "System - OOM kill",
+    "name": "Common - OOM kill occurred",
     "note": "OOM Kill detected({{ $labels.ident }})",
     "prod": "metric",
     "delay": 0,
@@ -512,11 +459,8 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   },
   {
@@ -525,12 +469,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "System - process too many",
+    "name": "Common - System process too many",
     "note": "Process Too Many detected",
     "prod": "metric",
     "delay": 0,
@@ -566,11 +508,9 @@
     "annotations": {},
     "uuid": 0,
     "cur_event_count": 0,
-    "update_by_nickname": "long",
     "cron_pattern": "@every 15s",
-    "notify_rule_ids": [
-      1
-    ],
+    "notify_rule_ids": [1],
     "notify_version": 1
   }
 ]
+

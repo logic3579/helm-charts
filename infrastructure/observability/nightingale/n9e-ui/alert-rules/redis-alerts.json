@@ -1,0 +1,248 @@
+[
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Redis - High Redis eviction rate",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "(sum(rate(redis_evicted_keys{cluster_name=\"my-redis-cluster\"}[5m])) / sum(redis_keyspace_keys{cluster_name=\"my-redis-cluster\"})) > 0.1",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": ["alertname=RedisHighKeysEvictionRatio"],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [6],
+    "pipeline_configs": null,
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Redis - High Redis memory usage rate",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "redis_maxmemory{cluster_name=\"my-redis-cluster\"} > 0 and (redis_used_memory{cluster_name=\"my-redis-cluster\"} / redis_maxmemory{cluster_name=\"my-redis-cluster\"}) > 0.85",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": ["alertname=RedisHighMemoryUsage"],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [6],
+    "pipeline_configs": null,
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Redis - High Redis Ping latency (above 100 milliseconds)",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "redis_ping_use_seconds{cluster_name=\"my-redis-cluster\"} > 0.1",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": ["alertname=HighPingLatency"],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [6],
+    "pipeline_configs": null,
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Redis - Low Redis hit rate",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "rate(redis_keyspace_hits{cluster_name=\"my-redis-cluster\"}[5m])\n/\n(rate(redis_keyspace_misses{cluster_name=\"my-redis-cluster\"}[5m]) + rate(redis_keyspace_hits{cluster_name=\"my-redis-cluster\"}[5m]))\n< 0.8",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": ["alertname=RedisLowHitRatio"],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [6],
+    "pipeline_configs": null,
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Redis - Redis connection refused",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "(rate(redis_rejected_connections{cluster_name=\"my-redis-cluster\"}[5m])) > 0",
+          "severity": 2
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": ["alertname=RedisRejectedConnHigh"],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [6],
+    "pipeline_configs": null,
+    "notify_version": 1
+  },
+  {
+    "cate": "prometheus",
+    "datasource_queries": [
+      {
+        "match_type": 0,
+        "op": "in",
+        "values": [2]
+      }
+    ],
+    "name": "Redis - Redis has just been restarted, please be aware",
+    "note": "",
+    "prod": "metric",
+    "delay": 0,
+    "prom_for_duration": 120,
+    "rule_config": {
+      "inhibit": false,
+      "queries": [
+        {
+          "prom_ql": "redis_uptime_in_seconds{cluster_name=\"my-redis-cluster\"} < 600",
+          "severity": 3
+        }
+      ]
+    },
+    "event_relabel_config": null,
+    "prom_eval_interval": 15,
+    "enable_in_bg": 0,
+    "notify_recovered": 1,
+    "notify_repeat_step": 60,
+    "notify_max_number": 0,
+    "recover_duration": 0,
+    "callbacks": [],
+    "append_tags": ["alertname=RedisLowUptime"],
+    "annotations": {},
+    "uuid": 0,
+    "cur_event_count": 0,
+    "update_by_nickname": "logic",
+    "cron_pattern": "@every 15s",
+    "notify_rule_ids": [6],
+    "pipeline_configs": null,
+    "notify_version": 1
+  }
+]

@@ -5,12 +5,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayHighErrorRate",
+    "name": "Istio - IstioGatewayHighErrorRate",
     "note": "Gateway {{ $labels.gateway }} has high 5xx error rate.",
     "prod": "metric",
     "delay": 0,
@@ -68,12 +66,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayHigh5xxByHost",
+    "name": "Istio - IstioGatewayHigh5xxByHost",
     "note": "Host {{ $labels.request_host }} on gateway {{ $labels.gateway }} has high 5xx error rate.",
     "prod": "metric",
     "delay": 0,
@@ -127,12 +123,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayHigh4xxRate",
+    "name": "Istio - IstioGatewayHigh4xxRate",
     "note": "Gateway {{ $labels.gateway }} has high 4xx client error rate.",
     "prod": "metric",
     "delay": 0,
@@ -186,12 +180,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayHighLatencyP99",
+    "name": "Istio - IstioGatewayHighLatencyP99",
     "note": "Gateway {{ $labels.gateway }} P99 latency is too high.",
     "prod": "metric",
     "delay": 0,
@@ -249,12 +241,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayHighLatencyP99ByHost",
+    "name": "Istio - IstioGatewayHighLatencyP99ByHost",
     "note": "Host {{ $labels.request_host }} P99 latency is too high.",
     "prod": "metric",
     "delay": 0,
@@ -304,12 +294,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayHighLatencyP90",
+    "name": "Istio - IstioGatewayHighLatencyP90",
     "note": "Gateway {{ $labels.gateway }} P90 latency is too high.",
     "prod": "metric",
     "delay": 0,
@@ -367,12 +355,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayLowSuccessRate",
+    "name": "Istio - IstioGatewayLowSuccessRate",
     "note": "Gateway {{ $labels.gateway }} success rate (non-5xx) has dropped below threshold.",
     "prod": "metric",
     "delay": 0,
@@ -430,12 +416,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayNoTraffic",
+    "name": "Istio - IstioGatewayNoTraffic",
     "note": "Gateway {{ $labels.gateway }} has received no requests.",
     "prod": "metric",
     "delay": 0,
@@ -485,12 +469,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayTrafficSpike",
+    "name": "Istio - IstioGatewayTrafficSpike",
     "note": "Gateway {{ $labels.gateway }} request volume has spiked significantly.",
     "prod": "metric",
     "delay": 0,
@@ -540,12 +522,10 @@
       {
         "match_type": 0,
         "op": "in",
-        "values": [
-          2
-        ]
+        "values": [2]
       }
     ],
-    "name": "IstioGatewayTcpConnectionSurge",
+    "name": "Istio - IstioGatewayTcpConnectionSurge",
     "note": "Gateway {{ $labels.gateway }} TCP connections opening rate is abnormally high for {{ $labels.destination_service_name }}.",
     "prod": "metric",
     "delay": 0,
