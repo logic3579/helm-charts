@@ -75,7 +75,7 @@
       "inhibit": false,
       "queries": [
         {
-          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 75",
+          "prom_ql": "sum(container_memory_working_set_bytes{env=\"prod\",image!~\".*pause.*\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 75",
           "recover_config": {
             "judge_type": 0,
             "recover_exp": ""
@@ -89,11 +89,11 @@
           "var_enabled": false
         },
         {
-          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 85",
+          "prom_ql": "sum(container_memory_working_set_bytes{env=\"prod\",image!~\".*pause.*\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 85",
           "severity": 2
         },
         {
-          "prom_ql": "sum(container_memory_usage_bytes{env=\"prod\",image!~\".*pause.*\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 95",
+          "prom_ql": "sum(container_memory_working_set_bytes{env=\"prod\",image!~\".*pause.*\",namespace!=\"kube-system\"}) by (pod,namespace,container) / max (kube_pod_container_resource_limits{env=\"prod\",image!~\".*pause.*\",resource=\"memory\",namespace!=\"kube-system\"}) by (pod,namespace,container) * 100 > 95",
           "severity": 1
         }
       ]
