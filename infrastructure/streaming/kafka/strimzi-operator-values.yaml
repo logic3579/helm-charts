@@ -1,0 +1,23 @@
+# Minimal override for the Strimzi Operator Helm chart:
+#   strimzi/strimzi-kafka-operator
+#
+# Keep this file small. Pull upstream defaults with:
+#   helm show values strimzi/strimzi-kafka-operator --version 1.1.0
+
+watchNamespaces:
+  - kafka
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 384Mi
+  limits:
+    cpu: 1000m
+    memory: 768Mi
+
+nodeSelector:
+  tier: mgmt
+
+tolerations: []
+affinity: {}
+

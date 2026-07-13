@@ -8,14 +8,14 @@ Production-ready reference configurations for Kubernetes cluster infrastructure 
 | ---------------------------------- | -------------------------------------------------------------------------------------------- |
 | [app/](./app/)                     | In-cluster example apps (nginx + alpine) for the uat/prod ApplicationSets, plus a private `common` library copy |
 | [argocd/](./argocd/)               | Multi-cluster GitOps — per-component Applications on mgmt + ApplicationSets on uat/prod, Workload Identity, Slack notifications |
-| [bigdata/](./bigdata/)             | Flink, HBase, MLflow VirtualService configs                                                  |
+| [bigdata/](./bigdata/)             | HBase and MLflow VirtualService configs                                                       |
 | [cert-manager/](./cert-manager/)   | TLS automation via Let's Encrypt + GCP Cloud DNS                                             |
 | [database/](./database/)           | ClickHouse (with GCS backup), Elasticsearch, Neo4j                                           |
 | [envoy-gateway/](./envoy-gateway/) | Kubernetes Gateway API reference manifests using Envoy Gateway; standalone for now, not ArgoCD-managed |
 | [istio/](./istio/)                 | Service mesh gateways, AuthorizationPolicy, EnvoyFilter access logging                       |
 | [mgmt/](./mgmt/)                   | Shared values files for mgmt-tier UIs + rocketmq-exporter — consumed by both ArgoCD Applications (`argocd/applications/`) and the standalone helm fallback documented in `mgmt/README.md` |
 | [observability/](./observability/) | Observability stacks — Grafana LGTM, VictoriaMetrics, Prometheus, OpenTelemetry, Nightingale |
-| [streaming/](./streaming/)         | Kafka broker service aliases                                                                 |
+| [streaming/](./streaming/)         | Streaming infrastructure references — Kafka with Strimzi/KRaft and Flink Operator            |
 
 ## Quick Start
 

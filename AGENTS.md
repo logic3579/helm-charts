@@ -192,6 +192,27 @@ In-cluster example applications for UAT/prod ApplicationSets.
 - Each app ships `values.yaml`, `values-uat.yaml`, and `values-prod.yaml`.
 - These charts are not published to GitHub Pages or OCI.
 
+### `infrastructure/streaming/flink`
+
+Standalone Apache Flink Kubernetes Operator reference.
+
+- Do not add an ArgoCD Application unless explicitly requested.
+- Use `FlinkDeployment` Application mode for production jobs.
+- Keep checkpoints, savepoints, and HA metadata in object storage.
+- Use Kubernetes HA for new references.
+- Do not reintroduce direct JobManager/TaskManager Helm chart deployments for production examples.
+
+### `infrastructure/streaming/kafka`
+
+Standalone Strimzi Kafka reference.
+
+- Do not add an ArgoCD Application unless explicitly requested.
+- Use KRaft mode and `KafkaNodePool` resources.
+- Keep controller and broker node pools separate for production-like examples.
+- Manage topics and users with `KafkaTopic` and `KafkaUser`.
+- Use Cruise Control / `KafkaRebalance` for rebalance examples.
+- Do not create new ZooKeeper-based Kafka references or direct Kafka Helm chart deployments for production examples.
+
 ### Observability
 
 - `grafana-lgtm/`: Grafana LGTM stack with Loki, Grafana, Tempo, Mimir, Alloy/Promtail.
@@ -297,6 +318,7 @@ Branches:
 - Values files with `serviceAccount.annotations` should include comments for both AWS IRSA and GCP Workload Identity formats above the annotations map.
 - Do not add VirtualServices for OTLP-receiving components such as Tempo, VictoriaTraces, and the OpenTelemetry collector.
 - Keep `infrastructure/envoy-gateway/` as a standalone Gateway API reference path unless the user explicitly asks to wire it into ArgoCD. Existing charts still use Istio `VirtualService` values; do not retrofit Gateway API templates into `charts/common` as part of Envoy Gateway reference work.
+- Keep `infrastructure/streaming/kafka/` and `infrastructure/streaming/flink/` as standalone operator-based reference paths unless the user explicitly asks to wire them into ArgoCD.
 - Grafana LGTM uses object storage by default.
 - VictoriaMetrics uses local PVCs. Do not retrofit object storage hot-tier assumptions into VM configs.
 - Nightingale alert-rule JSON files live under `infrastructure/observability/nightingale/n9e-ui/alert-rules/`.

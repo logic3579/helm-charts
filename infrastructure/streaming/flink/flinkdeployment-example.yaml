@@ -1,0 +1,45 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkDeployment
+metadata:
+  name: example-application
+  namespace: flink
+spec:
+  image: flink:1.20.1
+  flinkVersion: v1_20
+  serviceAccount: flink
+  mode: native
+  flinkConfiguration:
+    taskmanager.numberOfTaskSlots: "2"
+    state.backend.type: rocksdb
+    state.checkpoints.dir: gs://example-flink/checkpoints/example-application
+    state.savepoints.dir: gs://example-flink/savepoints/example-application
+    high-availability.type: kubernetes
+    high-availability.storageDir: gs://example-flink/ha/example-application
+    execution.checkpointing.interval: 60s
+    execution.checkpointing.timeout: 10min
+    execution.checkpointing.min-pause: 30s
+    execution.checkpointing.tolerable-failed-checkpoints: "3"
+    kubernetes.operator.job.restart.failed: "true"
+  jobManager:
+    resource:
+      cpu: 1
+      memory: 2048m
+  taskManager:
+    resource:
+      cpu: 1
+      memory: 4096m
+  podTemplate:
+    spec:
+      nodeSelector:
+        tier: mgmt
+      containers:
+        - name: flink-main-container
+          env:
+            - name: TZ
+              value: UTC
+  job:
+    jarURI: local:///opt/flink/examples/streaming/StateMachineExample.jar
+    parallelism: 2
+    upgradeMode: savepoint
+    state: running
+

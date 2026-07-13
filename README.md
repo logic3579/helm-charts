@@ -7,6 +7,12 @@ This repo provides two things:
 1. **Publishable Helm charts** in [`charts/`](./charts/) — released via GitHub Pages (chart `.tgz` hosted directly on the `gh-pages` branch)
 2. **Infrastructure examples** in [`infrastructure/`](./infrastructure/) — cluster infrastructure reference configs
 
+Infrastructure references include operator-based standalone examples for
+[`Kafka with Strimzi/KRaft`](./infrastructure/streaming/kafka/) and
+[`Flink with the Apache Flink Kubernetes Operator`](./infrastructure/streaming/flink/).
+They are not published as charts and are not ArgoCD-managed unless explicitly
+wired later.
+
 ## Available Charts
 
 | Chart | Description | Default Port |
@@ -124,16 +130,16 @@ The `helm show / pull / push` family accepts either an OCI reference or a `<repo
 
 ```bash
 # Inspect chart metadata / rendered manifest / default values
-helm show chart    oci://registry-1.docker.io/bitnamicharts/kafka
-helm show manifest oci://registry-1.docker.io/bitnamicharts/kafka
-helm show values   oci://registry-1.docker.io/bitnamicharts/kafka
+helm show chart    oci://registry-1.docker.io/bitnamicharts/nginx
+helm show manifest oci://registry-1.docker.io/bitnamicharts/nginx
+helm show values   oci://registry-1.docker.io/bitnamicharts/nginx
 
 # Pin a specific version
-helm show values oci://registry-1.docker.io/bitnamicharts/kafka --version=32.4.3 > kafka-values.yaml
+helm show values oci://registry-1.docker.io/bitnamicharts/nginx --version=21.0.7 > nginx-values.yaml
 
 # Download the chart archive locally (add --untar to extract into ./<name>/)
-helm pull oci://registry-1.docker.io/bitnamicharts/kafka --version=32.4.3
-helm pull oci://registry-1.docker.io/bitnamicharts/kafka --version=32.4.3 --untar --destination ./charts
+helm pull oci://registry-1.docker.io/bitnamicharts/nginx --version=21.0.7
+helm pull oci://registry-1.docker.io/bitnamicharts/nginx --version=21.0.7 --untar --destination ./charts
 ```
 
 **Traditional Helm repo** (`https://<host>/index.yaml`):
@@ -144,19 +150,19 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
 # List versions known in the local cache (no OCI equivalent — use `crane ls` there)
-helm search repo bitnami/kafka --versions
+helm search repo bitnami/nginx --versions
 
 # Same show commands, addressed as <repo>/<chart>
-helm show chart    bitnami/kafka
-helm show manifest bitnami/kafka
-helm show values   bitnami/kafka
+helm show chart    bitnami/nginx
+helm show manifest bitnami/nginx
+helm show values   bitnami/nginx
 
 # Pin a specific version
-helm show values bitnami/kafka --version=32.4.3 > kafka-values.yaml
+helm show values bitnami/nginx --version=21.0.7 > nginx-values.yaml
 
 # Download the chart archive locally (add --untar to extract into ./<name>/)
-helm pull bitnami/kafka --version=32.4.3
-helm pull bitnami/kafka --version=32.4.3 --untar --destination ./charts
+helm pull bitnami/nginx --version=21.0.7
+helm pull bitnami/nginx --version=21.0.7 --untar --destination ./charts
 ```
 
 ### Packaging and publishing
@@ -195,17 +201,17 @@ This repo's release workflow (`.github/workflows/release.yaml`) automates that f
 
 ```bash
 # List available tags
-crane ls registry-1.docker.io/bitnamicharts/kafka
+crane ls registry-1.docker.io/bitnamicharts/nginx
 
 # Resolve a tag to an immutable digest (use it to pin image.tag in values.yaml)
-crane digest docker.io/bitnami/kafka:3.8.0
+crane digest docker.io/bitnami/nginx:1.27.4
 
 # Show the OCI manifest (layers, mediaType, annotations)
-crane manifest docker.io/bitnami/kafka:3.8.0
+crane manifest docker.io/bitnami/nginx:1.27.4
 
 # Show the image config (entrypoint, env, labels, exposed ports)
-crane config docker.io/bitnami/kafka:3.8.0 | jq
+crane config docker.io/bitnami/nginx:1.27.4 | jq
 
 # Mirror an image to a private registry (air-gapped clusters, pull-through cache)
-crane copy docker.io/bitnami/kafka:3.8.0 registry.internal/bitnami/kafka:3.8.0
+crane copy docker.io/bitnami/nginx:1.27.4 registry.internal/bitnami/nginx:1.27.4
 ```

@@ -1,0 +1,40 @@
+# Minimal override for the Apache Flink Kubernetes Operator Helm chart.
+#
+# Keep this file small. Pull upstream defaults with:
+#   helm show values flink-operator-repo/flink-kubernetes-operator --version 1.15.0
+
+image:
+  repository: ghcr.io/apache/flink-kubernetes-operator
+  tag: 1.15.0
+  pullPolicy: IfNotPresent
+
+watchNamespaces:
+  - flink
+
+operatorPod:
+  nodeSelector:
+    tier: mgmt
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+operatorServiceAccount:
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/flink-operator-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: flink-operator@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+jobServiceAccount:
+  create: true
+  name: flink
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/flink-job-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: flink-job@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+
+webhook:
+  create: true
+

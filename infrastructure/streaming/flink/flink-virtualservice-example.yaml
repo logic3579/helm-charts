@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: example-application-flink
+  namespace: flink
+spec:
+  gateways:
+    - istio-ingress/internal-gateway
+  hosts:
+    - flink.example.com
+  http:
+    - route:
+        - destination:
+            host: example-application-rest.flink.svc.cluster.local
+            port:
+              number: 8081
+
