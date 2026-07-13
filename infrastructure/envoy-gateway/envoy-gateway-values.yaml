@@ -1,0 +1,27 @@
+# Minimal override for the official Envoy Gateway Helm chart:
+#   oci://docker.io/envoyproxy/gateway-helm
+#
+# Keep this file small. Pull the full upstream defaults with:
+#   helm show values oci://docker.io/envoyproxy/gateway-helm --version v1.8.2
+
+deployment:
+  envoyGateway:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+config:
+  envoyGateway:
+    provider:
+      type: Kubernetes
+      kubernetes:
+        deploy:
+          # ControllerNamespace is the default deployment model: Envoy data
+          # plane Deployments and Services are created in envoy-gateway-system.
+          # GatewayNamespace gives stronger tenant isolation but needs broader
+          # RBAC and should be introduced deliberately.
+          type: ControllerNamespace

@@ -2,6 +2,10 @@
 
 Guidance for Claude Code (claude.ai/code) when working in this repository.
 
+When repository conventions change, keep this file and `AGENTS.md` aligned.
+`CLAUDE.md` remains the Claude-facing source, while `AGENTS.md` carries the
+same project rules in a generic coding-agent format.
+
 ## Repository Overview
 
 Two purposes:
@@ -51,6 +55,7 @@ helm install my-elasticvue logic3579/elasticvue -f my-values.yaml
   - **uat / prod**: `applicationsets/{uat,prod}-apps.yaml` use a Git directory generator on `infrastructure/app/*` (excluding `infrastructure/app/common`). Each app provides colocated `values.yaml` + `values-uat.yaml` / `values-prod.yaml`; namespace derived from chart dir name via `{{ .path.basename }}`. Publishable charts under `charts/` are NOT deployed in uat/prod.
   - Supporting files: install values (`argocd-values.yaml`), UI VirtualService (`argocd-virtualservice.yaml`), cluster secrets, projects, notifications.
 - **istio/** — Gateway and AuthorizationPolicy configs.
+- **envoy-gateway/** — Kubernetes Gateway API reference configs using the upstream Envoy Gateway Helm chart (`oci://docker.io/envoyproxy/gateway-helm`). Standalone-only for now — not ArgoCD-managed. This is a parallel Gateway API exploration path and does NOT replace the repo's current Istio `VirtualService` convention. Contains minimal chart values, a GatewayClass, internal/external Gateway resources, an HTTPRoute example, and a ReferenceGrant example for cross-namespace TLS Secret references.
 - **observability/grafana-lgtm/** — Grafana LGTM stack (Loki + Grafana + Tempo + Mimir) with Alloy/Promtail collectors.
 - **observability/victoriametrics/** — VictoriaMetrics stack (VMCluster + VictoriaLogs + VictoriaTraces) with vmagent / vmalert / vlagent and bundled vmauth gateway.
 - **observability/prometheus-community/** — `prometheus-community/prometheus` chart, **server-only** (alertmanager/KSM/node-exporter/pushgateway subcharts disabled). Minimal single-node alternative to Mimir / VMCluster; namespace `prom`.
@@ -135,6 +140,7 @@ These fix recurring decisions across `infrastructure/` so they don't get re-deba
     annotations: {}
   ```
 - **VirtualService skip rule for OTLP-receiving components**: Tempo, VictoriaTraces, and the OpenTelemetry collector skip VS creation. OTLP gRPC doesn't fit Istio's HTTP gateway routing, and queries run intra-cluster via Grafana's Service URLs. Don't add a VS just for symmetry with Loki/Mimir/vmauth gateways.
+- **Envoy Gateway / Gateway API reference path**: `infrastructure/envoy-gateway/` is standalone infrastructure documentation and manifests only. Do not add it to ArgoCD unless explicitly requested. Existing charts and infrastructure still route through Istio `VirtualService`; Gateway API `HTTPRoute` examples live only under this directory for now. Keep the official upstream Envoy Gateway chart pinned, use Gateway API resources (`GatewayClass`, `Gateway`, `HTTPRoute`, `ReferenceGrant`), and avoid Ingress resources.
 - **Storage backend differs by stack**: grafana-lgtm uses object storage (GCS by default; values carry `gcs.bucket_name: example-*` placeholders). VictoriaMetrics uses local PVCs (`premium-rwo` storageClass). Don't retrofit the other model — VM has no native object-store hot tier; LGTM scales much better against object storage than PVCs.
 - **ArgoCD topology**: split by env type.
   - **mgmt**: NO ApplicationSet. Each component is an explicit `infrastructure/argocd/applications/<chart>.yaml` (`elasticvue`, `redisinsight`, `kafka-ui`, `nightingale`) — multi-source (chart path + `ref: values` [+ optional raw manifests dir for kafka-ui]) with `ignoreMissingValueFiles: false` (the shared values file is required). The `$values` ref path varies: UIs use `$values/infrastructure/mgmt/<chart>-values.yaml`; nightingale uses `$values/infrastructure/observability/nightingale/nightingale-values.yaml`. The shared values file is also consumed by the standalone helm fallback so ArgoCD and helm render identically. Namespace placement: UIs (elasticvue/redisinsight/kafka-ui) share the `mgmt` namespace (kafka-ui's VS at `infrastructure/mgmt/kafka-ui-manifests/virtualservice.yaml` also pins `namespace: mgmt`); nightingale lives in its own `nightingale` namespace (matching `infrastructure/observability/nightingale/nightingale-virtualservice.yaml`). To add a new mgmt-tier component: drop a new `applications/<name>.yaml` and a values file in the matching subtree.

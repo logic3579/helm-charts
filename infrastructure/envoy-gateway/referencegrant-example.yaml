@@ -1,0 +1,16 @@
+# Apply this in the namespace that owns the referenced TLS Secret.
+# It allows Gateways in envoy-gateway-system to reference Secrets in this
+# namespace. Edit metadata.namespace before applying.
+apiVersion: gateway.networking.k8s.io/v1
+kind: ReferenceGrant
+metadata:
+  name: allow-envoy-gateway-tls-secrets
+  namespace: cert-manager
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      namespace: envoy-gateway-system
+  to:
+    - group: ""
+      kind: Secret
