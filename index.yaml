@@ -11,7 +11,7 @@ entries:
           url: https://github.com/cars10/elasticvue
     apiVersion: v2
     appVersion: 1.15.0
-    created: "2026-06-02T08:10:22.144330211Z"
+    created: "2026-11-16T11:23:56.796191343Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -49,7 +49,7 @@ entries:
       catalog.cattle.io/release-name: flashcatcloud
     apiVersion: v2
     appVersion: 8.5.1
-    created: "2026-06-02T08:10:22.147494258Z"
+    created: "2026-11-16T11:23:56.797976059Z"
     description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
     digest: 3cc88878c4ca4800f3bbefe2f13c618c302145a77f33c5a3170456789d0515f9
     home: https://n9e.github.io
@@ -86,7 +86,7 @@ entries:
           url: https://github.com/redis/RedisInsight
     apiVersion: v2
     appVersion: "3.4"
-    created: "2026-06-02T08:10:22.148333851Z"
+    created: "2026-11-16T11:23:56.798543474Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -110,41 +110,44 @@ entries:
     urls:
     - https://logic3579.github.io/helm-charts/redisinsight-3.4.0.tgz
     version: 3.4.0
-  rocketmq-exporter:
+  rocketmq-dashboard:
   - annotations:
       artifacthub.io/changes: |
         - kind: added
-          description: Initial publish of rocketmq-exporter chart
+          description: Initial publish with RocketMQ Studio 3.0.0 frontend and backend
+        - kind: added
+          description: Bundle persistent MySQL 8.0 by default with optional external database support
+        - kind: changed
+          description: Use public logic3579 Docker Hub images for the frontend and backend by default
       artifacthub.io/license: Apache-2.0
       artifacthub.io/links: |
         - name: Upstream Project
-          url: https://github.com/apache/rocketmq-exporter
+          url: https://github.com/apache/rocketmq-dashboard/tree/v3.0.0
     apiVersion: v2
-    appVersion: 0.0.2
-    created: "2026-06-02T08:10:22.14917659Z"
+    appVersion: 3.0.0
+    created: "2026-11-16T11:23:56.799523916Z"
     dependencies:
     - name: common
       repository: file://../common
       version: 0.3.0
-    description: A Helm chart for Apache RocketMQ Exporter — a Prometheus exporter
-      for Apache RocketMQ
-    digest: b3adf47e2707b42c86da10d4db0ecfb6ea8e535ba91051d0c634d5f47f6abb5c
+    description: A Helm chart for RocketMQ Studio 3.x, the Apache RocketMQ management
+      console
+    digest: 888d4ab706bdf7fe232e4374e5cd84855fb7c66e0c1f0d1b5a602f4ff9bf6cd4
     home: https://github.com/logic3579/helm-charts
     icon: https://rocketmq.apache.org/img/logo.svg
     keywords:
     - rocketmq
-    - exporter
-    - prometheus
-    - metrics
-    - monitoring
+    - dashboard
+    - studio
+    - messaging
     maintainers:
     - name: logic3579
       url: https://github.com/logic3579/helm-charts
-    name: rocketmq-exporter
+    name: rocketmq-dashboard
     sources:
-    - https://github.com/apache/rocketmq-exporter
+    - https://github.com/apache/rocketmq-dashboard/tree/v3.0.0
     type: application
     urls:
-    - https://logic3579.github.io/helm-charts/rocketmq-exporter-0.0.2.tgz
-    version: 0.0.2
-generated: "2026-06-02T08:10:22.143390049Z"
+    - https://logic3579.github.io/helm-charts/rocketmq-dashboard-3.0.0.tgz
+    version: 3.0.0
+generated: "2026-11-16T11:23:56.795429672Z"
