@@ -21,7 +21,7 @@ wired later.
 | [elasticvue](./charts/elasticvue) | Web UI for Elasticsearch / OpenSearch | 8080 |
 | [nightingale](./charts/nightingale) | Nightingale (n9e) cloud-native monitoring system — repackaged from [`flashcatcloud/n9e-helm`](https://github.com/flashcatcloud/n9e-helm) | 80 |
 | [redisinsight](./charts/redisinsight) | Redis Inc.'s official web UI for Redis (stateful — SQLite at `/data`) | 5540 |
-| [rocketmq-exporter](./charts/rocketmq-exporter) | Apache RocketMQ Prometheus exporter | 5557 |
+| [rocketmq-dashboard](./charts/rocketmq-dashboard) | RocketMQ Studio 3.0.0 management console — frontend + backend, bundled MySQL 8.0 (external optional), public Docker Hub images | 8080 |
 
 > Looking for `kafka-ui`? Use the upstream chart published by the kafbat
 > team: [`kafbat/kafka-ui`](https://artifacthub.io/packages/helm/kafka-ui/kafka-ui)
@@ -104,7 +104,7 @@ The GitHub Actions workflow will automatically:
 
 ## Chart Features
 
-`common`-based application charts (`elasticvue`, `redisinsight`, `rocketmq-exporter`) support:
+`common`-based application charts (`elasticvue`, `redisinsight`, `rocketmq-dashboard`) support:
 
 | Feature | Key | Notes |
 |---------|-----|-------|

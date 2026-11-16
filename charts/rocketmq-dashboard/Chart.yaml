@@ -1,0 +1,34 @@
+apiVersion: v2
+name: rocketmq-dashboard
+description: A Helm chart for RocketMQ Studio 3.x, the Apache RocketMQ management console
+type: application
+version: 3.0.0
+appVersion: "3.0.0"
+home: https://github.com/logic3579/helm-charts
+icon: https://rocketmq.apache.org/img/logo.svg
+sources:
+  - https://github.com/apache/rocketmq-dashboard/tree/v3.0.0
+maintainers:
+  - name: logic3579
+    url: https://github.com/logic3579/helm-charts
+keywords:
+  - rocketmq
+  - dashboard
+  - studio
+  - messaging
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/links: |
+    - name: Upstream Project
+      url: https://github.com/apache/rocketmq-dashboard/tree/v3.0.0
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial publish with RocketMQ Studio 3.0.0 frontend and backend
+    - kind: added
+      description: Bundle persistent MySQL 8.0 by default with optional external database support
+    - kind: changed
+      description: Use public logic3579 Docker Hub images for the frontend and backend by default
+dependencies:
+  - name: common
+    version: "0.3.0"
+    repository: "file://../common"

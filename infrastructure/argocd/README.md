@@ -125,7 +125,7 @@ because it's a Helm *library chart* (`type: library`).
 | `nginx` (example)    |      | yes | yes  | `infrastructure/app/nginx`                   | Front-end example app — DHI hardened nginx image.                                                                           |
 | `alpine` (example)   |      | yes | yes  | `infrastructure/app/alpine`                  | Back-end example app — BusyBox `nc` httpd loop.                                                                             |
 | `common` (library)   |      |     |      | both `charts/common` and `infrastructure/app/common` | Library charts (`type: library`) — never deployed as standalone Applications.                                       |
-| `rocketmq-exporter`  |      |     |      | `charts/rocketmq-exporter`                   | Published to the registry; not ArgoCD-deployed (standalone-only via `infrastructure/mgmt/rocketmq-exporter-values.yaml`).   |
+| `rocketmq-dashboard` |      |     |      | `charts/rocketmq-dashboard`                 | Standalone RocketMQ Studio example via `infrastructure/mgmt/rocketmq-dashboard-values.yaml`; no ArgoCD Application. |
 
 ---
 

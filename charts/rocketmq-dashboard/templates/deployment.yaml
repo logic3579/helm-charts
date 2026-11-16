@@ -1,0 +1,235 @@
+{{- if eq (int .Values.service.port) (int .Values.dashboard.port) }}
+{{- fail "service.port and dashboard.port must differ because frontend and backend share a pod" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "common.fullname" . }}
+  labels:
+    {{- include "common.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "common.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/frontend-config: {{ include (print $.Template.BasePath "/frontend-configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "common.podLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "common.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.mysql.enabled }}
+      initContainers:
+        - name: wait-for-mysql
+          image: {{ include "common.image" (dict "Values" (dict "image" .Values.mysql.image) "Chart" .Chart) | quote }}
+          imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          command:
+            - sh
+            - -ec
+            - |
+              until MYSQL_PWD="$MYSQL_PASSWORD" mysql --protocol=TCP --host="$MYSQL_HOST" \
+                --port={{ .Values.mysql.service.port }} --connect-timeout=3 \
+                --user="$MYSQL_USER" --database="$MYSQL_DATABASE" --execute='SELECT 1' >/dev/null 2>&1; do
+                sleep 3
+              done
+          env:
+            - name: MYSQL_HOST
+              value: {{ include "rocketmq-dashboard.mysql.fullname" . }}
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mysql.auth.database | quote }}
+            - name: MYSQL_USER
+              value: {{ .Values.mysql.auth.username | quote }}
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rocketmq-dashboard.mysql.secretName" . }}
+                  key: {{ .Values.mysql.auth.passwordKey | quote }}
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: backend-tmp
+              mountPath: /tmp
+      {{- end }}
+      containers:
+        - name: backend
+          image: {{ include "common.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: backend
+              containerPort: {{ .Values.dashboard.port }}
+              protocol: TCP
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: SERVER_PORT
+              value: {{ .Values.dashboard.port | quote }}
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            - name: SPRING_DATASOURCE_URL
+              {{- if .Values.mysql.enabled }}
+              value: {{ printf "jdbc:mysql://%s:%v/%s?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci" (include "rocketmq-dashboard.mysql.fullname" .) .Values.mysql.service.port .Values.mysql.auth.database | quote }}
+              {{- else }}
+              value: {{ .Values.externalDatabase.url | quote }}
+              {{- end }}
+            - name: SPRING_DATASOURCE_USERNAME
+              {{- if .Values.mysql.enabled }}
+              value: {{ .Values.mysql.auth.username | quote }}
+              {{- else }}
+              value: {{ .Values.externalDatabase.username | quote }}
+              {{- end }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              {{- if .Values.mysql.enabled }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rocketmq-dashboard.mysql.secretName" . }}
+                  key: {{ .Values.mysql.auth.passwordKey | quote }}
+              {{- else if .Values.externalDatabase.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.externalDatabase.existingSecret | quote }}
+                  key: {{ .Values.externalDatabase.passwordKey | quote }}
+              {{- else }}
+              value: ""
+              {{- end }}
+            - name: SPRING_SQL_INIT_MODE
+              value: {{ ternary "always" "never" (ternary .Values.mysql.initializeSchema .Values.externalDatabase.initializeSchema .Values.mysql.enabled) | quote }}
+            - name: SPRING_SQL_INIT_SCHEMA_LOCATIONS
+              value: classpath:db/schema.sql
+            - name: STUDIO_AUTH_LOGIN_REQUIRED
+              value: {{ .Values.auth.loginRequired | quote }}
+            - name: STUDIO_AUTH_ADMIN_USERNAME
+              value: {{ .Values.auth.username | quote }}
+            - name: STUDIO_AUTH_ADMIN_PASSWORD
+              {{- if .Values.auth.existingSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecret | quote }}
+                  key: {{ .Values.auth.passwordKey | quote }}
+              {{- else }}
+              value: ""
+              {{- end }}
+            - name: STUDIO_AUTH_SESSION_COOKIE_SECURE
+              value: {{ .Values.auth.sessionCookieSecure | quote }}
+            - name: STUDIO_ROCKETMQ_NAMESRV_ADDR
+              value: {{ .Values.dashboard.namesrvAddr | quote }}
+            - name: STUDIO_METRICS_PROMETHEUS_BASE_URL
+              value: {{ .Values.dashboard.prometheusUrl | quote }}
+            - name: STUDIO_CORS_ALLOWED_ORIGINS
+              value: {{ .Values.dashboard.corsAllowedOrigins | quote }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.dashboard.javaToolOptions | quote }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: backend-tmp
+              mountPath: /tmp
+            - name: backend-logs
+              mountPath: /app/logs
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+        - name: frontend
+          image: {{ include "common.image" (dict "Values" (dict "image" .Values.frontend.image) "Chart" .Chart) | quote }}
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.frontend.securityContext | nindent 12 }}
+          # Bypass the upstream entrypoint's Docker/Podman DNS resolver and
+          # envsubst scripts; this pod uses a complete config and loopback proxy.
+          command: [nginx]
+          args: ["-g", "daemon off;"]
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          {{- with .Values.frontend.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.frontend.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.frontend.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          volumeMounts:
+            - name: frontend-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              readOnly: true
+            - name: frontend-tmp
+              mountPath: /tmp
+      volumes:
+        - name: frontend-config
+          configMap:
+            name: {{ include "common.fullname" . }}-nginx
+        - name: frontend-tmp
+          emptyDir:
+            medium: Memory
+        - name: backend-tmp
+          emptyDir:
+            medium: Memory
+        - name: backend-logs
+          emptyDir: {}
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

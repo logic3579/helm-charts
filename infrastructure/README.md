@@ -13,7 +13,7 @@ Production-ready reference configurations for Kubernetes cluster infrastructure 
 | [database/](./database/)           | ClickHouse (with GCS backup), Elasticsearch, Neo4j                                           |
 | [envoy-gateway/](./envoy-gateway/) | Kubernetes Gateway API reference manifests using Envoy Gateway; standalone for now, not ArgoCD-managed |
 | [istio/](./istio/)                 | Service mesh gateways, AuthorizationPolicy, EnvoyFilter access logging                       |
-| [mgmt/](./mgmt/)                   | Shared values files for mgmt-tier UIs + rocketmq-exporter — consumed by both ArgoCD Applications (`argocd/applications/`) and the standalone helm fallback documented in `mgmt/README.md` |
+| [mgmt/](./mgmt/)                   | Shared values files for ArgoCD-managed mgmt UIs and standalone Helm examples, including RocketMQ Studio (`rocketmq-dashboard`) |
 | [observability/](./observability/) | Observability stacks — Grafana LGTM, VictoriaMetrics, Prometheus, OpenTelemetry, Nightingale |
 | [streaming/](./streaming/)         | Streaming infrastructure references — Kafka with Strimzi/KRaft and Flink Operator            |
 

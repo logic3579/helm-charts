@@ -1,0 +1,269 @@
+# -- Number of frontend/backend pod pairs. Keep one replica for hosted AI sessions.
+replicaCount: 1
+
+# -- Public Docker Hub backend image, built from upstream v3.0.0 sources.
+image:
+  repository: logic3579/rocketmq-server
+  pullPolicy: IfNotPresent
+  # -- Defaults to Chart.appVersion (3.0.0); never uses latest.
+  tag: ""
+  # -- Optional image digest; takes precedence over tag.
+  digest: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Settings passed to the Java backend. v3 uses STUDIO_* rather than the
+# legacy ROCKETMQ_CONFIG_* settings. Register actual instances through the UI.
+dashboard:
+  # -- Backend port, reachable by the frontend over localhost in the same pod.
+  port: 8888
+  namesrvAddr: "127.0.0.1:9876"
+  # -- Optional Prometheus-compatible query endpoint. Leave empty if unused.
+  prometheusUrl: ""
+  # -- Comma-separated browser origins; same-origin access needs no CORS override.
+  corsAllowedOrigins: ""
+  # -- JDK options; the upstream image's PropertiesLauncher entrypoint is retained.
+  javaToolOptions: "-XX:MaxRAMPercentage=65.0 -Duser.home=/tmp"
+
+# -- Bundled single-instance MySQL, matching the upstream Compose mysql:8.0 image.
+# Disable to use externalDatabase instead. This chart does not install RocketMQ.
+mysql:
+  enabled: true
+  image:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+    digest: ""
+  auth:
+    database: rocketmq
+    username: rocketmq
+    # -- Generated on installation when empty; reused from the existing Secret
+    # on Helm upgrades. Set explicitly for reproducible offline/GitOps rendering,
+    # or supply an existing Secret instead. Prefer an external secret manager.
+    rootPassword: ""
+    password: ""
+    # -- Optional Secret with both password keys below; no Secret is created if set.
+    existingSecret: ""
+    rootPasswordKey: root-password
+    passwordKey: password
+  # -- Initialize Studio tables from the backend image's classpath:db/schema.sql.
+  initializeSchema: true
+  service:
+    port: 3306
+  persistence:
+    enabled: true
+    size: 8Gi
+    # -- Empty uses the cluster default StorageClass; "-" disables dynamic provisioning.
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    # -- Reuse an existing PVC instead of a StatefulSet volumeClaimTemplate.
+    existingClaim: ""
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Optional external MySQL 8 database; only used when mysql.enabled=false.
+externalDatabase:
+  url: "jdbc:mysql://mysql.middleware.svc.cluster.local:3306/rocketmq?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8"
+  username: rocketmq
+  # -- Existing Secret in the release namespace containing the database password.
+  # If unset, an empty password is passed, masking the upstream demo password.
+  existingSecret: ""
+  passwordKey: password
+  # -- Run the image's classpath:db/schema.sql before startup. The database must
+  # already exist and the DB user needs DDL permissions, including for migrations.
+  # Disable after initializing the schema separately with the upstream SQL.
+  initializeSchema: true
+
+# -- Dashboard login. Credentials bootstrap the first user; later changes are
+# managed through the UI and stored in MySQL, not synchronized from this Secret.
+auth:
+  loginRequired: true
+  username: admin
+  # -- Existing Secret containing the bootstrap admin password. No default
+  # password is supplied: configure this before enabling access to the UI.
+  existingSecret: ""
+  passwordKey: password
+  # -- Keep true behind HTTPS. Set false explicitly for HTTP-only local testing.
+  sessionCookieSecure: true
+
+frontend:
+  # -- Public Docker Hub frontend image, built from upstream v3.0.0 sources.
+  image:
+    repository: logic3579/rocketmq-web
+    pullPolicy: IfNotPresent
+    tag: ""
+    digest: ""
+  # -- Nginx runs directly, bypassing the upstream Docker/Podman DNS entrypoint.
+  # Its config, PID, and temporary paths work with a read-only root filesystem.
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  startupProbe:
+    httpGet:
+      path: /index.html
+      port: http
+    periodSeconds: 2
+    failureThreshold: 30
+  livenessProbe:
+    httpGet:
+      path: /index.html
+      port: http
+    periodSeconds: 30
+    timeoutSeconds: 3
+  readinessProbe:
+    httpGet:
+      path: /index.html
+      port: http
+    periodSeconds: 10
+    timeoutSeconds: 3
+
+serviceAccount:
+  create: true
+  # AWS IRSA:                eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/rocketmq-dashboard-role
+  # GCP Workload Identity:   iam.gke.io/gcp-service-account: rocketmq-dashboard@PROJECT_ID.iam.gserviceaccount.com
+  annotations: {}
+  name: ""
+  automountServiceAccountToken: false
+
+podAnnotations: {}
+podLabels: {}
+
+# -- Both containers run without root; writable volumes use this group.
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+# -- Backend security context. /tmp and /app/logs have writable emptyDir mounts.
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# -- The Service and Nginx listen on this port. The backend has a separate port.
+service:
+  type: ClusterIP
+  port: 8080
+
+# -- Backend resources. Frontend resources are configured separately above.
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+# -- Backend probes are separate: database outages affect readiness, not liveness.
+startupProbe:
+  httpGet:
+    path: /livez
+    port: backend
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 60
+livenessProbe:
+  httpGet:
+    path: /livez
+    port: backend
+  periodSeconds: 30
+  timeoutSeconds: 3
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: backend
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# -- HPA is optional. Hosted AI processes/workspaces are local to each pod;
+# review session routing and schema initialization before scaling out.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Additional pod volumes and backend mounts (e.g. a persistent AI workspace).
+# Built-ins: backend-tmp (/tmp), backend-logs (/app/logs), frontend-tmp (/tmp),
+# and frontend-config (/etc/nginx/nginx.conf). Do not reuse their names.
+volumes: []
+volumeMounts: []
+
+# -- Additional backend env vars, including valueFrom.secretKeyRef. Use env for
+# SPRING_APPLICATION_JSON, STUDIO_AI_TOKEN_SECRET, SMTP, LLM, or admin ACL config.
+env: []
+# -- Additional backend configMapRef/secretRef sources. Explicit env vars take
+# precedence; use mysql.auth/auth/externalDatabase.existingSecret for built-in passwords.
+envFrom: []
+
+# -- Optional generic ConfigMap/Secret. Reference explicitly with envFrom or volumes.
+configMap:
+  enabled: false
+  data: {}
+# WARNING: plaintext input is base64-encoded at render time. Prefer ESO or Sealed Secrets.
+secret:
+  enabled: false
+  data: {}
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+virtualservice:
+  enabled: false
+  gateways: []
+    # - istio-ingress/internal-gateway
+  hosts: []
+    # - rocketmq-dashboard.example.com
+  # -- Destination port defaults to service.port.
+  port: ""
+  # -- No request deadline for SSE. Frontend Nginx handles the stream idle timeout.
+  timeout: 0s
+  # corsPolicy:
+  #   allowOrigins:
+  #     - exact: https://rocketmq-dashboard.example.com
+  #   allowMethods: [GET, POST, PUT, DELETE, OPTIONS]
+  #   allowHeaders: [Content-Type, Authorization]
+  #   allowCredentials: true
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 1

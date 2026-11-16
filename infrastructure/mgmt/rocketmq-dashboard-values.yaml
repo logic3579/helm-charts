@@ -1,0 +1,68 @@
+# Standalone mgmt example for logic3579/rocketmq-dashboard (RocketMQ Studio 3.0.0).
+# Uses logic3579's public Docker Hub images built from upstream v3.0.0 sources.
+# Replace the NameServer address and VirtualService hostname before deploying.
+# No ArgoCD Application is added.
+
+image:
+  repository: logic3579/rocketmq-server
+  tag: "3.0.0"
+frontend:
+  image:
+    repository: logic3579/rocketmq-web
+    tag: "3.0.0"
+
+replicaCount: 1
+
+# Defaults to a bundled MySQL 8.0 StatefulSet, matching upstream Compose.
+# Database/user are created automatically; passwords are generated into a Secret
+# and reused by Helm upgrades. For managed credentials, set mysql.auth.existingSecret
+# to a Secret in mgmt with BOTH root-password and password keys.
+mysql:
+  enabled: true
+  auth:
+    database: rocketmq
+    username: rocketmq
+    existingSecret: ""
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""  # Uses the cluster default StorageClass.
+  initializeSchema: true
+
+# Optional external MySQL: set mysql.enabled=false above, then configure:
+# externalDatabase:
+#   url: "jdbc:mysql://mysql.middleware.svc.cluster.local:3306/rocketmq?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8"
+#   username: rocketmq
+#   existingSecret: rocketmq-dashboard-db  # Key: password; database must already exist.
+#   initializeSchema: true
+
+auth:
+  loginRequired: true
+  username: admin
+  # Existing Secret in namespace mgmt; key: password. Used only to bootstrap users.
+  existingSecret: rocketmq-dashboard-auth
+  # The internal gateway must serve HTTPS for secure login cookies.
+  sessionCookieSecure: true
+
+dashboard:
+  namesrvAddr: rocketmq-nameserver.middleware.svc.cluster.local:9876
+  corsAllowedOrigins: https://rocketmq-dashboard.example.com
+  # Optional: a Prometheus-compatible service that scrapes your RocketMQ brokers.
+  # prometheusUrl: http://prometheus-server.prom.svc.cluster.local
+
+# Optional extra credentials/configuration supplied by a separately managed Secret:
+# - STUDIO_AI_TOKEN_SECRET: base64 encoding of at least 32 random bytes for AI mutations
+# - SPRING_APPLICATION_JSON: studio.cluster.admin.credentials for broker ACL / rmqctl
+# - RMQ_LLM_TOKEN: LLM provider credential
+# Do not commit real credentials. Use ESO, Sealed Secrets, or another secret manager.
+envFrom: []
+#  - secretRef:
+#      name: rocketmq-dashboard-extra
+
+virtualservice:
+  enabled: true
+  gateways:
+    - istio-ingress/internal-gateway
+  hosts:
+    - rocketmq-dashboard.example.com
+  timeout: 0s

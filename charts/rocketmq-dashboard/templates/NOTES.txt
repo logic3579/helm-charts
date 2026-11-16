@@ -1,0 +1,39 @@
+RocketMQ Dashboard (RocketMQ Studio {{ .Chart.AppVersion }}) has been deployed.
+
+The frontend Service is {{ include "common.fullname" . }}:{{ .Values.service.port }}.
+The backend listens on {{ .Values.dashboard.port }} inside the same pod.
+
+Forward the frontend locally:
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "common.fullname" . }} 8080:{{ .Values.service.port }}
+
+{{- if .Values.auth.sessionCookieSecure }}
+Login requires HTTPS because auth.sessionCookieSecure is true.
+For HTTP-only local testing, set auth.sessionCookieSecure=false explicitly.
+{{- end }}
+{{- if .Values.mysql.enabled }}
+
+Bundled MySQL: {{ include "rocketmq-dashboard.mysql.fullname" . }}:{{ .Values.mysql.service.port }}
+Database: {{ .Values.mysql.auth.database }}; user: {{ .Values.mysql.auth.username }}
+Credentials Secret: {{ include "rocketmq-dashboard.mysql.secretName" . }}
+MySQL data persistence is {{ ternary "enabled" "disabled" (or .Values.mysql.persistence.enabled (not (empty .Values.mysql.persistence.existingClaim))) }}.
+Generated credentials and StatefulSet PVCs are retained on uninstall; keep them together when reinstalling.
+{{- else if not .Values.externalDatabase.existingSecret }}
+
+Configure externalDatabase.existingSecret before connecting to a password-protected MySQL database.
+The chart passes an empty database password when no Secret is configured.
+{{- end }}
+{{- if and .Values.auth.loginRequired (not .Values.auth.existingSecret) }}
+
+Configure auth.existingSecret with a bootstrap password before the first login.
+The chart passes an empty admin password when no Secret is configured.
+{{- end }}
+
+Application images:
+  Backend: {{ include "common.image" . }}
+  Frontend: {{ include "common.image" (dict "Values" (dict "image" .Values.frontend.image) "Chart" .Chart) }}
+
+{{- if not .Values.mysql.enabled }}
+External MySQL and its database must already exist.
+{{- end }}
+Schema initialization is {{ ternary "enabled" "disabled" (ternary .Values.mysql.initializeSchema .Values.externalDatabase.initializeSchema .Values.mysql.enabled) }}.
+Register RocketMQ instances through the Studio UI; this chart does not seed demo instances.

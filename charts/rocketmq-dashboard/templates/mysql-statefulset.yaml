@@ -1,0 +1,149 @@
+{{- if .Values.mysql.enabled }}
+{{- if or (empty .Values.mysql.auth.database) (empty .Values.mysql.auth.username) (eq .Values.mysql.auth.username "root") }}
+{{- fail "mysql.auth.database must be set and mysql.auth.username must be a non-root user" }}
+{{- end }}
+{{- if eq .Values.mysql.auth.rootPasswordKey .Values.mysql.auth.passwordKey }}
+{{- fail "mysql.auth.rootPasswordKey and mysql.auth.passwordKey must differ" }}
+{{- end }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "rocketmq-dashboard.mysql.fullname" . }}
+  labels:
+    {{- include "rocketmq-dashboard.mysql.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "rocketmq-dashboard.mysql.fullname" . }}-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "rocketmq-dashboard.mysql.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "rocketmq-dashboard.mysql.labels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "common.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        {{- toYaml .Values.mysql.podSecurityContext | nindent 8 }}
+      containers:
+        - name: mysql
+          image: {{ include "common.image" (dict "Values" (dict "image" .Values.mysql.image) "Chart" .Chart) | quote }}
+          imagePullPolicy: {{ .Values.mysql.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.mysql.securityContext | nindent 12 }}
+          args:
+            - --port={{ .Values.mysql.service.port }}
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+            - --init-connect=SET NAMES utf8mb4
+            - --socket=/var/run/mysqld/mysqld.sock
+            - --pid-file=/var/run/mysqld/mysqld.pid
+          env:
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mysql.auth.database | quote }}
+            - name: MYSQL_USER
+              value: {{ .Values.mysql.auth.username | quote }}
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rocketmq-dashboard.mysql.secretName" . }}
+                  key: {{ .Values.mysql.auth.passwordKey | quote }}
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "rocketmq-dashboard.mysql.secretName" . }}
+                  key: {{ .Values.mysql.auth.rootPasswordKey | quote }}
+            - name: MYSQL_ROOT_HOST
+              value: localhost
+          ports:
+            - name: mysql
+              containerPort: {{ .Values.mysql.service.port }}
+              protocol: TCP
+          startupProbe:
+            tcpSocket:
+              port: mysql
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 60
+          livenessProbe:
+            tcpSocket:
+              port: mysql
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -ec
+                - >-
+                  MYSQL_PWD="$MYSQL_PASSWORD" mysql --protocol=TCP --host=127.0.0.1
+                  --port={{ .Values.mysql.service.port }} --connect-timeout=3
+                  --user="$MYSQL_USER" --database="$MYSQL_DATABASE"
+                  --execute='SELECT 1' >/dev/null
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.mysql.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+              subPath: mysql
+            - name: mysql-tmp
+              mountPath: /tmp
+            - name: mysql-run
+              mountPath: /var/run/mysqld
+            - name: mysql-files
+              mountPath: /var/lib/mysql-files
+      volumes:
+        - name: mysql-tmp
+          emptyDir:
+            medium: Memory
+        - name: mysql-run
+          emptyDir:
+            medium: Memory
+        - name: mysql-files
+          emptyDir: {}
+        {{- if .Values.mysql.persistence.existingClaim }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.mysql.persistence.existingClaim | quote }}
+        {{- else if not .Values.mysql.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.mysql.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mysql.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mysql.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if and .Values.mysql.persistence.enabled (not .Values.mysql.persistence.existingClaim) }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - {{ .Values.mysql.persistence.accessMode | quote }}
+        {{- if eq .Values.mysql.persistence.storageClass "-" }}
+        storageClassName: ""
+        {{- else if .Values.mysql.persistence.storageClass }}
+        storageClassName: {{ .Values.mysql.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.mysql.persistence.size | quote }}
+  {{- end }}
+{{- end }}

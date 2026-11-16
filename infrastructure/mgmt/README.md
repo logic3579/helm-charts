@@ -7,9 +7,11 @@
 > yet bootstrapped on the mgmt cluster).
 >
 > **The values files in this directory are the single source of truth.**
-> The ArgoCD Applications reference these same files via `$values`, so
+> The existing ArgoCD Applications reference these same files via `$values`, so
 > ArgoCD-managed and standalone-helm renders are identical. Edit
 > `<PLACEHOLDER>` tokens in place before installing.
+>
+> `rocketmq-dashboard` is a standalone example with no ArgoCD Application.
 
 All components land in the shared `mgmt` namespace — both the ArgoCD
 Applications (`destination.namespace: mgmt`) and the standalone helm
@@ -79,16 +81,51 @@ helm upgrade --install \
   -f redisinsight-values.yaml
 ```
 
-## rocketmq-exporter
+## rocketmq-dashboard
 
-Not ArgoCD-managed — this is a standalone-only component. Uses the in-repo
-`logic3579/rocketmq-exporter` chart. NameServer address, RocketMQ version,
-Prometheus scrape annotations, and VirtualService are all configured
-through values — no standalone manifest needed.
+Uses the in-repo `logic3579/rocketmq-dashboard` chart for **RocketMQ Studio
+3.0.0**. It runs separate frontend/backend containers in one pod and deploys
+a MySQL 8.0 StatefulSet with an 8Gi PVC by default, matching upstream Compose.
+The default application images are public Docker Hub images
+`logic3579/rocketmq-server:3.0.0` and `logic3579/rocketmq-web:3.0.0`, built from
+the official v3.0.0 source; no local build or image pull Secret is needed. Edit
+`rocketmq-dashboard-values.yaml` to set the NameServer address and HTTPS hostname,
+and configure MySQL storage if needed. The example uses the internal Istio gateway.
+
+MySQL creates the `rocketmq` database and application user automatically. Its
+passwords are generated into a retained Secret and reused by Helm upgrades;
+alternatively set `mysql.auth.existingSecret` to an existing Secret containing
+`root-password` and `password`. Bootstrap the dashboard login Secret in `mgmt`
+(or manage it through ESO / Sealed Secrets):
 
 ```bash
-helm upgrade --install \
-  --namespace mgmt \
-  rocketmq-exporter logic3579/rocketmq-exporter \
-  -f rocketmq-exporter-values.yaml
+kubectl -n mgmt create secret generic rocketmq-dashboard-auth \
+  --from-literal=password='<bootstrap-admin-password>'
 ```
+
+Install locally before the chart's first publication, from the repository root:
+
+```bash
+helm dependency update charts/rocketmq-dashboard
+helm upgrade --install rocketmq-dashboard charts/rocketmq-dashboard \
+  --namespace mgmt \
+  -f infrastructure/mgmt/rocketmq-dashboard-values.yaml
+```
+
+After publication, the standalone install from this directory is:
+
+```bash
+helm upgrade --install rocketmq-dashboard logic3579/rocketmq-dashboard \
+  --version 3.0.0 --namespace mgmt \
+  -f rocketmq-dashboard-values.yaml
+```
+
+The backend waits for MySQL and initializes the packaged schema by default;
+it does not seed instances. Register RocketMQ instances through the UI after
+login. Set `mysql.enabled: false` and configure `externalDatabase` to connect
+to an existing MySQL database instead; the values file includes a commented
+example. Keep retained MySQL PVCs and their credential Secret together when
+reinstalling, and update accounts in MySQL before changing stored DB passwords.
+The admin password Secret is a first-login bootstrap seed; later account changes
+are stored in MySQL. HTTPS is required by default for session cookies. This
+component is standalone-only here and is not part of the ArgoCD Applications.
