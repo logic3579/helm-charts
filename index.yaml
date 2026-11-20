@@ -11,7 +11,7 @@ entries:
           url: https://github.com/cars10/elasticvue
     apiVersion: v2
     appVersion: 1.15.0
-    created: "2026-11-16T11:23:56.796191343Z"
+    created: "2026-11-20T08:06:23.206667414Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -49,7 +49,7 @@ entries:
       catalog.cattle.io/release-name: flashcatcloud
     apiVersion: v2
     appVersion: 8.5.1
-    created: "2026-11-16T11:23:56.797976059Z"
+    created: "2026-11-20T08:06:23.20851171Z"
     description: A Helm Chart for Nightingale (n9e), cloud-native monitoring system
     digest: 3cc88878c4ca4800f3bbefe2f13c618c302145a77f33c5a3170456789d0515f9
     home: https://n9e.github.io
@@ -86,7 +86,7 @@ entries:
           url: https://github.com/redis/RedisInsight
     apiVersion: v2
     appVersion: "3.4"
-    created: "2026-11-16T11:23:56.798543474Z"
+    created: "2026-11-20T08:06:23.209116759Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -125,7 +125,7 @@ entries:
           url: https://github.com/apache/rocketmq-dashboard/tree/v3.0.0
     apiVersion: v2
     appVersion: 3.0.0
-    created: "2026-11-16T11:23:56.799523916Z"
+    created: "2026-11-20T08:06:23.210113515Z"
     dependencies:
     - name: common
       repository: file://../common
@@ -150,4 +150,4 @@ entries:
     urls:
     - https://logic3579.github.io/helm-charts/rocketmq-dashboard-3.0.0.tgz
     version: 3.0.0
-generated: "2026-11-16T11:23:56.795429672Z"
+generated: "2026-11-20T08:06:23.205920962Z"
