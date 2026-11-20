@@ -28,6 +28,8 @@ annotations:
       description: Bundle persistent MySQL 8.0 by default with optional external database support
     - kind: changed
       description: Use public logic3579 Docker Hub images for the frontend and backend by default
+    - kind: fixed
+      description: Correct frontend and backend image repositories to rocketmq-dashboard-web and rocketmq-dashboard-server so images can be pulled and scanned
 dependencies:
   - name: common
     version: "0.3.0"

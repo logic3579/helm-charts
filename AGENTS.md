@@ -131,7 +131,7 @@ RocketMQ Studio v3.0.0, the successor to RocketMQ Dashboard.
 
 - Uses `common` version `0.3.0` and runs frontend Nginx plus Java backend in one pod.
 - Frontend Service/Nginx port: `service.port` (default `8080`); backend: `dashboard.port` (default `8888`). The ports must differ.
-- Default application images are public Docker Hub images `logic3579/rocketmq-server:3.0.0` and `logic3579/rocketmq-web:3.0.0`, built from upstream v3.0.0 `server/Dockerfile` (repository-root context) and `web/Dockerfile` (web context). Local builds and image pull Secrets are not required; image repositories, tags, and digests remain overridable.
+- Default application images are public Docker Hub images `logic3579/rocketmq-dashboard-server:3.0.0` and `logic3579/rocketmq-dashboard-web:3.0.0`, built from upstream v3.0.0 `server/Dockerfile` (repository-root context) and `web/Dockerfile` (web context). Local builds and image pull Secrets are not required; image repositories, tags, and digests remain overridable.
 - Retain the upstream backend PropertiesLauncher entrypoint so the separately supplied MySQL JDBC driver is loaded.
 - Bundles a single-replica `mysql:8.0` StatefulSet by default, matching upstream Compose, with an 8Gi PVC, distinct MySQL selectors, and an authenticated wait init container before backend startup.
 - MySQL creates its database and non-root app user. Passwords are generated into a retained Secret and reused through Helm `lookup`, or supplied through `mysql.auth.existingSecret`. Preserve credentials with retained PVCs; password values only initialize empty data directories.
@@ -294,7 +294,7 @@ Workflow summary:
 4. Run `helm package` into `.packages/`.
 5. Soft-fail OCI fan-out pushes to GHCR, Docker Hub, and Quay.
 6. Add a `gh-pages` worktree.
-7. Copy new `.tgz` files, preserving already-published versions.
+7. Copy new `.tgz` files, preserving already-published versions unless the manual `overwrite_package` input selects an exact package filename to replace.
 8. Remove `.tgz` files for charts no longer present under `charts/`.
 9. Keep the latest 3 versions per chart on `gh-pages`.
 10. Regenerate `index.yaml` with `helm repo index`.
@@ -313,6 +313,7 @@ All three registries use the GitHub repository owner's username. Only the token 
 
 Important release details:
 
+- To correct an existing Pages chart version, manually run `release.yaml` with `overwrite_package` set to its exact `.tgz` filename, for example `rocketmq-dashboard-3.0.0.tgz`. The workflow replaces only the selected existing package and regenerates `index.yaml` with its new digest so Artifact Hub can reindex it. Push-triggered runs and manual runs with an empty input preserve existing versions.
 - `index.yaml` is regenerated from scratch from the `.tgz` files in the `gh-pages` worktree.
 - Retention is 3 versions per chart, controlled by `RETENTION` in the workflow env.
 - Chart removal from `charts/` deletes its `.tgz` files from `gh-pages` on the next workflow run.

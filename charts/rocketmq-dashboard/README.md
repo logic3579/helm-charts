@@ -17,8 +17,8 @@ Version 3 uses **two application images**, a React/Nginx frontend and a Java bac
 
 The chart defaults to the maintainer's public Docker Hub images built from the upstream **v3.0.0** source:
 
-- Backend: [`logic3579/rocketmq-server:3.0.0`](https://hub.docker.com/r/logic3579/rocketmq-server)
-- Frontend: [`logic3579/rocketmq-web:3.0.0`](https://hub.docker.com/r/logic3579/rocketmq-web)
+- Backend: [`logic3579/rocketmq-dashboard-server:3.0.0`](https://hub.docker.com/r/logic3579/rocketmq-dashboard-server)
+- Frontend: [`logic3579/rocketmq-dashboard-web:3.0.0`](https://hub.docker.com/r/logic3579/rocketmq-dashboard-web)
 
 No image pull Secret or local image build is required for these public images. Override `image.*` and `frontend.image.*` to use custom builds or mirrors. For custom builds, upstream uses `server/Dockerfile` with the repository-root context and `web/Dockerfile` with the `web/` context.
 
@@ -105,8 +105,8 @@ kubectl -n mgmt port-forward svc/rocketmq-dashboard 8080:8080
 
 | Parameter | Purpose | Default |
 | --- | --- | --- |
-| `image.*` | Backend image; tag defaults to appVersion | `logic3579/rocketmq-server:3.0.0` |
-| `frontend.image.*` | Frontend image; tag defaults to appVersion | `logic3579/rocketmq-web:3.0.0` |
+| `image.*` | Backend image; tag defaults to appVersion | `logic3579/rocketmq-dashboard-server:3.0.0` |
+| `frontend.image.*` | Frontend image; tag defaults to appVersion | `logic3579/rocketmq-dashboard-web:3.0.0` |
 | `service.port` | Frontend Service and Nginx port | `8080` |
 | `dashboard.port` | Backend port in the same pod; must differ from frontend | `8888` |
 | `dashboard.namesrvAddr` | `STUDIO_ROCKETMQ_NAMESRV_ADDR` | `127.0.0.1:9876` |

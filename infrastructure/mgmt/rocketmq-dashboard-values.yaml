@@ -4,11 +4,11 @@
 # No ArgoCD Application is added.
 
 image:
-  repository: logic3579/rocketmq-server
+  repository: logic3579/rocketmq-dashboard-server
   tag: "3.0.0"
 frontend:
   image:
-    repository: logic3579/rocketmq-web
+    repository: logic3579/rocketmq-dashboard-web
     tag: "3.0.0"
 
 replicaCount: 1

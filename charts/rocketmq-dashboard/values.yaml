@@ -3,7 +3,7 @@ replicaCount: 1
 
 # -- Public Docker Hub backend image, built from upstream v3.0.0 sources.
 image:
-  repository: logic3579/rocketmq-server
+  repository: logic3579/rocketmq-dashboard-server
   pullPolicy: IfNotPresent
   # -- Defaults to Chart.appVersion (3.0.0); never uses latest.
   tag: ""
@@ -110,7 +110,7 @@ auth:
 frontend:
   # -- Public Docker Hub frontend image, built from upstream v3.0.0 sources.
   image:
-    repository: logic3579/rocketmq-web
+    repository: logic3579/rocketmq-dashboard-web
     pullPolicy: IfNotPresent
     tag: ""
     digest: ""

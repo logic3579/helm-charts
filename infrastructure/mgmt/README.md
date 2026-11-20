@@ -87,7 +87,7 @@ Uses the in-repo `logic3579/rocketmq-dashboard` chart for **RocketMQ Studio
 3.0.0**. It runs separate frontend/backend containers in one pod and deploys
 a MySQL 8.0 StatefulSet with an 8Gi PVC by default, matching upstream Compose.
 The default application images are public Docker Hub images
-`logic3579/rocketmq-server:3.0.0` and `logic3579/rocketmq-web:3.0.0`, built from
+`logic3579/rocketmq-dashboard-server:3.0.0` and `logic3579/rocketmq-dashboard-web:3.0.0`, built from
 the official v3.0.0 source; no local build or image pull Secret is needed. Edit
 `rocketmq-dashboard-values.yaml` to set the NameServer address and HTTPS hostname,
 and configure MySQL storage if needed. The example uses the internal Istio gateway.

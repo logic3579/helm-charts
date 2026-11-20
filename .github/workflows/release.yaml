@@ -7,6 +7,12 @@ on:
     paths:
       - "charts/**"
   workflow_dispatch:
+    inputs:
+      overwrite_package:
+        description: "Existing .tgz filename to replace; leave empty to preserve published versions"
+        required: false
+        default: ""
+        type: string
 
 concurrency:
   group: release-charts
@@ -108,13 +114,20 @@ jobs:
           git fetch origin gh-pages
           git worktree add gh-pages origin/gh-pages
 
-      - name: Publish new .tgz (preserve already-published versions)
+      - name: Publish .tgz (preserve existing versions unless explicitly selected)
+        env:
+          OVERWRITE_PACKAGE: ${{ inputs.overwrite_package }}
         run: |
           for pkg in .packages/*.tgz; do
             [ -f "$pkg" ] || continue
             target="gh-pages/$(basename "$pkg")"
             if [ -e "$target" ]; then
-              echo "skip existing: $(basename "$pkg")"
+              if [ "$(basename "$pkg")" = "$OVERWRITE_PACKAGE" ]; then
+                cp "$pkg" "$target"
+                echo "replaced: $(basename "$pkg")"
+              else
+                echo "skip existing: $(basename "$pkg")"
+              fi
             else
               cp "$pkg" "$target"
               echo "added: $(basename "$pkg")"
